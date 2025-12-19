@@ -323,33 +323,33 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 
 ---
 
-### 2.4.1 Write Composition Tests for NAT Gateway (TEST FIRST)
+### 2.4.1 Write Composition Tests for NAT Gateway (TEST FIRST) ✅
 **Priority**: P1 (BLOCKING - MUST DO BEFORE 2.4)
 **Effort**: Medium
 **Description**: **🔴 RED** - Write tests for NAT Gateway BEFORE implementation
 **Dependencies**: Task 2.3 (IGW)
-**Status**: PENDING
+**Status**: ✅ COMPLETED
 
 **TDD Workflow**: This is the RED phase - tests will FAIL until 2.4 is implemented
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-nat-single --language=kcl`
-- [ ] Write test: Single NAT Gateway strategy
+- [x] Generate test: `up test generate test-xvpc-nat-single --language=kcl`
+- [x] Write test: Single NAT Gateway strategy
   - Assert 1 NAT Gateway created
   - Assert 1 EIP allocated
   - Assert NAT placed in first public subnet
   - Assert correct tags
-- [ ] Generate test: `up test generate test-xvpc-nat-per-az --language=kcl`
-- [ ] Write test: NAT per AZ strategy
+- [x] Generate test: `up test generate test-xvpc-nat-per-az --language=kcl`
+- [x] Write test: NAT per AZ strategy
   - Assert N NAT Gateways (one per AZ)
   - Assert N EIPs
   - Assert NATs distributed across public subnets
-- [ ] Generate test: `up test generate test-xvpc-nat-disabled --language=kcl`
-- [ ] Write test: No NAT Gateway
+- [x] Generate test: `up test generate test-xvpc-nat-disabled --language=kcl`
+- [x] Write test: No NAT Gateway
   - Assert 0 NAT Gateways
   - Assert 0 EIPs
-- [ ] Run tests: `up test run tests/test-xvpc-nat-*`
-- [ ] **MUST SEE: ALL FAIL (NAT not implemented yet - this is correct RED phase)**
+- [x] Run tests: `up test run tests/test-xvpc-nat-*`
+- [x] **MUST SEE: ALL FAIL (NAT not implemented yet - this is correct RED phase)**
 
 **Reference**:
 - thoughts/TDD_STRATEGY.md (RED phase requirements)
