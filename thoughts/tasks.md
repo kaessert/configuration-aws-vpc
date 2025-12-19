@@ -4,7 +4,13 @@ This document contains a prioritized list of all tasks needed to build an Upboun
 
 ## Project Goal
 
-Build a production-ready Upbound configuration package that provides the same functionality as the popular Terraform AWS VPC module, implemented using KCL composition functions and Crossplane managed resources.
+Build a production-ready **drop-in replacement** for the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module using Upbound, KCL, and Crossplane.
+
+**Critical Requirements**:
+- ✅ **Feature Parity**: All Terraform inputs/outputs supported
+- ✅ **Behavior Match**: Exact same behavior as Terraform module
+- ✅ **Test-Driven**: Tests written BEFORE implementation (🔴 RED → 🟢 GREEN → 🔵 REFACTOR)
+- ✅ **Never Commit Failing Tests**: All tests MUST pass before commit
 
 ## Task Priority Legend
 
@@ -12,6 +18,17 @@ Build a production-ready Upbound configuration package that provides the same fu
 - **P1**: Core functionality - essential features
 - **P2**: Important features - significant value
 - **P3**: Nice-to-have - optional enhancements
+
+## Development Workflow (MANDATORY)
+
+For EVERY feature:
+
+1. **🔴 RED**: Write composition test FIRST (test should fail)
+2. **🟢 GREEN**: Implement minimum code to pass test
+3. **🔵 REFACTOR**: Improve code while keeping tests green
+4. **✅ COMMIT**: Only commit when ALL tests pass
+
+**Read**: [thoughts/TDD_STRATEGY.md](TDD_STRATEGY.md) and [thoughts/ARCHITECTURE.md](ARCHITECTURE.md)
 
 ---
 
@@ -147,30 +164,44 @@ Build a production-ready Upbound configuration package that provides the same fu
 
 ---
 
-### 2.2.1 Add Composition Tests for Subnets
-**Priority**: P1
-**Effort**: Small
-**Description**: Create composition tests to validate subnet creation logic
-**Dependencies**: Task 2.2
+### 2.2.1 Write Composition Tests for All Subnet Types (Catch-Up Testing)
+**Priority**: P1 (BLOCKING)
+**Effort**: Medium
+**Description**: Write comprehensive tests for all subnet types (features already implemented in 2.2)
+**Dependencies**: Task 2.2 ✅ COMPLETED
+**Status**: PENDING
+
+**Note**: Task 2.2 already implemented all subnet types WITHOUT tests (not ideal TDD). This task adds missing test coverage.
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-public-subnets --language=kcl`
-- [ ] Write test asserting public subnets are created with correct specs
-- [ ] Test single AZ scenario
-- [ ] Test multi-AZ scenario
-- [ ] Verify mapPublicIpOnLaunch is set correctly
-- [ ] Run test locally: `up test run tests/test-xvpc-public-subnets`
-- [ ] Fix any broken tests from previous features (VPC)
-- [ ] Ensure all tests pass
+- [ ] Generate test: `up test generate test-xvpc-subnets-public --language=kcl`
+- [ ] Write test: Assert public subnets with mapPublicIpOnLaunch
+- [ ] Generate test: `up test generate test-xvpc-subnets-private --language=kcl`
+- [ ] Write test: Assert private subnets (no public IP)
+- [ ] Generate test: `up test generate test-xvpc-subnets-database --language=kcl`
+- [ ] Write test: Assert database subnets with correct tags
+- [ ] Generate test: `up test generate test-xvpc-subnets-elasticache --language=kcl`
+- [ ] Write test: Assert elasticache subnets with correct tags
+- [ ] Generate test: `up test generate test-xvpc-subnets-redshift --language=kcl`
+- [ ] Write test: Assert redshift subnets with correct tags
+- [ ] Generate test: `up test generate test-xvpc-subnets-intra --language=kcl`
+- [ ] Write test: Assert intra subnets (no routing to NAT/IGW)
+- [ ] Run all tests: `up test run tests/test-xvpc-subnets-*`
+- [ ] **Expected: ALL PASS (features already implemented)**
+- [ ] Fix any issues found by tests
 
-**Reference**: thoughts/tools/testing-notes-platform-ref.md
+**Reference**:
+- thoughts/TDD_STRATEGY.md
+- thoughts/spec/terraform-vpc-analysis.md (subnet types)
+- functions/vpc/main.k (existing implementation)
 
 **Acceptance Criteria**:
-- Test validates correct number of subnets created
-- Test validates subnet CIDR blocks
-- Test validates subnet placement across AZs
-- All existing tests still pass
-- Test runs in < 10 seconds
+- ✅ Tests for all 6 subnet types exist
+- ✅ Each test asserts correct specs (CIDR, AZ, tags)
+- ✅ ALL tests PASS (features already implemented)
+- ✅ 100% subnet feature coverage
+
+**Going Forward**: For NEW features (2.4+), write tests FIRST (proper TDD)
 
 ---
 
@@ -198,133 +229,235 @@ Build a production-ready Upbound configuration package that provides the same fu
 
 ---
 
-### 2.3.1 Add Composition Tests for Internet Gateway
-**Priority**: P1
+### 2.3.1 Write Composition Tests for Internet Gateway (Catch-Up Testing)
+**Priority**: P1 (BLOCKING)
 **Effort**: Small
-**Description**: Create composition tests for IGW functionality
-**Dependencies**: Task 2.3
+**Description**: Write comprehensive tests for IGW (feature already implemented in 2.3)
+**Dependencies**: Task 2.3 ✅ COMPLETED
+**Status**: PENDING
+
+**Note**: Task 2.3 already implemented IGW WITHOUT tests. This task adds missing test coverage.
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-igw --language=kcl`
-- [ ] Test IGW is created when public subnets exist
-- [ ] Test IGW is NOT created when no public subnets
-- [ ] Verify IGW attachment to VPC
-- [ ] Run test: `up test run tests/test-xvpc-igw`
-- [ ] Fix any broken tests from subnet changes
-- [ ] Ensure all tests pass
+- [ ] Generate test: `up test generate test-xvpc-igw-enabled --language=kcl`
+- [ ] Write test: IGW created when createIgw: true
+  - Assert 1 InternetGateway resource
+  - Assert vpcIdSelector.matchControllerRef: true
+  - Assert correct tags
+- [ ] Generate test: `up test generate test-xvpc-igw-disabled --language=kcl`
+- [ ] Write test: NO IGW when createIgw: false
+  - Assert 0 InternetGateway resources
+- [ ] Run tests: `up test run tests/test-xvpc-igw-*`
+- [ ] **Expected: ALL PASS (feature already implemented)**
+- [ ] Fix any issues found by tests
+
+**Reference**:
+- functions/vpc/main.k (existing IGW implementation)
+- thoughts/spec/terraform-vpc-analysis.md
 
 **Acceptance Criteria**:
-- Test validates conditional IGW creation
-- Test validates VPC attachment
-- All existing tests still pass
+- ✅ Tests for IGW enabled/disabled exist
+- ✅ Tests validate conditional creation
+- ✅ Tests validate VPC attachment via selector
+- ✅ ALL tests PASS (feature already implemented)
+
+**Going Forward**: For NEW features (2.4+), write tests FIRST (proper TDD)
 
 ---
 
-### 2.4 Implement NAT Gateway
-**Priority**: P1
+### 2.4.1 Write Composition Tests for NAT Gateway (TEST FIRST)
+**Priority**: P1 (BLOCKING - MUST DO BEFORE 2.4)
 **Effort**: Medium
-**Description**: Create NAT Gateways for private subnet internet access
+**Description**: **🔴 RED** - Write tests for NAT Gateway BEFORE implementation
+**Dependencies**: Task 2.3 (IGW)
+**Status**: PENDING
 
-**Tasks**:
-- [ ] Add NAT Gateway resource generation to gateway.k
-- [ ] Create Elastic IP for NAT Gateway
-- [ ] Support three strategies:
-  - [ ] Single NAT Gateway (all AZs use one)
-  - [ ] One NAT Gateway per AZ
-  - [ ] No NAT Gateway
-- [ ] Place NAT Gateways in public subnets
-- [ ] Make strategy configurable
-
-**AWS Resources**: `ec2.aws.upbound.io/v1beta1/NATGateway`, `ec2.aws.upbound.io/v1beta1/EIP`
-
-**Acceptance Criteria**:
-- All three strategies work correctly
-- NAT Gateways placed in public subnets
-- EIPs allocated properly
-- Cost-optimized single-NAT option available
-
----
-
-### 2.4.1 Add Composition Tests for NAT Gateway
-**Priority**: P1
-**Effort**: Medium
-**Description**: Create composition tests for all NAT Gateway strategies
-**Dependencies**: Task 2.4
+**TDD Workflow**: This is the RED phase - tests will FAIL until 2.4 is implemented
 
 **Tasks**:
 - [ ] Generate test: `up test generate test-xvpc-nat-single --language=kcl`
-- [ ] Test single NAT Gateway strategy (1 NAT, 1 EIP)
+- [ ] Write test: Single NAT Gateway strategy
+  - Assert 1 NAT Gateway created
+  - Assert 1 EIP allocated
+  - Assert NAT placed in first public subnet
+  - Assert correct tags
 - [ ] Generate test: `up test generate test-xvpc-nat-per-az --language=kcl`
-- [ ] Test NAT per AZ strategy (N NATs, N EIPs)
+- [ ] Write test: NAT per AZ strategy
+  - Assert N NAT Gateways (one per AZ)
+  - Assert N EIPs
+  - Assert NATs distributed across public subnets
 - [ ] Generate test: `up test generate test-xvpc-nat-disabled --language=kcl`
-- [ ] Test no NAT Gateway (0 NATs, 0 EIPs)
-- [ ] Verify NAT placement in public subnets
-- [ ] Verify EIP allocation
+- [ ] Write test: No NAT Gateway
+  - Assert 0 NAT Gateways
+  - Assert 0 EIPs
 - [ ] Run tests: `up test run tests/test-xvpc-nat-*`
-- [ ] Fix any broken tests
-- [ ] Ensure all tests pass
+- [ ] **MUST SEE: ALL FAIL (NAT not implemented yet - this is correct RED phase)**
+
+**Reference**:
+- thoughts/TDD_STRATEGY.md (RED phase requirements)
+- thoughts/spec/terraform-vpc-analysis.md (NAT Gateway strategies)
+- Terraform example: https://github.com/terraform-aws-modules/terraform-aws-vpc/tree/master/examples/complete
 
 **Acceptance Criteria**:
-- All three NAT strategies have tests
-- Tests validate correct number of NATs and EIPs
-- Tests validate placement in public subnets
-- All existing tests still pass
+- ✅ Tests for all 3 NAT strategies exist
+- ✅ Tests assert correct resource counts
+- ✅ Tests assert NAT placement in public subnets
+- ✅ Tests assert EIP allocation
+- ✅ Tests assert tags
+- ✅ Tests MUST FAIL (this proves test is correct - feature not implemented yet)
+
+**IMPORTANT**: DO NOT implement NAT Gateway yet. Only write tests. This ensures test-first approach.
 
 ---
 
-### 2.5 Implement Route Tables and Routes
-**Priority**: P1
-**Effort**: Large
-**Description**: Create route tables and routing rules for all subnet types
-
-**Tasks**:
-- [ ] Create `functions/vpc/route.k` module
-- [ ] Implement public route table (routes to IGW)
-- [ ] Implement private route tables (routes to NAT)
-- [ ] Implement database route tables
-- [ ] Implement elasticache route tables
-- [ ] Implement redshift route tables
-- [ ] Implement intra route tables (no external routes)
-- [ ] Create route table associations for subnets
-- [ ] Support per-AZ route tables
-- [ ] Support custom routes
-
-**AWS Resources**: `ec2.aws.upbound.io/v1beta1/RouteTable`, `ec2.aws.upbound.io/v1beta1/Route`, `ec2.aws.upbound.io/v1beta1/RouteTableAssociation`
-
-**Acceptance Criteria**:
-- Public subnets route to IGW
-- Private subnets route to NAT Gateway
-- Specialized subnets have proper isolation
-- Custom routes can be added
-- Route table associations correct
-
----
-
-### 2.5.1 Add Composition Tests for Route Tables
+### 2.4 Implement NAT Gateway (GREEN)
 **Priority**: P1
 **Effort**: Medium
-**Description**: Create composition tests for routing logic
-**Dependencies**: Task 2.5
+**Description**: **🟢 GREEN** - Implement NAT Gateway to pass tests from 2.4.1
+**Dependencies**: Task 2.4.1 (tests written)
+**Status**: PENDING
+
+**TDD Workflow**: This is the GREEN phase - make failing tests pass
+
+**Tasks**:
+- [ ] Create or update `functions/vpc/gateway.k` module
+- [ ] Implement _generateNATGateways() function
+- [ ] Implement _generateEIPs() function
+- [ ] Support three strategies:
+  - [ ] Single NAT Gateway (singleNatGateway: true)
+  - [ ] One NAT Gateway per AZ (oneNatGatewayPerAz: true)
+  - [ ] No NAT Gateway (enableNatGateway: false)
+- [ ] Place NAT Gateways in public subnets using subnetIdSelector
+- [ ] Update main.k to include NAT and EIP resources
+- [ ] Run tests: `up test run tests/test-xvpc-nat-*`
+- [ ] **Expected: ALL PASS**
+- [ ] Run all tests: `up test run tests/test-*`
+- [ ] **Expected: ALL PASS (no regressions)**
+
+**AWS Resources**:
+- `ec2.aws.upbound.io/v1beta1/NATGateway`
+- `ec2.aws.upbound.io/v1beta1/EIP`
+
+**Acceptance Criteria**:
+- ✅ All three NAT strategies work
+- ✅ NAT Gateways placed in public subnets
+- ✅ EIPs allocated and associated correctly
+- ✅ All tests pass (including new NAT tests)
+- ✅ No regressions in existing tests
+- ✅ Cost-optimized single-NAT option available
+
+**Reference**:
+- thoughts/ARCHITECTURE.md (module design)
+- thoughts/coding/upbound-patterns.md (selector patterns)
+- AWS Provider Docs: NAT Gateway, EIP
+
+---
+
+### 2.5.1 Write Composition Tests for Route Tables (TEST FIRST)
+**Priority**: P1 (BLOCKING - MUST DO BEFORE 2.5)
+**Effort**: Large
+**Description**: **🔴 RED** - Write comprehensive tests for routing BEFORE implementation
+**Dependencies**: Tasks 2.4 (NAT Gateway implemented)
+**Status**: PENDING
+
+**TDD Workflow**: This is the RED phase - tests MUST FAIL until 2.5 is implemented
 
 **Tasks**:
 - [ ] Generate test: `up test generate test-xvpc-routes-public --language=kcl`
-- [ ] Test public route table points to IGW
-- [ ] Test route table associations for public subnets
-- [ ] Generate test: `up test generate test-xvpc-routes-private --language=kcl`
-- [ ] Test private route tables point to NAT Gateway
-- [ ] Test per-AZ route tables (if NAT per AZ)
+- [ ] Write test: Public route table
+  - Assert 1 RouteTable for public subnets
+  - Assert 1 Route with destination 0.0.0.0/0 → IGW
+  - Assert RouteTableAssociations for all public subnets
+  - Assert correct tags
+- [ ] Generate test: `up test generate test-xvpc-routes-private-single-nat --language=kcl`
+- [ ] Write test: Private routing with single NAT
+  - Assert 1 RouteTable for private subnets (shared)
+  - Assert 1 Route with destination 0.0.0.0/0 → NAT Gateway
+  - Assert RouteTableAssociations for all private subnets
+- [ ] Generate test: `up test generate test-xvpc-routes-private-per-az --language=kcl`
+- [ ] Write test: Private routing with NAT per AZ
+  - Assert N RouteTables (one per AZ)
+  - Assert N Routes (each to its AZ's NAT)
+  - Assert correct subnet-to-route-table associations
 - [ ] Generate test: `up test generate test-xvpc-routes-isolated --language=kcl`
-- [ ] Test database/intra subnets have no external routes
-- [ ] Verify route table association correctness
+- [ ] Write test: Isolated subnets (intra, database without NAT)
+  - Assert RouteTable exists
+  - Assert NO routes to IGW or NAT
+  - Assert only local VPC route
+- [ ] Generate test: `up test generate test-xvpc-routes-database-with-nat --language=kcl`
+- [ ] Write test: Database subnets with NAT access
+  - Assert separate RouteTable for database subnets
+  - Assert route to NAT Gateway
 - [ ] Run tests: `up test run tests/test-xvpc-routes-*`
-- [ ] Fix any broken tests
-- [ ] Ensure all tests pass
+- [ ] **MUST SEE: ALL FAIL (routing not implemented yet - correct RED phase)**
+
+**Reference**:
+- thoughts/TDD_STRATEGY.md (RED phase)
+- thoughts/spec/terraform-vpc-analysis.md (routing patterns)
+- Terraform examples: complete, separate-route-tables
 
 **Acceptance Criteria**:
-- Tests validate route destinations (IGW, NAT, none)
-- Tests validate route table associations
-- Tests cover all subnet types
-- All existing tests still pass
+- ✅ Tests for all routing scenarios exist
+- ✅ Tests validate route destinations (IGW, NAT, none)
+- ✅ Tests validate route table associations
+- ✅ Tests validate per-AZ routing strategy
+- ✅ Tests validate isolated subnet routing
+- ✅ Tests MUST FAIL (proves test correctness - feature not implemented)
+
+**IMPORTANT**: DO NOT implement routing yet. Only write tests.
+
+---
+
+### 2.5 Implement Route Tables and Routes (GREEN)
+**Priority**: P1
+**Effort**: Large
+**Description**: **🟢 GREEN** - Implement routing to pass tests from 2.5.1
+**Dependencies**: Task 2.5.1 (tests written and failing)
+**Status**: PENDING
+
+**TDD Workflow**: This is the GREEN phase - make failing tests pass
+
+**Tasks**:
+- [ ] Create `functions/vpc/route.k` module (or implement in main.k)
+- [ ] Implement _generatePublicRouteTable() function
+  - Create RouteTable for public subnets
+  - Create Route with 0.0.0.0/0 → IGW
+  - Create RouteTableAssociations for public subnets
+- [ ] Implement _generatePrivateRouteTables() function
+  - Support single NAT strategy (1 route table, shared)
+  - Support NAT per AZ strategy (N route tables)
+  - Create Routes with 0.0.0.0/0 → appropriate NAT
+  - Create RouteTableAssociations for private subnets
+- [ ] Implement _generateDatabaseRouteTables() function
+  - Create separate route table when createDatabaseSubnetRouteTable: true
+  - Optionally route to NAT (createDatabaseNatGatewayRoute: true)
+- [ ] Implement _generateIsolatedRouteTables() function
+  - Create route tables for intra/isolated subnets
+  - NO routes to IGW or NAT (local VPC only)
+- [ ] Update main.k to include all route table resources
+- [ ] Run tests: `up test run tests/test-xvpc-routes-*`
+- [ ] **Expected: ALL PASS**
+- [ ] Run all tests: `up test run tests/test-*`
+- [ ] **Expected: ALL PASS (no regressions)**
+
+**AWS Resources**:
+- `ec2.aws.upbound.io/v1beta1/RouteTable`
+- `ec2.aws.upbound.io/v1beta1/Route`
+- `ec2.aws.upbound.io/v1beta1/RouteTableAssociation`
+
+**Acceptance Criteria**:
+- ✅ Public subnets route to IGW
+- ✅ Private subnets route to NAT Gateway (single or per-AZ)
+- ✅ Database subnets have separate routing (configurable)
+- ✅ Isolated subnets have NO external routes
+- ✅ All route table associations correct
+- ✅ All tests pass (including new routing tests)
+- ✅ No regressions in existing tests
+
+**Reference**:
+- thoughts/ARCHITECTURE.md (module design)
+- thoughts/coding/upbound-patterns.md (selector patterns)
+- Terraform module: route tables implementation
 
 ---
 

@@ -102,13 +102,76 @@ kubectl describe xvpc my-vpc
 up project stop
 ```
 
-### Before Committing
+### TDD Workflow for Features (MANDATORY)
 
-1. **Test thoroughly** - Ensure your changes work
-2. **Update documentation** - If you changed behavior, update docs
-3. **Update tasks.md** - Mark tasks complete, add new ones if needed
-4. **Follow git workflows** - See thoughts/git/common-operations.md
-5. **Use conventional commits** - feat:, fix:, docs:, etc.
+**For EVERY new feature**, follow this workflow:
+
+1. **🔴 RED Phase - Write Test FIRST**
+   ```bash
+   # Generate test
+   up test generate test-xvpc-<feature> --language=kcl
+
+   # Edit test: tests/test-xvpc-<feature>/main.k
+   # Assert expected resources and behavior
+
+   # Run test (MUST fail)
+   up test run tests/test-xvpc-<feature>
+   # ❌ FAIL - feature not implemented (CORRECT!)
+   ```
+
+2. **🟢 GREEN Phase - Make Test Pass**
+   ```bash
+   # Implement minimum code in functions/vpc/
+   # Edit main.k or appropriate module
+
+   # Run test until it passes
+   up test run tests/test-xvpc-<feature>
+   # ✅ PASS
+
+   # Run ALL tests (check for regressions)
+   up test run tests/test-*
+   # If ANY tests fail: FIX THEM NOW
+   # Expected: ✅ ALL PASS
+   ```
+
+3. **🔵 REFACTOR Phase - Improve Code**
+   ```bash
+   # Refactor for clarity/modularity
+   # Extract to modules if needed
+
+   # Keep tests passing during refactoring
+   up test run tests/test-*
+   # ✅ ALL PASS
+   ```
+
+4. **✅ COMMIT Phase - Only When Green**
+   ```bash
+   # Final checks
+   up project build              # ✅ MUST pass
+   up test run tests/test-*      # ✅ ALL MUST pass
+   # If ANY test fails: DO NOT COMMIT - fix tests first!
+
+   # Only commit when everything is green
+   # Commit
+   git add .
+   git commit -m "feat: implement <feature>
+
+- Add composition test for <feature>
+- Implement <feature> in functions/vpc/
+- All tests passing
+"
+   ```
+
+### Before Committing (CRITICAL CHECKS)
+
+1. **✅ ALL tests pass** - Run `up test run tests/test-*`
+2. **✅ Project builds** - Run `up project build`
+3. **✅ No regressions** - All existing tests still pass
+4. **Update documentation** - If you changed behavior, update docs
+5. **Update tasks.md** - Mark tasks complete, add new ones if needed
+6. **Use conventional commits** - feat:, fix:, docs:, test:, etc.
+
+**NEVER commit if tests fail. Fix tests first.**
 
 ## Key Files to Know
 
@@ -257,12 +320,41 @@ functions/vpc/
     └── tags.k          # Tag management
 ```
 
-## Testing Strategy
+## Testing Strategy (CRITICAL - TEST-DRIVEN DEVELOPMENT)
 
-1. **Unit Testing**: Test individual KCL functions
-2. **Integration Testing**: Test full composition with examples
-3. **Validation Testing**: Verify outputs match Terraform module
-4. **Cleanup Testing**: Ensure resources delete properly
+**MANDATORY**: This project follows **strict Test-Driven Development (TDD)**
+
+### The Iron Rule: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT
+
+1. **🔴 RED**: Write test FIRST (test MUST fail)
+2. **🟢 GREEN**: Write minimum code to pass test
+3. **🔵 REFACTOR**: Improve code while keeping tests green
+4. **✅ COMMIT**: Only commit when ALL tests pass
+
+### NEVER:
+- ❌ Write code before tests
+- ❌ Commit failing tests
+- ❌ Skip tests for "simple" features
+- ❌ Write tests after implementation
+
+### Test Levels:
+
+1. **Composition Tests (Unit)** - MAJORITY
+   - Fast (< 10 seconds)
+   - Isolated (no AWS calls)
+   - 100% feature coverage
+   - Run: `up test run tests/test-*`
+
+2. **E2E Tests** - FEW
+   - Slow (10-30 minutes)
+   - Real AWS resources
+   - Critical paths only
+   - Run: `up test run tests/e2etest-* --e2e`
+
+### Read These First:
+- **[thoughts/TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md)** - Complete TDD workflow
+- **[thoughts/ARCHITECTURE.md](thoughts/ARCHITECTURE.md)** - Modular architecture
+- **[TESTING.md](TESTING.md)** - Testing guide for contributors
 
 ## Version Control
 
