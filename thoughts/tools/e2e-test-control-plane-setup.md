@@ -8,14 +8,14 @@
 
 ### Local Testing (Manual Runs)
 
-For local testing, use the **`upbound-gcp-us-central-1`** control plane group:
+For local testing, use the **`claude-testing`** control plane group (in the `upbound-gcp-us-central-1` space):
 
 ```bash
-# Run E2E tests locally on GCP control plane group
-up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
+# Run E2E tests locally on claude-testing control plane group
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 
 # Example with specific test
-up test run tests/e2etest-xvpc-simple --e2e --control-plane-group=upbound-gcp-us-central-1
+up test run tests/e2etest-xvpc-simple --e2e --control-plane-group=claude-testing
 ```
 
 ### CI/CD Testing (GitHub Actions)
@@ -97,10 +97,11 @@ up test run tests/e2etest-* --e2e
 ### Explicit Group (Required for Local Testing)
 
 ```bash
-# ✅ CORRECT - Run test on GCP control plane group for local testing
-up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
+# ✅ CORRECT - Run test on claude-testing control plane group for local testing
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 
-# This overrides the context and creates control plane in "upbound-gcp-us-central-1"
+# This overrides the context and creates control plane in "claude-testing" group
+# (which lives in the upbound-gcp-us-central-1 space)
 ```
 
 ## Best Practices
@@ -109,7 +110,7 @@ up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
 
 **✅ GOOD** - For local testing:
 ```bash
-up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 ```
 
 **❌ BAD** - Using production control plane group:
@@ -119,8 +120,13 @@ up test run tests/e2etest-* --e2e  # Uses current context group!
 
 ### 2. Control Plane Groups by Environment
 
-- **Local Testing**: `upbound-gcp-us-central-1` (manual developer testing)
+- **Local Testing**: `claude-testing` control plane group (in `upbound-gcp-us-central-1` space)
 - **CI/CD Testing**: TBD (will be configured in GitHub workflows later)
+
+**Important Terminology:**
+- **Control Plane Group**: Logical grouping of control planes (e.g., `claude-testing`)
+- **Space**: Physical location where control plane runs (e.g., `upbound-gcp-us-central-1`)
+- The `--control-plane-group` flag takes the GROUP name, not the space name
 
 ### 3. Document the Required Group
 
@@ -139,15 +145,19 @@ In your project README or CI/CD docs, document:
 # View current profile and organization
 up profile list
 
-# View current context (includes control plane group)
+# View current context (shows org/group/control-plane/space)
 up ctx .
 
-# Example output:
+# Example output format:
 # Kubeconfig context "upbound": Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
-# Organization: solutions
-# Control Plane Group: upbound-aws-us-east-1
-# Control Plane: upbox
-# Space: upbox-danske
+#                                       ↓         ↓                        ↓     ↓
+#                                       org       group                    cp    space
+#
+# Components:
+# - Organization: solutions
+# - Control Plane Group: upbound-aws-us-east-1
+# - Control Plane: upbox
+# - Space: upbox-danske
 ```
 
 ## Control Plane Groups in Upbound
@@ -165,14 +175,15 @@ A control plane group is a logical grouping of control planes within an Upbound 
 ```
 Organization: solutions
   ├── Control Plane Group: production
-  │   ├── control plane: prod-us-east
-  │   └── control plane: prod-eu-west
+  │   ├── control plane: prod-us-east (in some space)
+  │   └── control plane: prod-eu-west (in some space)
   ├── Control Plane Group: staging
-  │   └── control plane: staging-us-east
-  └── Control Plane Group: test-cplanes (for E2E tests)
-      ├── control plane: e2e-test-1 (auto-created by tests)
-      ├── control plane: e2e-test-2 (auto-created by tests)
-      └── ... (cleaned up automatically after tests)
+  │   └── control plane: staging-us-east (in some space)
+  └── Control Plane Group: claude-testing (for local E2E tests)
+      ├── space: upbound-gcp-us-central-1
+      │   ├── control plane: e2e-test-1 (auto-created by tests)
+      │   ├── control plane: e2e-test-2 (auto-created by tests)
+      │   └── ... (cleaned up automatically after tests)
 ```
 
 ## Debugging Failed E2E Tests
@@ -218,14 +229,15 @@ up login
 up ctx .
 # Output: Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
 
-# 3. Run E2E tests on GCP control plane group (for local testing)
+# 3. Run E2E tests on claude-testing control plane group (for local testing)
 up test run tests/e2etest-* \
   --e2e \
-  --control-plane-group=upbound-gcp-us-central-1 \
+  --control-plane-group=claude-testing \
   --organization=solutions
 
 # 4. Tests will:
-#    - Create temporary control plane in "upbound-gcp-us-central-1"
+#    - Create temporary control plane in "claude-testing" group
+#    - Control plane will run in upbound-gcp-us-central-1 space
 #    - Run tests
 #    - Clean up control plane
 #    - Report results
@@ -233,7 +245,7 @@ up test run tests/e2etest-* \
 # 5. If test fails and you need to debug:
 up test run tests/e2etest-xvpc-simple \
   --e2e \
-  --control-plane-group=upbound-gcp-us-central-1 \
+  --control-plane-group=claude-testing \
   --skip-control-plane-cleanup
 
 # 6. Then inspect the control plane:
@@ -245,11 +257,16 @@ kubectl get all
 ## Summary
 
 ### Local Testing
-- ✅ **ALWAYS** use `--control-plane-group=upbound-gcp-us-central-1` for local E2E tests
+- ✅ **ALWAYS** use `--control-plane-group=claude-testing` for local E2E tests
+- ✅ Control plane will run in `upbound-gcp-us-central-1` space
 - ✅ **NEVER** run E2E tests without specifying control plane group
 - ✅ **NEVER** run E2E tests on production control plane groups
 - ✅ E2E tests create temporary control planes automatically
 - ✅ Control planes are cleaned up automatically (unless `--skip-control-plane-cleanup`)
+
+### Terminology
+- **Control Plane Group**: Logical grouping (use with `--control-plane-group` flag)
+- **Space**: Physical location where control plane runs (specified at group level)
 
 ### CI/CD Testing
 - ⏸️ GitHub workflows will be configured separately later
