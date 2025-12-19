@@ -32,6 +32,62 @@ For EVERY feature:
 
 ---
 
+## ✅ Crossplane v2 Migration (COMPLETED)
+
+**Date**: 2025-12-19
+**Status**: ✅ COMPLETED - All tests passing
+
+The project has been successfully migrated from Crossplane v1 to v2. This was a **P0 (Critical)** task that updated the entire codebase to use the v2 API.
+
+### What Changed:
+
+1. **XRD (apis/vpc/definition.yaml)**:
+   - Updated `apiVersion` from `apiextensions.crossplane.io/v1` to `v2`
+   - Added `scope: Namespaced` (v2 requirement)
+   - Removed `claimNames` section (v2 doesn't support XR/Claim pattern)
+   - Changed kind from `XVPC` to `VPC` (removed X prefix)
+   - Updated metadata.name from `xvpcs.aws.platform.upbound.io` to `vpcs.aws.platform.upbound.io`
+
+2. **Composition (apis/vpc/composition.yaml)**:
+   - Updated compositeTypeRef kind from `XVPC` to `VPC`
+
+3. **Function Code (functions/vpc/main.k)**:
+   - Updated imports from `aws.ec2` to `awsm.ec2` (v2 uses `.m` suffix for namespaced resources)
+   - Changed all `XVPC` references to `VPC`
+   - Added v2-required fields to all managed resources:
+     - `providerConfigRef.kind = "ProviderConfig"` (explicit kind now required)
+     - `managementPolicies = ["*"]` (replaces deletionPolicy)
+
+4. **Examples (examples/*.yaml)**:
+   - Changed kind from `XVPC` to `VPC`
+   - Added `namespace: default` to all resources (v2 namespaced requirement)
+
+5. **Tests (tests/*/main.k)**:
+   - Updated imports to use `awsm.ec2`
+   - Changed kind from `XVPC` to `VPC`
+   - Added namespace to test XRs
+   - Updated test-xvpc-simple with v2 assertions (providerConfigRef.kind and managementPolicies)
+
+### Migration Results:
+
+- ✅ **Build**: `up project build` succeeds
+- ✅ **All Tests Pass**: 7/7 composition tests passing
+  - test-xvpc-simple
+  - test-xvpc-subnets-public
+  - test-xvpc-subnets-private
+  - test-xvpc-subnets-database
+  - test-xvpc-subnets-elasticache
+  - test-xvpc-subnets-redshift
+  - test-xvpc-subnets-intra
+
+### Reference:
+
+See the comprehensive v2 migration guide that was provided for this migration. Key resources:
+- [Crossplane v2 Upgrade Guide](https://docs.crossplane.io/latest/guides/upgrade-to-crossplane-v2/)
+- Provider package: `xpkg.upbound.io/upbound/provider-aws-ec2:v2.3.0`
+
+---
+
 ## Phase 1: Project Foundation (P0)
 
 ### 1.1 Initialize Upbound Project Structure ✅

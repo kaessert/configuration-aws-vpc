@@ -1,14 +1,12 @@
 ---
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: xvpcs.aws.platform.upbound.io
+  name: vpcs.aws.platform.upbound.io
 spec:
+  scope: Namespaced
   group: aws.platform.upbound.io
   names:
-    kind: XVPC
-    plural: xvpcs
-  claimNames:
     kind: VPC
     plural: vpcs
   versions:

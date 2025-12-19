@@ -11,8 +11,8 @@ Tests the terraform-aws-modules/vpc "simple" example scenario:
 Spec: This validates the MINIMAL VPC test case from terraform-vpc-analysis.md
 """
 
-import models.io.upbound.aws.v1beta1 as awsv1beta1
 import models.io.upbound.awsm.v1beta1 as awsmv1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 import models.io.upbound.dev.meta.v2alpha1 as metav2alpha1
 import models.io.upbound.platform.aws.v1alpha1 as awsv1alpha1
@@ -31,9 +31,10 @@ _items = [
             # Define XR inline instead of using separate file
             xr: {
                 apiVersion: "aws.platform.upbound.io/v1alpha1"
-                kind: "XVPC"
+                kind: "VPC"
                 metadata: {
                     name: "test-vpc"
+                    namespace: "default"
                 }
                 spec: {
                     region: "us-west-2"
@@ -54,13 +55,18 @@ _items = [
             # Assert that VPC is created with correct specs
             # Spec: Basic VPC creation with CIDR block and DNS settings
             assertResources: [
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "VPC"
+                ec2v1beta1.VPC{
                     metadata: {
                         name: "vpc-test-vpc"
                     }
                     spec: {
+                        # v2: providerConfigRef requires kind field
+                        providerConfigRef: {
+                            kind: "ProviderConfig"
+                            name: "default"
+                        }
+                        # v2: managementPolicies replaces deletionPolicy
+                        managementPolicies: ["*"]
                         forProvider: {
                             # Spec: VPC should have correct CIDR block
                             cidrBlock: "10.0.0.0/16"
@@ -80,13 +86,18 @@ _items = [
                     }
                 },
                 # Spec: Public subnet 1 (us-west-2a)
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "Subnet"
+                ec2v1beta1.Subnet{
                     metadata: {
                         name: "subnet-public-test-vpc-us-west-2a"
                     }
                     spec: {
+                        # v2: providerConfigRef requires kind field
+                        providerConfigRef: {
+                            kind: "ProviderConfig"
+                            name: "default"
+                        }
+                        # v2: managementPolicies replaces deletionPolicy
+                        managementPolicies: ["*"]
                         forProvider: {
                             # Spec: Subnets should reference VPC via controller ref
                             vpcIdSelector: {
@@ -111,13 +122,18 @@ _items = [
                     }
                 },
                 # Spec: Public subnet 2 (us-west-2b)
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "Subnet"
+                ec2v1beta1.Subnet{
                     metadata: {
                         name: "subnet-public-test-vpc-us-west-2b"
                     }
                     spec: {
+                        # v2: providerConfigRef requires kind field
+                        providerConfigRef: {
+                            kind: "ProviderConfig"
+                            name: "default"
+                        }
+                        # v2: managementPolicies replaces deletionPolicy
+                        managementPolicies: ["*"]
                         forProvider: {
                             vpcIdSelector: {
                                 matchControllerRef: True

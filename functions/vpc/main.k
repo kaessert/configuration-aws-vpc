@@ -14,9 +14,11 @@ This composition function creates a complete AWS VPC with:
 The composition provides feature parity with the terraform-aws-modules/vpc module.
 """
 
-# Import AWS provider models
-import models.io.upbound.aws.v1beta1 as awsv1beta1
+# Import AWS provider models (v2 - namespaced with .m suffix)
 import models.io.upbound.awsm.v1beta1 as awsmv1beta1
+
+# Import AWS EC2 provider models (v2 - namespaced resources)
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 # Import Upbound meta models
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
@@ -48,9 +50,9 @@ _metadata = lambda name: str -> any {
     { annotations = { "krm.kcl.dev/composition-resource-name" = name }}
 }
 
-# Extract typed metadata and spec from the XR
-oxrMeta = awsv1alpha1.XVPC.metadata{**oxr.metadata}
-oxrSpec = awsv1alpha1.XVPC.spec{**oxr.spec}
+# Extract typed metadata and spec from the XR (v2 - using VPC without X prefix)
+oxrMeta = awsv1alpha1.VPC.metadata{**oxr.metadata}
+oxrSpec = awsv1alpha1.VPC.spec{**oxr.spec}
 
 # Get the VPC name from metadata
 vpcName = oxrMeta.name
@@ -70,6 +72,16 @@ oneNatGatewayPerAz = oxrSpec.oneNatGatewayPerAz if oxrSpec.oneNatGatewayPerAz !=
 # Extract DNS configuration
 enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames != None else True
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
+
+# v2 Common Spec Configuration
+# Crossplane v2 requires providerConfigRef.kind and managementPolicies
+_defaultV2Spec = {
+    providerConfigRef = {
+        kind = "ProviderConfig"
+        name = "default"
+    }
+    managementPolicies = ["*"]  # v2 replacement for deletionPolicy
+}
 
 # Extract subnet configuration
 publicSubnets = oxrSpec.publicSubnets or []
@@ -91,16 +103,14 @@ redshiftSubnetTags = oxrSpec.redshiftSubnetTags or {}
 intraSubnets = oxrSpec.intraSubnets or []
 intraSubnetTags = oxrSpec.intraSubnetTags or {}
 
-# Generate public subnets distributed across AZs
+# Generate public subnets distributed across AZs - Using typed EC2 Subnet model
 _publicSubnetResources = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "Subnet"
+    ec2v1beta1.Subnet{
         metadata = _metadata("public-subnet-${i}") | {
             name = "subnet-public-${vpcName}-${azs[i % len(azs)]}"
             labels = tags | publicSubnetTags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -119,16 +129,14 @@ _publicSubnetResources = [
     for i, subnetCidr in publicSubnets
 ] if len(publicSubnets) > 0 and len(azs) > 0 else []
 
-# Generate private subnets distributed across AZs
+# Generate private subnets distributed across AZs - Using typed EC2 Subnet model
 _privateSubnetResources = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "Subnet"
+    ec2v1beta1.Subnet{
         metadata = _metadata("private-subnet-${i}") | {
             name = "subnet-private-${vpcName}-${azs[i % len(azs)]}"
             labels = tags | privateSubnetTags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -147,16 +155,14 @@ _privateSubnetResources = [
     for i, subnetCidr in privateSubnets
 ] if len(privateSubnets) > 0 and len(azs) > 0 else []
 
-# Generate database subnets distributed across AZs
+# Generate database subnets distributed across AZs - Using typed EC2 Subnet model
 _databaseSubnetResources = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "Subnet"
+    ec2v1beta1.Subnet{
         metadata = _metadata("database-subnet-${i}") | {
             name = "subnet-database-${vpcName}-${azs[i % len(azs)]}"
             labels = tags | databaseSubnetTags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -175,16 +181,14 @@ _databaseSubnetResources = [
     for i, subnetCidr in databaseSubnets
 ] if len(databaseSubnets) > 0 and len(azs) > 0 else []
 
-# Generate elasticache subnets distributed across AZs
+# Generate elasticache subnets distributed across AZs - Using typed EC2 Subnet model
 _elasticacheSubnetResources = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "Subnet"
+    ec2v1beta1.Subnet{
         metadata = _metadata("elasticache-subnet-${i}") | {
             name = "subnet-elasticache-${vpcName}-${azs[i % len(azs)]}"
             labels = tags | elasticacheSubnetTags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -203,16 +207,14 @@ _elasticacheSubnetResources = [
     for i, subnetCidr in elasticacheSubnets
 ] if len(elasticacheSubnets) > 0 and len(azs) > 0 else []
 
-# Generate redshift subnets distributed across AZs
+# Generate redshift subnets distributed across AZs - Using typed EC2 Subnet model
 _redshiftSubnetResources = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "Subnet"
+    ec2v1beta1.Subnet{
         metadata = _metadata("redshift-subnet-${i}") | {
             name = "subnet-redshift-${vpcName}-${azs[i % len(azs)]}"
             labels = tags | redshiftSubnetTags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -231,16 +233,14 @@ _redshiftSubnetResources = [
     for i, subnetCidr in redshiftSubnets
 ] if len(redshiftSubnets) > 0 and len(azs) > 0 else []
 
-# Generate intra subnets distributed across AZs (internal subnets with no internet access)
+# Generate intra subnets distributed across AZs - Using typed EC2 Subnet model
 _intraSubnetResources = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "Subnet"
+    ec2v1beta1.Subnet{
         metadata = _metadata("intra-subnet-${i}") | {
             name = "subnet-intra-${vpcName}-${azs[i % len(azs)]}"
             labels = tags | intraSubnetTags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -259,16 +259,14 @@ _intraSubnetResources = [
     for i, subnetCidr in intraSubnets
 ] if len(intraSubnets) > 0 and len(azs) > 0 else []
 
-# Generate Internet Gateway resource (conditional)
+# Generate Internet Gateway resource (conditional) - Using typed EC2 InternetGateway model
 _igwResource = [
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "InternetGateway"
+    ec2v1beta1.InternetGateway{
         metadata = _metadata("igw") | {
             name = "igw-${vpcName}"
             labels = tags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 vpcIdSelector = {
                     matchControllerRef = True
@@ -284,15 +282,13 @@ _igwResource = [
 
 # Main composition logic - returns list of desired resources
 items = [
-    # VPC Resource
-    {
-        apiVersion = "ec2.aws.upbound.io/v1beta1"
-        kind = "VPC"
+    # VPC Resource - Using typed EC2 VPC model
+    ec2v1beta1.VPC{
         metadata = _metadata("vpc") | {
             name = "vpc-${vpcName}"
             labels = tags
         }
-        spec = {
+        spec = _defaultV2Spec | {
             forProvider = {
                 cidrBlock = cidr
                 region = region

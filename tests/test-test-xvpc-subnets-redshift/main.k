@@ -11,8 +11,8 @@ Tests redshift subnet creation from terraform-vpc-analysis.md spec:
 Spec: This validates the REDSHIFT SUBNET feature implementation
 """
 
-import models.io.upbound.aws.v1beta1 as awsv1beta1
 import models.io.upbound.awsm.v1beta1 as awsmv1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 import models.io.upbound.dev.meta.v2alpha1 as metav2alpha1
 import models.io.upbound.platform.aws.v1alpha1 as awsv1alpha1
@@ -31,9 +31,10 @@ _items = [
             # Define XR with redshift subnets across 2 AZs
             xr: {
                 apiVersion: "aws.platform.upbound.io/v1alpha1"
-                kind: "XVPC"
+                kind: "VPC"
                 metadata: {
                     name: "test-redshift-subnets"
+                    namespace: "default"
                 }
                 spec: {
                     region: "us-west-2"
@@ -53,17 +54,19 @@ _items = [
             # Spec: Assert that redshift subnets are created correctly
             assertResources: [
                 # Spec: VPC resource should exist
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "VPC"
+                ec2v1beta1.VPC{
                     metadata: {
                         name: "vpc-test-redshift-subnets"
                     }
+                    spec: {
+                        forProvider: {
+                            cidrBlock: "10.0.0.0/16"
+                            region: "us-west-2"
+                        }
+                    }
                 },
                 # Spec: Redshift subnet 1 in us-west-2a
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "Subnet"
+                ec2v1beta1.Subnet{
                     metadata: {
                         name: "subnet-redshift-test-redshift-subnets-us-west-2a"
                     }
@@ -91,9 +94,7 @@ _items = [
                     }
                 },
                 # Spec: Redshift subnet 2 in us-west-2b
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "Subnet"
+                ec2v1beta1.Subnet{
                     metadata: {
                         name: "subnet-redshift-test-redshift-subnets-us-west-2b"
                     }
