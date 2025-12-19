@@ -174,23 +174,27 @@ Build a production-ready Upbound configuration package that provides the same fu
 
 ---
 
-### 2.3 Implement Internet Gateway
+### 2.3 Implement Internet Gateway ✅
 **Priority**: P1
 **Effort**: Small
 **Description**: Create and attach Internet Gateway for public access
+**Status**: COMPLETED
 
 **Tasks**:
-- [ ] Create `functions/vpc/gateway.k` module
-- [ ] Implement IGW resource generation
-- [ ] Attach IGW to VPC
-- [ ] Make creation conditional (create_igw parameter)
+- [x] Create `functions/vpc/gateway.k` module (implemented in main.k)
+- [x] Implement IGW resource generation
+- [x] Attach IGW to VPC
+- [x] Make creation conditional (create_igw parameter)
 
 **AWS Resources**: `ec2.aws.upbound.io/v1beta1/InternetGateway`
 
 **Acceptance Criteria**:
-- IGW created when public subnets exist
-- Properly attached to VPC
-- Conditional creation works
+- ✅ IGW created when createIgw is enabled
+- ✅ Properly attached to VPC using vpcIdSelector
+- ✅ Conditional creation works
+- ✅ Tests pass
+
+**Notes**: IGW implemented inline in main.k. Uses vpcIdSelector for automatic VPC attachment. Conditionally created based on createIgw parameter (default: true).
 
 ---
 
