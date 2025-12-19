@@ -285,27 +285,27 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 
 ---
 
-### 2.3.1 Write Composition Tests for Internet Gateway (Catch-Up Testing)
+### 2.3.1 Write Composition Tests for Internet Gateway (Catch-Up Testing) ✅
 **Priority**: P1 (BLOCKING)
 **Effort**: Small
 **Description**: Write comprehensive tests for IGW (feature already implemented in 2.3)
 **Dependencies**: Task 2.3 ✅ COMPLETED
-**Status**: PENDING
+**Status**: ✅ COMPLETED
 
 **Note**: Task 2.3 already implemented IGW WITHOUT tests. This task adds missing test coverage.
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-igw-enabled --language=kcl`
-- [ ] Write test: IGW created when createIgw: true
+- [x] Generate test: `up test generate test-xvpc-igw-enabled --language=kcl`
+- [x] Write test: IGW created when createIgw: true
   - Assert 1 InternetGateway resource
   - Assert vpcIdSelector.matchControllerRef: true
   - Assert correct tags
-- [ ] Generate test: `up test generate test-xvpc-igw-disabled --language=kcl`
-- [ ] Write test: NO IGW when createIgw: false
+- [x] Generate test: `up test generate test-xvpc-igw-disabled --language=kcl`
+- [x] Write test: NO IGW when createIgw: false
   - Assert 0 InternetGateway resources
-- [ ] Run tests: `up test run tests/test-xvpc-igw-*`
-- [ ] **Expected: ALL PASS (feature already implemented)**
-- [ ] Fix any issues found by tests
+- [x] Run tests: `up test run tests/test-xvpc-igw-*`
+- [x] **Expected: ALL PASS (feature already implemented)**
+- [x] Fix any issues found by tests
 
 **Reference**:
 - functions/vpc/main.k (existing IGW implementation)
@@ -316,6 +316,8 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 - ✅ Tests validate conditional creation
 - ✅ Tests validate VPC attachment via selector
 - ✅ ALL tests PASS (feature already implemented)
+
+**Results**: Both tests passing. All 9 composition tests passing. No regressions.
 
 **Going Forward**: For NEW features (2.4+), write tests FIRST (proper TDD)
 
