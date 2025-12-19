@@ -56,7 +56,14 @@
       "Bash(up space list --help:*)",
       "Bash(up profile:*)",
       "Bash(up group list:*)",
-      "Bash(up controlplane list:*)"
+      "Bash(up controlplane list:*)",
+      "Bash(up controlplane delete:*)",
+      "Bash(up group create:*)",
+      "Bash(tree:*)",
+      "Bash(wc:*)",
+      "Bash(kubectl api-resources:*)",
+      "Bash(kubectl describe:*)",
+      "Bash(kubectl apply:*)"
     ]
   }
 }
