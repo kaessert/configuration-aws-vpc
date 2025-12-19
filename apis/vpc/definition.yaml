@@ -292,6 +292,12 @@ spec:
                   additionalProperties:
                     type: string
 
+                intraSubnetTags:
+                  type: object
+                  description: Additional tags for intra subnets
+                  additionalProperties:
+                    type: string
+
                 vpcEndpointTags:
                   type: object
                   description: Additional tags for VPC endpoints

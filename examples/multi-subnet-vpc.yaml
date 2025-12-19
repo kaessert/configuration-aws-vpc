@@ -1,0 +1,86 @@
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: XVPC
+metadata:
+  name: multi-subnet-vpc
+spec:
+  # Core configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  azs:
+    - us-west-2a
+    - us-west-2b
+    - us-west-2c
+
+  # Public subnets - for resources that need direct internet access
+  publicSubnets:
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+    - 10.0.3.0/24
+
+  # Private subnets - for application servers with NAT Gateway access
+  privateSubnets:
+    - 10.0.11.0/24
+    - 10.0.12.0/24
+    - 10.0.13.0/24
+
+  # Database subnets - isolated subnets for databases
+  databaseSubnets:
+    - 10.0.21.0/24
+    - 10.0.22.0/24
+    - 10.0.23.0/24
+
+  # ElastiCache subnets - for Redis/Memcached clusters
+  elasticacheSubnets:
+    - 10.0.31.0/24
+    - 10.0.32.0/24
+    - 10.0.33.0/24
+
+  # Redshift subnets - for data warehouse clusters
+  redshiftSubnets:
+    - 10.0.41.0/24
+    - 10.0.42.0/24
+    - 10.0.43.0/24
+
+  # Intra subnets - completely isolated, no internet access
+  intraSubnets:
+    - 10.0.51.0/24
+    - 10.0.52.0/24
+    - 10.0.53.0/24
+
+  # Gateway configuration
+  createIgw: true
+  enableNatGateway: false  # Set to true when implementing NAT Gateway
+
+  # DNS configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+
+  # Tagging
+  tags:
+    Environment: development
+    ManagedBy: upbound
+    Project: multi-subnet-example
+
+  publicSubnetTags:
+    SubnetType: public
+    Tier: dmz
+
+  privateSubnetTags:
+    SubnetType: private
+    Tier: application
+
+  databaseSubnetTags:
+    SubnetType: database
+    Tier: data
+
+  elasticacheSubnetTags:
+    SubnetType: elasticache
+    Tier: cache
+
+  redshiftSubnetTags:
+    SubnetType: redshift
+    Tier: analytics
+
+  intraSubnetTags:
+    SubnetType: intra
+    Tier: isolated
