@@ -418,43 +418,43 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 
 ---
 
-### 2.5.1 Write Composition Tests for Route Tables (TEST FIRST)
+### 2.5.1 Write Composition Tests for Route Tables (TEST FIRST) ✅
 **Priority**: P1 (BLOCKING - MUST DO BEFORE 2.5)
 **Effort**: Large
 **Description**: **🔴 RED** - Write comprehensive tests for routing BEFORE implementation
 **Dependencies**: Tasks 2.4 (NAT Gateway implemented)
-**Status**: PENDING
+**Status**: ✅ COMPLETED
 
 **TDD Workflow**: This is the RED phase - tests MUST FAIL until 2.5 is implemented
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-routes-public --language=kcl`
-- [ ] Write test: Public route table
+- [x] Generate test: `up test generate test-xvpc-routes-public --language=kcl`
+- [x] Write test: Public route table
   - Assert 1 RouteTable for public subnets
   - Assert 1 Route with destination 0.0.0.0/0 → IGW
   - Assert RouteTableAssociations for all public subnets
   - Assert correct tags
-- [ ] Generate test: `up test generate test-xvpc-routes-private-single-nat --language=kcl`
-- [ ] Write test: Private routing with single NAT
+- [x] Generate test: `up test generate test-xvpc-routes-private-single-nat --language=kcl`
+- [x] Write test: Private routing with single NAT
   - Assert 1 RouteTable for private subnets (shared)
   - Assert 1 Route with destination 0.0.0.0/0 → NAT Gateway
   - Assert RouteTableAssociations for all private subnets
-- [ ] Generate test: `up test generate test-xvpc-routes-private-per-az --language=kcl`
-- [ ] Write test: Private routing with NAT per AZ
+- [x] Generate test: `up test generate test-xvpc-routes-private-per-az --language=kcl`
+- [x] Write test: Private routing with NAT per AZ
   - Assert N RouteTables (one per AZ)
   - Assert N Routes (each to its AZ's NAT)
   - Assert correct subnet-to-route-table associations
-- [ ] Generate test: `up test generate test-xvpc-routes-isolated --language=kcl`
-- [ ] Write test: Isolated subnets (intra, database without NAT)
+- [x] Generate test: `up test generate test-xvpc-routes-isolated --language=kcl`
+- [x] Write test: Isolated subnets (intra, database without NAT)
   - Assert RouteTable exists
   - Assert NO routes to IGW or NAT
   - Assert only local VPC route
-- [ ] Generate test: `up test generate test-xvpc-routes-database-with-nat --language=kcl`
-- [ ] Write test: Database subnets with NAT access
+- [x] Generate test: `up test generate test-xvpc-routes-database-with-nat --language=kcl`
+- [x] Write test: Database subnets with NAT access
   - Assert separate RouteTable for database subnets
   - Assert route to NAT Gateway
-- [ ] Run tests: `up test run tests/test-xvpc-routes-*`
-- [ ] **MUST SEE: ALL FAIL (routing not implemented yet - correct RED phase)**
+- [x] Run tests: `up test run tests/test-xvpc-routes-*`
+- [x] **Tests failed as expected (routing not implemented yet - correct RED phase)**
 
 **Reference**:
 - thoughts/TDD_STRATEGY.md (RED phase)
@@ -467,43 +467,43 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 - ✅ Tests validate route table associations
 - ✅ Tests validate per-AZ routing strategy
 - ✅ Tests validate isolated subnet routing
-- ✅ Tests MUST FAIL (proves test correctness - feature not implemented)
+- ✅ Tests initially failed (proved test correctness - feature not implemented)
 
-**IMPORTANT**: DO NOT implement routing yet. Only write tests.
+**Results**: All 5 routing tests created and initially failing (correct RED phase).
 
 ---
 
-### 2.5 Implement Route Tables and Routes (GREEN)
+### 2.5 Implement Route Tables and Routes (GREEN) ✅
 **Priority**: P1
 **Effort**: Large
 **Description**: **🟢 GREEN** - Implement routing to pass tests from 2.5.1
 **Dependencies**: Task 2.5.1 (tests written and failing)
-**Status**: PENDING
+**Status**: ✅ COMPLETED
 
 **TDD Workflow**: This is the GREEN phase - make failing tests pass
 
 **Tasks**:
-- [ ] Create `functions/vpc/route.k` module (or implement in main.k)
-- [ ] Implement _generatePublicRouteTable() function
+- [x] Implemented inline in main.k (no separate route.k module needed)
+- [x] Implemented public route table generation
   - Create RouteTable for public subnets
   - Create Route with 0.0.0.0/0 → IGW
   - Create RouteTableAssociations for public subnets
-- [ ] Implement _generatePrivateRouteTables() function
+- [x] Implemented private route table generation
   - Support single NAT strategy (1 route table, shared)
   - Support NAT per AZ strategy (N route tables)
   - Create Routes with 0.0.0.0/0 → appropriate NAT
   - Create RouteTableAssociations for private subnets
-- [ ] Implement _generateDatabaseRouteTables() function
+- [x] Implemented database route table generation
   - Create separate route table when createDatabaseSubnetRouteTable: true
   - Optionally route to NAT (createDatabaseNatGatewayRoute: true)
-- [ ] Implement _generateIsolatedRouteTables() function
+- [x] Implemented intra/isolated route table generation
   - Create route tables for intra/isolated subnets
   - NO routes to IGW or NAT (local VPC only)
-- [ ] Update main.k to include all route table resources
-- [ ] Run tests: `up test run tests/test-xvpc-routes-*`
-- [ ] **Expected: ALL PASS**
-- [ ] Run all tests: `up test run tests/test-*`
-- [ ] **Expected: ALL PASS (no regressions)**
+- [x] Updated main.k to include all route table resources
+- [x] Run tests: `up test run tests/test-xvpc-routes-*`
+- [x] **Result: ALL PASS** ✅ 5/5 routing tests passing
+- [x] Run all tests: `up test run tests/test-*`
+- [x] **Result: ALL PASS (no regressions)** ✅ 17/17 tests passing
 
 **AWS Resources**:
 - `ec2.aws.upbound.io/v1beta1/RouteTable`
@@ -518,6 +518,22 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 - ✅ All route table associations correct
 - ✅ All tests pass (including new routing tests)
 - ✅ No regressions in existing tests
+
+**Implementation Notes**:
+- All routing logic implemented inline in functions/vpc/main.k
+- Added subnet labels (subnet-type, az) for route table associations
+- Route tables use label selectors for VPC attachment
+- Routes use label selectors for route table and gateway attachment
+- Conditional creation based on subnet types and NAT configuration
+- All route table types properly tagged for identification
+
+**Test Results**:
+- ✅ test-xvpc-routes-public - Public subnets routing via IGW
+- ✅ test-xvpc-routes-private-single-nat - Private subnets with single NAT
+- ✅ test-xvpc-routes-private-per-az - Private subnets with NAT per AZ
+- ✅ test-xvpc-routes-isolated - Isolated subnets (no external routes)
+- ✅ test-xvpc-routes-database-nat - Database subnets with optional NAT
+- ✅ All 17 composition tests passing (no regressions)
 
 **Reference**:
 - thoughts/ARCHITECTURE.md (module design)
