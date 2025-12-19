@@ -1,0 +1,19 @@
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: XVPC
+metadata:
+  name: test-vpc
+spec:
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  azs:
+    - us-west-2a
+    - us-west-2b
+  publicSubnets:
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+  mapPublicIpOnLaunch: true
+  tags:
+    Environment: test
+    ManagedBy: upbound
+  publicSubnetTags:
+    Tier: public

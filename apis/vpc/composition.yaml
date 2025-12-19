@@ -10,14 +10,4 @@ spec:
   pipeline:
   - functionRef:
       name: solutions-configuration-aws-vpcvpc
-    step: vpc
-  - functionRef:
-      name: function-kcl
-    input:
-      apiVersion: krm.kcl.dev/v1alpha1
-      kind: KCLInput
-      metadata:
-        name: vpc-composition
-      spec:
-        source: oci://ghcr.io/upbound/configuration-aws-vpc/functions-vpc:latest
     step: vpc-resources
