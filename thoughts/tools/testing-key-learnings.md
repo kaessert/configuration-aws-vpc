@@ -201,11 +201,54 @@ You don't need to specify ALL fields - only the ones you want to assert:
 - Runs in minutes
 - Use for final validation before release
 
+## E2E Test Control Plane Configuration
+
+### ALWAYS Use Dedicated Control Plane Group
+
+**CRITICAL**: E2E tests should NEVER run on production control plane groups!
+
+```bash
+# ✅ CORRECT - Dedicated test group
+up test run tests/e2etest-* --e2e --control-plane-group=test-cplanes
+
+# ❌ WRONG - Uses current context (might be production!)
+up test run tests/e2etest-* --e2e
+```
+
+### How to Check Current Context
+
+```bash
+# View current context and control plane group
+up ctx .
+
+# Output shows:
+# Upbound <org>/<control-plane-group>/<control-plane>/<space>
+# Example: Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
+```
+
+### Available Flags
+
+- `--control-plane-group=STRING` - Specify control plane group for tests
+- `--control-plane-name-prefix=STRING` - Prefix for control plane name
+- `--skip-control-plane-cleanup` - Keep control plane for debugging
+- `--organization=STRING` - Override organization
+
+See `thoughts/tools/e2e-test-control-plane-setup.md` for complete documentation.
+
 ## Summary
 
+### Composition Tests
 - ✅ Always use FULL resource definitions in `assertResources`
 - ✅ Always specify `metadata.name` that matches generated names
 - ✅ Use `up composition render` to find correct resource names
 - ✅ Partial field matching is supported - only assert what matters
 - ❌ Never use a fake "assert" field - it doesn't exist
 - ❌ Don't leave metadata.name empty or the test will fail
+
+### E2E Tests
+- ✅ ALWAYS specify `--control-plane-group=test-cplanes` for E2E tests
+- ✅ Use IAM roles with `assumeRoleChain`, never static credentials
+- ✅ Set realistic timeouts (1800s for creation, 600s for cleanup)
+- ✅ Tests create temporary control planes automatically
+- ✅ Control planes are cleaned up after test (unless `--skip-control-plane-cleanup`)
+- ❌ NEVER run E2E tests on production control plane groups
