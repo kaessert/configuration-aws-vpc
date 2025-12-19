@@ -2,6 +2,31 @@
 
 Welcome! This document provides instructions for Claude Code (or any coding agent) working on this project.
 
+---
+
+## 🚨 CRITICAL PRIORITY CHANGE - READ FIRST 🚨
+
+**EFFECTIVE IMMEDIATELY**: E2E (End-to-End) tests are now **MANDATORY** for ALL features.
+
+### What Changed:
+- **OLD**: E2E tests were optional, mainly for "critical features"
+- **NEW**: E2E tests are MANDATORY before marking ANY feature complete
+
+### Why:
+- Composition tests validate KCL logic only
+- E2E tests validate actual AWS behavior
+- Without E2E validation, we risk shipping broken features
+- We discovered features may pass composition tests but fail in real AWS
+
+### Action Required:
+1. **STOP ALL NEW WORK** - Complete Task 0.1 first (add E2E tests for tasks 2.1-2.5)
+2. **NEW WORKFLOW**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+3. **BEFORE COMMIT**: ALL composition tests + ALL E2E tests MUST pass
+
+See `thoughts/tasks.md` for the new critical task (0.1) that blocks all other work.
+
+---
+
 ## Project Overview
 
 **Goal**: Build an Upbound control plane configuration that provides feature parity with the popular [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module.
@@ -106,7 +131,7 @@ up project stop
 
 **For EVERY new feature**, follow this workflow:
 
-1. **🔴 RED Phase - Write Test FIRST**
+1. **🔴 RED Phase - Write Composition Test FIRST**
    ```bash
    # Generate test
    up test generate test-xvpc-<feature> --language=kcl
@@ -144,34 +169,65 @@ up project stop
    # ✅ ALL PASS
    ```
 
-4. **✅ COMMIT Phase - Only When Green**
+4. **🧪 E2E TEST Phase - MANDATORY Real AWS Validation**
    ```bash
-   # Final checks
+   # Generate E2E test (MANDATORY for ALL major features)
+   up test generate e2etest-xvpc-<feature> --e2e --language=kcl
+
+   # Edit test: tests/e2etest-xvpc-<feature>/main.k
+   # Configure:
+   # - ProviderConfig with IAM role: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
+   # - Use assumeRoleChain (NEVER static credentials)
+   # - Set timeout: 1800-3000 seconds (30-50 minutes)
+   # - Set skipDelete: false (ensure cleanup)
+   # - Set validate: true
+   # - Add defaultConditions: ["Ready", "Synced"]
+
+   # Run E2E test (requires up login)
+   up login
+   up test run tests/e2etest-xvpc-<feature> --e2e
+   # Wait 30+ minutes for AWS resource creation
+   # ✅ PASS - Resources created, reached Ready/Synced, cleaned up
+
+   # CRITICAL: Do NOT skip this step!
+   # E2E tests are MANDATORY for ALL features
+   ```
+
+5. **✅ COMMIT Phase - Only When ALL Tests Pass**
+   ```bash
+   # Final checks - EVERYTHING must be green
    up project build              # ✅ MUST pass
-   up test run tests/test-*      # ✅ ALL MUST pass
+   up test run tests/test-*      # ✅ ALL composition tests MUST pass
+   up test run tests/e2etest-* --e2e  # ✅ ALL E2E tests MUST pass
    # If ANY test fails: DO NOT COMMIT - fix tests first!
 
    # Only commit when everything is green
-   # Commit
    git add .
    git commit -m "feat: implement <feature>
 
 - Add composition test for <feature>
 - Implement <feature> in functions/vpc/
-- All tests passing
+- Add E2E test validating real AWS behavior
+- All tests passing (17 composition + N E2E)
 "
    ```
 
+**CRITICAL**: E2E tests are NOW MANDATORY. A feature is NOT complete until it's validated in real AWS.
+
 ### Before Committing (CRITICAL CHECKS)
 
-1. **✅ ALL tests pass** - Run `up test run tests/test-*`
-2. **✅ Project builds** - Run `up project build`
-3. **✅ No regressions** - All existing tests still pass
-4. **Update documentation** - If you changed behavior, update docs
-5. **Update tasks.md** - Mark tasks complete, add new ones if needed
-6. **Use conventional commits** - feat:, fix:, docs:, test:, etc.
+1. **✅ ALL composition tests pass** - Run `up test run tests/test-*`
+2. **✅ ALL E2E tests pass** - Run `up test run tests/e2etest-* --e2e` (MANDATORY)
+3. **✅ Project builds** - Run `up project build`
+4. **✅ No regressions** - All existing tests still pass
+5. **✅ AWS cleanup verified** - No orphaned resources after E2E tests
+6. **Update documentation** - If you changed behavior, update docs
+7. **Update tasks.md** - Mark tasks complete, add new ones if needed
+8. **Use conventional commits** - feat:, fix:, docs:, test:, etc.
 
-**NEVER commit if tests fail. Fix tests first.**
+**NEVER commit if ANY test fails (composition OR E2E). Fix tests first.**
+
+**CRITICAL**: E2E tests are NO LONGER optional. Every feature must pass E2E validation before it's considered complete.
 
 ## Key Files to Know
 
@@ -322,20 +378,23 @@ functions/vpc/
 
 ## Testing Strategy (CRITICAL - TEST-DRIVEN DEVELOPMENT)
 
-**MANDATORY**: This project follows **strict Test-Driven Development (TDD)**
+**MANDATORY**: This project follows **strict Test-Driven Development (TDD)** with **MANDATORY E2E validation**
 
-### The Iron Rule: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT
+### The Iron Rule: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-1. **🔴 RED**: Write test FIRST (test MUST fail)
+1. **🔴 RED**: Write composition test FIRST (test MUST fail)
 2. **🟢 GREEN**: Write minimum code to pass test
 3. **🔵 REFACTOR**: Improve code while keeping tests green
-4. **✅ COMMIT**: Only commit when ALL tests pass
+4. **🧪 E2E TEST**: Write and pass E2E test (MANDATORY)
+5. **✅ COMMIT**: Only commit when ALL tests pass (composition + E2E)
 
 ### NEVER:
 - ❌ Write code before tests
 - ❌ Commit failing tests
 - ❌ Skip tests for "simple" features
 - ❌ Write tests after implementation
+- ❌ Skip E2E tests - they are MANDATORY
+- ❌ Mark a feature "complete" without E2E validation
 
 ### Test Levels:
 
@@ -345,11 +404,12 @@ functions/vpc/
    - 100% feature coverage
    - Run: `up test run tests/test-*`
 
-2. **E2E Tests** - FEW
+2. **E2E Tests** - MANDATORY FOR ALL FEATURES
    - Slow (10-30 minutes)
    - Real AWS resources
-   - Critical paths only
+   - **MANDATORY** - Required for ALL major features
    - Run: `up test run tests/e2etest-* --e2e`
+   - **CRITICAL**: Composition tests validate KCL logic, E2E tests validate real AWS behavior
 
 ### Read These First:
 - **[thoughts/TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md)** - Complete TDD workflow

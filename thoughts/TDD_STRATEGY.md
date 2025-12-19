@@ -7,13 +7,16 @@ This project follows **strict Test-Driven Development (TDD)** practices. Tests a
 ## Core TDD Principle
 
 ```
-🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT
+🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 ```
 
-1. **🔴 RED**: Write a failing test
+1. **🔴 RED**: Write a failing composition test
 2. **🟢 GREEN**: Write minimum code to pass
 3. **🔵 REFACTOR**: Improve code while keeping tests green
-4. **✅ COMMIT**: Only commit when all tests pass
+4. **🧪 E2E TEST**: Write and pass E2E test (MANDATORY)
+5. **✅ COMMIT**: Only commit when ALL tests pass (composition + E2E)
+
+**CRITICAL CHANGE**: E2E tests are now MANDATORY before marking ANY feature as complete. A feature is NOT done until it's validated in real AWS.
 
 ## Why TDD for This Project?
 
@@ -101,7 +104,7 @@ up test run tests/test-*
 
 **When to Write**: After implementing related features
 
-### Level 3: E2E Tests - FEW TESTS
+### Level 3: E2E Tests - MANDATORY FOR ALL FEATURES
 
 **Purpose**: Validate in real AWS environment
 
@@ -110,8 +113,11 @@ up test run tests/test-*
 - 💰 Expensive (real AWS resources)
 - 🌐 Complete (full lifecycle)
 - ✅ Final validation
+- ⚠️ **MANDATORY** - Required before marking feature complete
 
-**When to Write**: After composition tests pass, for critical scenarios
+**When to Write**: **MANDATORY** - After composition tests pass, for ALL major features
+
+**CRITICAL**: E2E tests are NO LONGER optional. Every significant feature (VPC, subnets, NAT, routing, etc.) MUST have E2E test coverage. Composition tests validate KCL logic, but E2E tests validate real AWS behavior.
 
 **Example**:
 ```bash
@@ -280,42 +286,62 @@ up test run tests/test-*
 # Tests must stay green during refactoring
 ```
 
-#### Step 8: Commit (Only When Green)
+#### Step 8: Write E2E Test (MANDATORY)
 
 ```bash
-# Final check
-up project build                  # ✅ Must pass
-up test run tests/test-*          # ✅ All must pass
+# For ALL major features (VPC, subnets, NAT, routing, etc.):
+up test generate e2etest-xvpc-<feature> --e2e --language=kcl
 
-# Commit
+# Edit: tests/e2etest-xvpc-<feature>/main.k
+# - Use real AWS resources
+# - Set realistic timeout (1800-3000 seconds / 30-50 minutes)
+# - Add ProviderConfig with IAM role: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
+# - Use assumeRoleChain (NEVER static credentials)
+# - Set skipDelete: false (ensure cleanup)
+# - Set validate: true
+# - Add defaultConditions: ["Ready", "Synced"]
+
+# Run locally (requires up login)
+up login
+up test run tests/e2etest-xvpc-<feature> --e2e
+
+# Or in CI with label: "run-e2e-tests"
+# Wait for test to complete (may take 30+ minutes)
+# Verify:
+# ✅ Resources created in AWS
+# ✅ Resources reach Ready/Synced state
+# ✅ Resources cleaned up after test
+```
+
+**CRITICAL**: Do NOT skip this step. E2E tests are MANDATORY.
+
+#### Step 9: Commit (Only When ALL Tests Pass)
+
+```bash
+# Final check - ALL tests must pass
+up project build                          # ✅ Must pass
+up test run tests/test-*                  # ✅ All composition tests must pass
+up test run tests/e2etest-xvpc-<feature> --e2e  # ✅ E2E test must pass
+
+# Only commit when EVERYTHING is green
 git add .
 git commit -m "feat: implement <feature>
 
 - Add composition test for <feature>
-- Implement <feature> in functions/vpc/<module>.k
-- All tests passing
+- Implement <feature> in functions/vpc/
+- Add E2E test validating real AWS behavior
+- All tests passing (17 composition + 1 E2E)
 "
 
 git push
 ```
 
-#### Step 9: Write E2E Test (Critical Features Only)
-
-```bash
-# For critical features (NAT, routing, complete VPC):
-up test generate e2etest-xvpc-<feature> --e2e --language=kcl
-
-# Edit: tests/e2etest-xvpc-<feature>/main.k
-# - Use real AWS resources
-# - Set realistic timeout (1800 seconds)
-# - Add ProviderConfig with IAM role
-# - Set skipDelete: False
-
-# Run locally (requires up login)
-up test run tests/e2etest-xvpc-<feature> --e2e
-
-# Or in CI with label: "run-e2e-tests"
-```
+**MANDATORY CHECKS BEFORE COMMIT**:
+- ✅ Project builds: `up project build`
+- ✅ All composition tests pass: `up test run tests/test-*`
+- ✅ E2E test passes: `up test run tests/e2etest-* --e2e`
+- ✅ No AWS resources orphaned (verify cleanup)
+- ✅ Documentation updated
 
 ## Test Organization
 

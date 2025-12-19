@@ -26,9 +26,109 @@ For EVERY feature:
 1. **🔴 RED**: Write composition test FIRST (test should fail)
 2. **🟢 GREEN**: Implement minimum code to pass test
 3. **🔵 REFACTOR**: Improve code while keeping tests green
-4. **✅ COMMIT**: Only commit when ALL tests pass
+4. **🧪 E2E TEST**: Write and pass E2E test (MANDATORY for major features)
+5. **✅ COMMIT**: Only commit when ALL tests pass (composition + E2E)
+
+**CRITICAL**: E2E tests are now MANDATORY before marking ANY task as complete. No task is done until E2E tests validate it in real AWS.
 
 **Read**: [thoughts/TDD_STRATEGY.md](TDD_STRATEGY.md) and [thoughts/ARCHITECTURE.md](ARCHITECTURE.md)
+
+---
+
+## 🚨 CRITICAL HIGHEST PRIORITY TASK 🚨
+
+### 0.1 Add E2E Tests for Implemented Features (BLOCKING ALL WORK)
+**Priority**: P0 - CRITICAL BLOCKER
+**Effort**: Large
+**Description**: **MANDATORY** - Create comprehensive E2E tests for all features implemented so far (2.1-2.5)
+**Status**: 🔴 BLOCKING - MUST COMPLETE BEFORE ANY NEW WORK
+
+⚠️ **THIS IS A BLOCKER**: No new features or tasks should be started until E2E tests exist and pass for ALL currently implemented features.
+
+**Why This Is Critical**:
+- Composition tests validate KCL logic, but DON'T validate real AWS behavior
+- We need confidence that our implementation actually works in production
+- E2E tests catch integration issues that composition tests miss
+- Without E2E validation, we risk building on a broken foundation
+
+**Tasks**:
+- [ ] **E2E Test 1: Basic VPC with Public Subnets and IGW**
+  - Generate: `up test generate e2etest-xvpc-basic --e2e --language=kcl`
+  - Test VPC creation (task 2.1)
+  - Test public subnets across multiple AZs (task 2.2)
+  - Test Internet Gateway attachment (task 2.3)
+  - Verify resources reach Ready/Synced state
+  - Verify resource cleanup
+
+- [ ] **E2E Test 2: VPC with NAT Gateway (Single)**
+  - Generate: `up test generate e2etest-xvpc-nat-single --e2e --language=kcl`
+  - Test single NAT Gateway strategy (task 2.4)
+  - Test EIP allocation
+  - Test NAT placement in public subnet
+  - Verify routing to NAT works (task 2.5)
+
+- [ ] **E2E Test 3: VPC with NAT Gateway (Per-AZ)**
+  - Generate: `up test generate e2etest-xvpc-nat-per-az --e2e --language=kcl`
+  - Test one NAT per AZ strategy (task 2.4)
+  - Test multiple EIP allocations
+  - Test NATs distributed across AZs
+  - Verify per-AZ routing (task 2.5)
+
+- [ ] **E2E Test 4: Complete VPC with All Subnet Types**
+  - Generate: `up test generate e2etest-xvpc-complete --e2e --language=kcl`
+  - Test all 6 subnet types: public, private, database, elasticache, redshift, intra
+  - Test isolated routing (intra subnets)
+  - Test database subnet routing with/without NAT
+  - Verify all route tables and associations
+
+- [ ] **Configure All E2E Tests Properly**
+  - Add ProviderConfig with IAM role: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
+  - Use assumeRoleChain (NEVER static credentials)
+  - Set realistic timeouts (1800-3000 seconds / 30-50 minutes)
+  - Add defaultConditions: ["Ready", "Synced"]
+  - Set skipDelete: false (ensure cleanup)
+  - Set validate: true
+
+- [ ] **Run All E2E Tests Locally**
+  - Login: `up login`
+  - Run: `up test run tests/e2etest-* --e2e`
+  - Verify each test creates real AWS resources
+  - Verify resources reach Ready/Synced states
+  - Verify resources are cleaned up after tests
+  - Fix any failures
+
+- [ ] **Verify E2E Tests in CI**
+  - Ensure `.github/workflows/e2e.yaml` exists
+  - Test CI workflow with label: "run-e2e-tests"
+  - Verify tests pass in CI environment
+
+- [ ] **Document E2E Testing Requirements**
+  - Update TESTING.md with E2E test guidelines
+  - Document IAM role requirements
+  - Document timeout recommendations
+  - Document cleanup verification steps
+
+**Reference**:
+- thoughts/tools/testing-guide.md (E2E test patterns)
+- thoughts/tools/testing-notes-platform-ref.md (platform-ref examples)
+- thoughts/TDD_STRATEGY.md (updated with E2E requirements)
+
+**Acceptance Criteria**:
+- ✅ ALL 4 E2E tests exist and pass locally
+- ✅ Each test creates real AWS resources
+- ✅ All resources reach Ready/Synced conditions
+- ✅ Resources are properly cleaned up (no orphans)
+- ✅ Tests use IAM role (no static credentials)
+- ✅ Tests pass in CI with proper secrets
+- ✅ Total E2E test time < 60 minutes
+- ✅ Documentation updated
+
+**Estimated Time**: 1-2 days
+
+**IMPORTANT**:
+- ⛔ DO NOT start Phase 3 tasks until this is complete
+- ⛔ DO NOT mark tasks 2.1-2.5 as "truly complete" until E2E tests pass
+- ⚠️ E2E tests are now part of the definition of "done" for ALL features
 
 ---
 
@@ -542,34 +642,20 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 
 ---
 
-### 2.5.2 Add E2E Test for Core VPC
+### 2.5.2 Add E2E Test for Core VPC (SUPERSEDED BY TASK 0.1)
 **Priority**: P1
 **Effort**: Medium
-**Description**: Create E2E test validating complete VPC with real AWS resources
+**Description**: ~~Create E2E test validating complete VPC with real AWS resources~~
 **Dependencies**: Tasks 2.1-2.5
+**Status**: ⚠️ SUPERSEDED - See Task 0.1 for comprehensive E2E testing
 
-**Tasks**:
-- [ ] Generate test: `up test generate e2etest-xvpc-basic --e2e --language=kcl`
-- [ ] Configure test with VPC, public subnets, IGW
-- [ ] Add ProviderConfig to extraResources with IAM role: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
-- [ ] IMPORTANT: Use assumeRoleChain, NEVER static credentials
-- [ ] Set realistic timeout (1800 seconds / 30 minutes)
-- [ ] Add defaultConditions: ["Ready", "Synced"]
-- [ ] Test locally (requires `up login`): `up test run tests/e2etest-xvpc-basic --e2e`
-- [ ] Verify resources created in AWS
-- [ ] Verify resources cleaned up after test
-- [ ] Document E2E test requirements in test README
+**⚠️ NOTE**: This task has been superseded by the new critical task 0.1, which includes this test plus additional E2E tests for NAT Gateway and complete VPC scenarios. Please complete Task 0.1 instead.
 
-**Reference**: thoughts/tools/testing-notes-platform-ref.md, thoughts/tools/testing-guide.md
-
-**Acceptance Criteria**:
-- E2E test creates real VPC in AWS
-- All resources reach Ready/Synced conditions
-- Resources are properly cleaned up
-- Test uses IAM role (no static credentials)
-- Test can run in CI with proper secrets
-
-**Important**: Run E2E tests on Upbound Cloud for validation
+**Original scope now covered by Task 0.1**:
+- E2E Test 1: Basic VPC with public subnets and IGW (this task)
+- E2E Test 2: VPC with single NAT Gateway
+- E2E Test 3: VPC with NAT per AZ
+- E2E Test 4: Complete VPC with all subnet types
 
 ---
 

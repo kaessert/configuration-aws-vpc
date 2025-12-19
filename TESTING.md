@@ -18,9 +18,9 @@ up test run tests/e2etest-xvpc-basic --e2e
 
 ## The Golden Rule
 
-**🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT**
+**🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT**
 
-Never write code before tests. Never commit failing tests.
+Never write code before tests. Never commit failing tests. **E2E tests are MANDATORY for all features.**
 
 ## Test-Driven Development Workflow
 
@@ -79,16 +79,47 @@ up test run tests/test-*
 
 **Expected**: ✅ ALL PASS (always)
 
-#### 4. ✅ COMMIT - Only When Green
+#### 4. 🧪 E2E TEST - MANDATORY Real AWS Validation
 
 ```bash
-# Final checks
-up project build
-up test run tests/test-*
+# Generate E2E test (MANDATORY for ALL major features)
+up test generate e2etest-xvpc-<feature> --e2e --language=kcl
 
-# Commit only if everything passes
+# Edit test: tests/e2etest-xvpc-<feature>/main.k
+# Configure:
+# - ProviderConfig with IAM role: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
+# - Use assumeRoleChain (NEVER static credentials)
+# - Set timeout: 1800-3000 seconds (30-50 minutes)
+# - Set skipDelete: false (ensure cleanup)
+# - Set validate: true
+# - Add defaultConditions: ["Ready", "Synced"]
+
+# Run E2E test (requires up login)
+up login
+up test run tests/e2etest-xvpc-<feature> --e2e
+```
+
+**Expected**: ✅ PASS (resources created, reach Ready/Synced, cleaned up)
+
+**CRITICAL**: Do NOT skip this step. E2E tests are MANDATORY.
+
+#### 5. ✅ COMMIT - Only When ALL Tests Pass
+
+```bash
+# Final checks - EVERYTHING must pass
+up project build
+up test run tests/test-*                    # Composition tests
+up test run tests/e2etest-* --e2e           # E2E tests
+
+# Commit only if EVERYTHING passes
 git add .
-git commit -m "feat: implement <feature>"
+git commit -m "feat: implement <feature>
+
+- Add composition test for <feature>
+- Implement <feature> in functions/vpc/
+- Add E2E test validating real AWS behavior
+- All tests passing
+"
 ```
 
 ## Test Types
@@ -140,7 +171,7 @@ metav1alpha1.CompositionTest{
 }
 ```
 
-### E2E Tests
+### E2E Tests - MANDATORY FOR ALL FEATURES
 
 **Purpose**: Validate behavior with real AWS resources
 
@@ -148,7 +179,9 @@ metav1alpha1.CompositionTest{
 - 🐌 Slow (10-30 minutes)
 - 💰 Expensive (real AWS resources)
 - 🌐 Complete (full lifecycle: create → ready → delete)
-- ⚠️ Critical paths only
+- ⚠️ **MANDATORY** - Required for ALL major features
+
+**CRITICAL**: E2E tests are NO LONGER optional. Composition tests validate KCL logic, but E2E tests validate real AWS behavior. A feature is NOT complete without E2E validation.
 
 **Location**: `tests/e2etest-xvpc-*/`
 
@@ -396,9 +429,10 @@ up test run tests/test-*
 ## Test Coverage Goals
 
 - ✅ **100% of features** have composition tests
-- ✅ **All critical paths** have E2E tests
-- ✅ **All tests pass** before every commit
+- ✅ **100% of major features** have E2E tests (MANDATORY)
+- ✅ **All tests pass** before every commit (composition + E2E)
 - ✅ **No flaky tests** (99.9% pass rate)
+- ✅ **All E2E tests verify cleanup** (no orphaned AWS resources)
 
 ## Feature Parity Validation
 
@@ -429,19 +463,24 @@ E2E tests compare against Terraform:
 
 ### DO:
 - ✅ Write tests before code (always)
+- ✅ Write E2E tests for ALL major features (MANDATORY)
 - ✅ Keep tests fast (< 10s for composition)
 - ✅ Test one feature per test
 - ✅ Assert all critical fields
 - ✅ Fix broken tests immediately
-- ✅ Run all tests before committing
+- ✅ Run all tests before committing (composition + E2E)
+- ✅ Verify E2E tests clean up resources
 
 ### DON'T:
 - ❌ Write code before tests
 - ❌ Commit failing tests
 - ❌ Skip tests for "simple" features
+- ❌ Skip E2E tests (they are MANDATORY)
+- ❌ Mark features "complete" without E2E validation
 - ❌ Write vague assertions
 - ❌ Ignore test failures
 - ❌ Write flaky tests
+- ❌ Leave orphaned AWS resources after E2E tests
 
 ## Resources
 
@@ -491,6 +530,30 @@ up test list
 
 ---
 
-**Remember**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT
+**Remember**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-**Never skip tests. Never commit failing tests.**
+**Never skip tests. Never skip E2E tests. Never commit failing tests.**
+
+## 🚨 CRITICAL CHANGE - E2E Tests Now MANDATORY
+
+**Effective immediately**: E2E tests are MANDATORY for ALL features before marking them complete.
+
+### Why:
+- Composition tests validate KCL logic only
+- E2E tests validate actual AWS behavior
+- Features may pass composition tests but fail in real AWS
+- We need confidence that implementations work in production
+
+### What This Means:
+1. **Task 0.1 is now the highest priority** - Add E2E tests for existing features (tasks 2.1-2.5)
+2. **New workflow**: Write composition test → implement → write E2E test → commit
+3. **Definition of "done"**: Feature is complete ONLY when both composition AND E2E tests pass
+4. **Before commit**: Run `up test run tests/test-*` AND `up test run tests/e2etest-* --e2e`
+
+### IAM Role for E2E Tests:
+All E2E tests MUST use the following IAM role (never static credentials):
+```
+arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
+```
+
+Configure in ProviderConfig with `assumeRoleChain` (see examples above).

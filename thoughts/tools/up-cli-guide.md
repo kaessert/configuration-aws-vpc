@@ -154,55 +154,32 @@ up project ai
 
 ## Control Plane Management
 
-### Create Control Plane
+**📚 For comprehensive control plane management, see [upbound-cloud-management.md](./upbound-cloud-management.md)**
+
+The new guide includes:
+- How control planes relate to groups and spaces
+- Creating control planes with all available options
+- Monitoring control plane creation and health
+- Deleting control planes safely
+- Complete workflows and best practices
+
+### Quick Reference
 
 ```bash
-# Create a new Spaces control plane
-up controlplane create my-controlplane
+# Create Control Plane
+up controlplane create <name> -g <group>
 
-# Create in specific space
-up controlplane create my-controlplane --space my-space
+# List Control Planes
+up controlplane list               # Current group
+up controlplane list -A            # All groups
+up controlplane list -g <group>    # Specific group
 
-# Create with specific configuration
-up controlplane create my-controlplane \
-  --space my-space \
-  --description "Production VPC control plane"
-```
+# Get Control Plane Details
+up controlplane get <name> -g <group>
+up controlplane get <name> --format json
 
-### List Control Planes
-
-```bash
-# List all control planes in current space
-up controlplane list
-
-# List in specific space
-up controlplane list --space my-space
-
-# Output as JSON
-up controlplane list --format json
-
-# Output as YAML
-up controlplane list --format yaml
-```
-
-### Get Control Plane Details
-
-```bash
-# Get single control plane details
-up controlplane get my-controlplane
-
-# Get in JSON format
-up controlplane get my-controlplane --format json
-```
-
-### Delete Control Plane
-
-```bash
-# Delete a control plane
-up controlplane delete my-controlplane
-
-# Delete without confirmation prompt
-up controlplane delete my-controlplane --force
+# Delete Control Plane
+up controlplane delete <name> -g <group>
 ```
 
 ### Connect App Cluster
@@ -239,33 +216,30 @@ up controlplane pull-secret create my-secret \
 
 ## Space and Group Management
 
-### Spaces
+**📚 For comprehensive group and control plane management, see [upbound-cloud-management.md](./upbound-cloud-management.md)**
+
+This new guide includes:
+- Complete understanding of Organizations, Spaces, Groups, and Control Planes
+- Detailed workflows for creating, listing, and deleting groups
+- Detailed workflows for creating, listing, and deleting control planes
+- Safety checks and best practices
+- Common workflows and troubleshooting
+
+### Quick Reference
 
 ```bash
-# List spaces
-up space list
+# Groups (within current space)
+up group list                      # List groups
+up group create <name>             # Create group
+up group get <name>                # Get group details
+up group delete <name>             # Delete group
 
-# Create space
-up space create my-space
-
-# Get space details
-up space get my-space
-
-# Delete space
-up space delete my-space
-```
-
-### Groups
-
-```bash
-# List groups in space
-up group list --space my-space
-
-# Create group
-up group create my-group --space my-space
-
-# Add members to group
-up group add-member my-group user@example.com --space my-space
+# Control Planes
+up controlplane list               # List in current group
+up controlplane list -A            # List across all groups
+up controlplane create <name> -g <group>     # Create in specific group
+up controlplane get <name> -g <group>        # Get details
+up controlplane delete <name> -g <group>     # Delete
 ```
 
 ## Organization and Team Management
