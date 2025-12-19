@@ -72,7 +72,25 @@ enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames !=
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
 
 # Main composition logic - returns list of desired resources
-# Resources will be added here as we implement each component
 items = [
-    # VPC resources will be added in the next phase
+    # VPC Resource
+    {
+        apiVersion = "ec2.aws.upbound.io/v1beta1"
+        kind = "VPC"
+        metadata = _metadata("vpc") | {
+            name = "vpc-${vpcName}"
+            labels = tags
+        }
+        spec = {
+            forProvider = {
+                cidrBlock = cidr
+                region = region
+                enableDnsHostnames = enableDnsHostnames
+                enableDnsSupport = enableDnsSupport
+                tags = tags | {
+                    Name = vpcName
+                }
+            }
+        }
+    }
 ]

@@ -14,7 +14,8 @@
       "Bash(up function generate --help:*)",
       "Bash(up function generate vpc:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:marketplace.upbound.io)"
     ]
   }
 }
