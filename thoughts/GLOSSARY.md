@@ -1,0 +1,614 @@
+# Glossary - Project Terminology
+
+This glossary defines project-specific terms and concepts. Use this when you encounter unfamiliar terminology.
+
+---
+
+## Crossplane Terms
+
+### XRD (Composite Resource Definition)
+**Definition**: Defines the API schema for a composite resource. Think of it as a "custom API" that users interact with.
+
+**Example**: `XVPC` is our XRD that defines the VPC API with fields like `cidr`, `azs`, `publicSubnets`, etc.
+
+**File**: `apis/vpc/definition.yaml`
+
+**Analogy**: Like a Kubernetes Custom Resource Definition (CRD), but for composition.
+
+---
+
+### XR (Composite Resource)
+**Definition**: An instance of an XRD. The actual resource created by a user based on the XRD schema.
+
+**Example**: When you `kubectl apply -f examples/simple-vpc.yaml`, you create an XR of type `XVPC`.
+
+**Also called**: Composite Resource
+
+**Relationship**: XRD is to XR as Class is to Instance (in OOP)
+
+---
+
+### Composition
+**Definition**: Defines HOW to create managed resources from an XR. Links an XRD to a composition function.
+
+**Example**: `apis/vpc/composition.yaml` links `XVPC` to the `vpc` KCL function.
+
+**Contains**:
+- Reference to XRD (`compositeTypeRef`)
+- Reference to composition function (`pipeline`)
+- Mode (`Pipeline` for function-based compositions)
+
+**Analogy**: The "controller" that orchestrates resource creation based on user input.
+
+---
+
+### Managed Resource (MR)
+**Definition**: A Crossplane resource that represents an actual cloud resource (VPC, Subnet, etc.). Managed by a provider.
+
+**Example**: `VPC.ec2.aws.upbound.io` is a managed resource representing an AWS VPC.
+
+**Lifecycle**: Created by composition function → Synced by provider → Becomes AWS resource
+
+**States**:
+- `Creating` - Resource is being created in cloud
+- `Syncing` - Crossplane is syncing with cloud state
+- `Ready` - Resource is ready and functional
+- `Deleting` - Resource is being deleted
+
+---
+
+### Claim
+**Definition**: A namespace-scoped version of a composite resource. Used when you want multi-tenancy.
+
+**Example**: `VPC` (claim) vs `XVPC` (composite)
+
+**Usage in this project**: We use Claims in E2E tests to isolate test resources.
+
+**Relationship**: Claim → XR → Managed Resources
+
+---
+
+### Provider
+**Definition**: A Crossplane controller that manages cloud resources. Communicates with cloud APIs.
+
+**Example**: `upbound-provider-aws` manages AWS resources (VPC, Subnet, EC2, etc.)
+
+**Responsibilities**:
+- Create/update/delete cloud resources
+- Sync cloud state with Kubernetes
+- Handle authentication (via ProviderConfig)
+
+---
+
+### ProviderConfig
+**Definition**: Configuration for how a provider authenticates with the cloud provider (AWS, Azure, GCP, etc.)
+
+**Example**:
+```yaml
+apiVersion: aws.upbound.io/v1beta1
+kind: ProviderConfig
+metadata:
+  name: default
+spec:
+  credentials:
+    source: Upbound
+  assumeRoleChain:
+    - roleARN: arn:aws:iam::123456789012:role/my-role
+```
+
+**Critical for**: E2E tests (authentication to real AWS)
+
+**Security note**: Always use IAM roles, NEVER static credentials!
+
+---
+
+## Upbound Terms
+
+### Upbound
+**Definition**: The company and platform for building and running control planes. Think "Crossplane as a Service."
+
+**Website**: https://upbound.io
+
+**Products**:
+- Upbound Spaces: Hosted control planes
+- Upbound CLI: `up` command for managing projects
+- Upbound Marketplace: Registry for configurations and functions
+
+---
+
+### Control Plane
+**Definition**: A Kubernetes cluster running Crossplane and your configuration. The "brain" that manages infrastructure.
+
+**Types**:
+- **Local**: `up project run` (development)
+- **Spaces**: Upbound Cloud (production or E2E tests)
+- **Self-hosted**: Your own Kubernetes cluster with Crossplane
+
+**Components**:
+- Crossplane core
+- Providers (e.g., AWS provider)
+- Your configuration package
+- Composition functions
+
+---
+
+### Spaces
+**Definition**: Upbound's hosted control plane service. Provides production-ready control planes in the cloud.
+
+**Features**:
+- Ephemeral control planes for E2E tests
+- Production control planes with SLA
+- Multi-tenancy and RBAC
+- Automatic upgrades
+
+**Usage**: All E2E tests run on Spaces (auto-provisioned control planes)
+
+**Console**: https://console.upbound.io
+
+---
+
+### Configuration Package
+**Definition**: A distributable package containing XRDs, Compositions, and Functions. The "product" you build.
+
+**Format**: OCI container image (`.uppkg`)
+
+**Contents**:
+- `apis/` - XRD and Composition YAML
+- `functions/` - Compiled KCL functions
+- `upbound.yaml` - Package metadata
+
+**Lifecycle**: Build → Push to registry → Install on control plane
+
+**Commands**:
+```bash
+up project build   # Build package
+up project push    # Push to registry
+```
+
+---
+
+### Function (Composition Function)
+**Definition**: Code that generates managed resources from an XR. The "logic" of your composition.
+
+**Languages supported**: KCL, Python, Go
+
+**This project uses**: KCL
+
+**Location**: `functions/vpc/`
+
+**Execution**: Runs in composition pipeline when XR is created/updated
+
+**Analogy**: Like a "template engine" that takes user input (XR) and outputs managed resources.
+
+---
+
+## KCL Terms
+
+### KCL (KCL Configuration Language)
+**Definition**: A domain-specific language for writing Crossplane composition functions. Focuses on configuration and validation.
+
+**Why KCL**: Type-safe, concise, designed for cloud configuration
+
+**File extension**: `.k`
+
+**Docs**: https://kcl-lang.io/docs
+
+**Example**:
+```kcl
+import models.io.upbound.aws.v1beta1 as awsv1beta1
+
+items = [
+    awsv1beta1.VPC{
+        metadata.name = "my-vpc"
+        spec.forProvider.cidrBlock = "10.0.0.0/16"
+    }
+]
+```
+
+---
+
+### Schema
+**Definition**: Defines the structure and types of data in KCL. Like a TypeScript interface or Go struct.
+
+**Example**:
+```kcl
+schema VPCConfig:
+    cidr: str
+    azs: [str]
+    publicSubnets: [str]
+```
+
+**Usage**: Type checking, validation, IDE autocomplete
+
+---
+
+### Lambda (in KCL context)
+**Definition**: Anonymous function in KCL. Used for filtering, mapping, and transforming data.
+
+**Example**:
+```kcl
+# Filter subnets
+publicSubnets = [s for s in subnets if s.type == "public"]
+
+# Map to names
+names = [subnet.name for subnet in publicSubnets]
+```
+
+**Syntax**: Similar to Python list comprehensions
+
+---
+
+### Option
+**Definition**: Access composition context (input XR, observed resources, etc.) in KCL.
+
+**Usage**:
+```kcl
+oxr = option("params").oxr  # Get input XR
+ocds = option("params").ocds  # Get observed composite resources
+```
+
+**Available options**:
+- `oxr` - Observed composite resource (input)
+- `ocds` - Observed composed resources (what currently exists)
+- `dxr` - Desired composite resource (output)
+
+---
+
+### Import
+**Definition**: Include external modules or models in KCL.
+
+**Example**:
+```kcl
+# Import AWS provider models
+import models.io.upbound.aws.v1beta1 as awsv1beta1
+
+# Use imported model
+vpc = awsv1beta1.VPC{ ... }
+```
+
+**Types of imports**:
+- Provider models (from kcl.mod dependencies)
+- Local modules (from `utils/`)
+- Standard library
+
+---
+
+## Testing Terms
+
+### Composition Test
+**Definition**: Fast unit test that validates composition logic without requiring a real control plane or cloud resources.
+
+**Speed**: Seconds
+
+**What it tests**: KCL logic, resource generation, conditional logic
+
+**When to use**: Development (fast feedback), CI on every PR
+
+**Tool**: `up test run tests/test-*`
+
+**Also called**: Unit test, function test
+
+---
+
+### E2E Test (End-to-End Test)
+**Definition**: Slow integration test that validates composition with REAL cloud resources. Creates actual AWS resources.
+
+**Speed**: 20-40 minutes per test
+
+**What it tests**: Complete lifecycle (create → ready → delete), AWS behavior, provider integration
+
+**When to use**: Before merging to main, on labeled PRs
+
+**Tool**: `up test run tests/e2etest-* --e2e`
+
+**Critical**: MUST verify cleanup (orphaned resources cost money!)
+
+**Also called**: Integration test, system test
+
+---
+
+### Test Pyramid
+**Definition**: Testing strategy with many fast unit tests, fewer slow integration tests.
+
+**Structure**:
+```
+        /\
+       /E2E\       ← Few, slow, expensive (real AWS)
+      /------\
+     / Comp. \    ← Many, fast, cheap (local)
+    /________\
+```
+
+**Ratio**: ~10-20 composition tests per 1 E2E test
+
+**Philosophy**: Fast feedback (composition) + high confidence (E2E)
+
+---
+
+### assertResources
+**Definition**: Validates that composition function generates expected managed resources in composition tests.
+
+**Usage**:
+```kcl
+assertResources: [
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "VPC"
+        name: "test-vpc"
+        # Assert specific fields...
+    }
+]
+```
+
+**Validates**: Resource exists, has correct spec, has correct metadata
+
+---
+
+### observedResources
+**Definition**: Validates resource status and conditions in composition or E2E tests.
+
+**Usage**:
+```kcl
+observedResources: [
+    {
+        name: "test-vpc"
+        conditions: [
+            { type: "Ready", status: "True" }
+            { type: "Synced", status: "True" }
+        ]
+    }
+]
+```
+
+**Validates**: Resource reached desired state (Ready, Synced, etc.)
+
+---
+
+### defaultConditions
+**Definition**: List of conditions that ALL resources must meet for E2E test to pass.
+
+**Common values**:
+- `["Ready"]` - Resource is ready
+- `["Synced"]` - Resource is synced with cloud
+- `["Ready", "Synced"]` - Both (recommended)
+
+**Usage in E2E tests**:
+```kcl
+spec.defaultConditions: ["Ready", "Synced"]
+```
+
+---
+
+## AWS Terms
+
+### VPC (Virtual Private Cloud)
+**Definition**: Isolated virtual network in AWS. The container for all your AWS resources.
+
+**CIDR Block**: IP address range (e.g., `10.0.0.0/16` = 65,536 IPs)
+
+**Key features**: DNS, DHCP, routing, security groups
+
+**This project**: Creates and configures VPCs based on user input
+
+---
+
+### Subnet
+**Definition**: Subdivision of a VPC in a specific Availability Zone. Resources launch into subnets.
+
+**Types**:
+- **Public**: Has route to Internet Gateway (0.0.0.0/0 → IGW)
+- **Private**: No direct internet access (may route through NAT)
+- **Isolated**: No internet access at all
+
+**CIDR**: Must be subset of VPC CIDR (e.g., VPC: `10.0.0.0/16`, Subnet: `10.0.1.0/24`)
+
+**Multi-AZ**: Spread subnets across multiple AZs for high availability
+
+---
+
+### Internet Gateway (IGW)
+**Definition**: Allows communication between VPC and the internet. Required for public subnets.
+
+**Usage**: Attach to VPC, add route in public route table (0.0.0.0/0 → IGW)
+
+**High availability**: Redundant and scalable by default (AWS managed)
+
+**Cost**: Free
+
+---
+
+### NAT Gateway
+**Definition**: Allows private subnet resources to access the internet (outbound only) without exposing them to inbound traffic.
+
+**Usage**: Place in public subnet, add route in private route table (0.0.0.0/0 → NAT)
+
+**Strategies**:
+- **Single**: One NAT for all AZs (cheap but not HA)
+- **One per AZ**: NAT in each AZ (expensive but HA)
+
+**Cost**: $0.045/hour ($32/month) + data transfer fees
+
+**Critical**: EXPENSIVE! Must verify cleanup after E2E tests!
+
+---
+
+### Route Table
+**Definition**: Contains rules (routes) that determine where network traffic is directed.
+
+**Types**:
+- **Public**: Routes 0.0.0.0/0 to Internet Gateway
+- **Private**: Routes 0.0.0.0/0 to NAT Gateway
+- **Isolated**: No 0.0.0.0/0 route (local VPC only)
+
+**Associations**: Links route table to subnets
+
+**Main route table**: Default table for VPC (usually used for private/isolated subnets)
+
+---
+
+### Elastic IP (EIP)
+**Definition**: Static public IPv4 address that can be assigned to AWS resources (NAT Gateway, EC2, etc.).
+
+**Usage**: Required for NAT Gateway (NAT needs public IP)
+
+**Cost**: Free if attached, $0.005/hour if unattached
+
+**E2E tests**: One EIP per NAT Gateway
+
+---
+
+### Availability Zone (AZ)
+**Definition**: Isolated data center within an AWS region. Used for high availability.
+
+**Examples**: `us-west-2a`, `us-west-2b`, `us-west-2c`
+
+**Best practice**: Spread resources across multiple AZs (minimum 2, preferably 3)
+
+**This project**: User specifies AZs, we create subnets in each AZ
+
+---
+
+## Project-Specific Terms
+
+### Feature Parity
+**Definition**: Our goal to match ALL features of the Terraform AWS VPC module.
+
+**Source**: [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc)
+
+**Scope**: 50+ input variables, 30+ outputs, 20+ resource types
+
+**Status**: Core features implemented, advanced features in progress
+
+---
+
+### TDD (Test-Driven Development)
+**Definition**: Development methodology where you write tests BEFORE writing code.
+
+**Our workflow**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+
+**Phases**:
+1. **🔴 RED**: Write failing test
+2. **🟢 GREEN**: Write minimal code to pass
+3. **🔵 REFACTOR**: Improve code quality
+4. **🧪 E2E**: Validate in real AWS
+5. **✅ COMMIT**: Commit when all pass
+
+**Benefits**: Fewer bugs, better design, living documentation
+
+---
+
+### Task 0.1
+**Definition**: CRITICAL BLOCKING TASK to write E2E tests for all implemented features (VPC, subnets, NAT, routing).
+
+**Why it's blocking**: E2E tests are now MANDATORY. We discovered composition tests only validate KCL logic, not real AWS behavior.
+
+**What it requires**: Write 4-5 E2E tests, each taking 1-2 hours
+
+**Priority**: HIGHEST - must complete before other work
+
+---
+
+### Composition Function
+**Definition**: KCL code that transforms an XR into managed resources. The "brain" of the composition.
+
+**Location**: `functions/vpc/main.k`
+
+**Input**: User's XR (desired state)
+
+**Output**: List of managed resources to create
+
+**Execution**: Runs in composition pipeline on control plane
+
+---
+
+### Modular Architecture
+**Definition**: Our design principle to organize code by concern, not by resource type.
+
+**Structure**:
+```
+functions/vpc/
+├── main.k       # Orchestration
+├── vpc.k        # VPC logic
+├── subnet.k     # Subnet logic
+├── gateway.k    # IGW + NAT logic
+├── route.k      # Routing logic
+└── utils/       # Helpers
+```
+
+**Benefits**: Testable, maintainable, scalable
+
+**Read more**: [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
+
+---
+
+## Common Acronyms
+
+| Acronym | Full Name | Meaning |
+|---------|-----------|---------|
+| **XRD** | Composite Resource Definition | API schema definition |
+| **XR** | Composite Resource | Instance of XRD |
+| **MR** | Managed Resource | Cloud resource (VPC, Subnet, etc.) |
+| **KCL** | KCL Configuration Language | Language for composition functions |
+| **IGW** | Internet Gateway | Gateway for internet access |
+| **NAT** | Network Address Translation | Gateway for private subnet internet access |
+| **EIP** | Elastic IP | Static public IP address |
+| **AZ** | Availability Zone | Data center within region |
+| **CIDR** | Classless Inter-Domain Routing | IP address range notation |
+| **TDD** | Test-Driven Development | Write tests first methodology |
+| **E2E** | End-to-End | Integration test with real resources |
+| **HA** | High Availability | Fault-tolerant architecture |
+| **IAM** | Identity and Access Management | AWS authentication/authorization |
+
+---
+
+## Quick Reference
+
+### Hierarchy
+
+```
+Control Plane
+  └── Configuration Package
+      ├── XRD (API definition)
+      ├── Composition (orchestration)
+      └── Function (KCL logic)
+          └── Generates Managed Resources
+              └── Synced by Provider
+                  └── Creates Cloud Resources (AWS)
+```
+
+### User Flow
+
+```
+User creates Claim/XR
+  → Composition function executes
+    → Generates managed resources
+      → Provider syncs with AWS
+        → AWS resources created
+          → Resources reach Ready state
+            → User can use infrastructure
+```
+
+### Testing Flow
+
+```
+Write composition test (RED)
+  → Implement feature (GREEN)
+    → Refactor code (BLUE)
+      → Write E2E test (E2E)
+        → All tests pass (COMMIT)
+```
+
+---
+
+## See Also
+
+- [README.md](README.md) - Documentation navigation
+- [GETTING_STARTED.md](GETTING_STARTED.md) - Quick start guide
+- [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) - System architecture
+- [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - Development workflow
+
+---
+
+**Pro tip**: Bookmark this glossary! You'll reference it frequently as you learn the project.
+
+**Not finding a term?** Add it! This glossary should grow as we discover new concepts.

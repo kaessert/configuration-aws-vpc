@@ -115,6 +115,7 @@ _items = [
                     kind: "ProviderConfig"
                     metadata: {
                         name: "default"
+                        namespace: "default"
                     }
                     spec: {
                         credentials: {
