@@ -259,6 +259,29 @@ _intraSubnetResources = [
     for i, subnetCidr in intraSubnets
 ] if len(intraSubnets) > 0 and len(azs) > 0 else []
 
+# Generate Internet Gateway resource (conditional)
+_igwResource = [
+    {
+        apiVersion = "ec2.aws.upbound.io/v1beta1"
+        kind = "InternetGateway"
+        metadata = _metadata("igw") | {
+            name = "igw-${vpcName}"
+            labels = tags
+        }
+        spec = {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "igw-${vpcName}"
+                }
+            }
+        }
+    }
+] if createIgw else []
+
 # Main composition logic - returns list of desired resources
 items = [
     # VPC Resource
@@ -281,4 +304,4 @@ items = [
             }
         }
     }
-] + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources
+] + _igwResource + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources
