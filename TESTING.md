@@ -331,12 +331,17 @@ up project build
 # Login to Upbound (required for E2E)
 up login
 
-# Run single E2E test
-up test run tests/e2etest-xvpc-basic --e2e
+# List available groups
+up group list
+
+# Run single E2E test (MUST specify group!)
+up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing
 
 # Run all E2E tests (slow!)
-up test run tests/e2etest-* --e2e
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 ```
+
+**CRITICAL**: Always specify `--control-plane-group` when running E2E tests. This determines which Upbound group the ephemeral control plane will be created in.
 
 ### CI/CD
 

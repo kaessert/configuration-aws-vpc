@@ -16,26 +16,32 @@ This guide provides **step-by-step instructions** for writing End-to-End (E2E) t
 
 1. **Upbound CLI** installed (`up` command)
 2. **Upbound account** authenticated (`up login`)
-3. **Feature already implemented** with passing composition tests
-4. **IAM role configured** (handled automatically by Upbound Cloud)
+3. **Control plane group** created (e.g., `claude-testing`)
+4. **Feature already implemented** with passing composition tests
+5. **IAM role configured** (handled automatically by Upbound Cloud)
 
 ### Steps
 
-1. Generate E2E test:
+1. List available groups to verify your group exists:
+   ```bash
+   up group list
+   ```
+
+2. Generate E2E test:
    ```bash
    up test generate e2etest-xvpc-<feature-name> --e2e --language=kcl
    ```
 
-2. Edit `tests/e2etest-*/main.k` - configure test manifest and ProviderConfig
+3. Edit `tests/e2etest-*/main.k` - configure test manifest and ProviderConfig
 
-3. Run test:
+4. Run test (**MUST specify --control-plane-group**):
    ```bash
-   up test run tests/e2etest-xvpc-<feature-name> --e2e
+   up test run tests/e2etest-xvpc-<feature-name> --e2e --control-plane-group=claude-testing
    ```
 
-4. Wait 20-40 minutes for AWS resource creation and cleanup
+5. Wait 20-40 minutes for AWS resource creation and cleanup
 
-5. Verify cleanup in AWS Console
+6. Verify cleanup in AWS Console
 
 ---
 
@@ -246,13 +252,25 @@ extraResources: [
 
 ### Step 5: Run E2E Test
 
+**CRITICAL**: You MUST specify the control plane group when running E2E tests!
+
 ```bash
-# Run specific E2E test
-up test run tests/e2etest-xvpc-<feature> --e2e
+# Run specific E2E test (CORRECT - specifies group)
+up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
 
 # Run all E2E tests (takes 2-4 hours!)
-up test run tests/e2etest-* --e2e
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
+
+# WRONG - missing --control-plane-group (will fail or use wrong group!)
+# up test run tests/e2etest-* --e2e  ❌ DON'T DO THIS
 ```
+
+**Why `--control-plane-group` is required**:
+- E2E tests create ephemeral control planes in Upbound Spaces
+- Control planes must be created in a specific group
+- Without specifying the group, the test may fail or use the wrong context
+- Use `--control-plane-group=claude-testing` for development/testing
+- Use `--control-plane-group=<your-group>` for your organization's group
 
 **What happens** (25-47 minutes per test):
 
@@ -796,11 +814,17 @@ jobs:
 # Generate E2E test
 up test generate e2etest-xvpc-<feature> --e2e --language=kcl
 
-# Run specific E2E test
-up test run tests/e2etest-xvpc-<feature> --e2e
+# List available groups
+up group list
 
-# Run all E2E tests
-up test run tests/e2etest-* --e2e
+# Run specific E2E test (MUST specify group!)
+up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
+
+# Run all E2E tests (MUST specify group!)
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
+
+# Check running control planes
+up controlplane list --group=claude-testing
 
 # Login to Upbound
 up login

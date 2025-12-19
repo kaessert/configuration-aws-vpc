@@ -183,9 +183,10 @@ up project stop
    # - Set validate: true
    # - Add defaultConditions: ["Ready", "Synced"]
 
-   # Run E2E test (requires up login)
+   # Run E2E test (requires up login and group specification)
    up login
-   up test run tests/e2etest-xvpc-<feature> --e2e
+   up group list  # Check available groups
+   up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
    # Wait 30+ minutes for AWS resource creation
    # ✅ PASS - Resources created, reached Ready/Synced, cleaned up
 
@@ -198,7 +199,7 @@ up project stop
    # Final checks - EVERYTHING must be green
    up project build              # ✅ MUST pass
    up test run tests/test-*      # ✅ ALL composition tests MUST pass
-   up test run tests/e2etest-* --e2e  # ✅ ALL E2E tests MUST pass
+   up test run tests/e2etest-* --e2e --control-plane-group=claude-testing  # ✅ ALL E2E tests MUST pass
    # If ANY test fails: DO NOT COMMIT - fix tests first!
 
    # Only commit when everything is green
