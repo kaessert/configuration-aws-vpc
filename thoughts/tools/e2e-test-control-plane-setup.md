@@ -4,19 +4,23 @@
 
 **IMPORTANT**: E2E tests should ALWAYS run on a dedicated control plane group for testing, NOT on production control plane groups.
 
-## How to Specify Control Plane Group
+## Local Testing vs CI/CD
 
-### Command Line Flag (Recommended)
+### Local Testing (Manual Runs)
 
-Use the `--control-plane-group` flag when running E2E tests:
+For local testing, use the **`upbound-gcp-us-central-1`** control plane group:
 
 ```bash
-# Run E2E tests on dedicated test control plane group
-up test run tests/e2etest-* --e2e --control-plane-group=test-cplanes
+# Run E2E tests locally on GCP control plane group
+up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
 
 # Example with specific test
-up test run tests/e2etest-xvpc-simple --e2e --control-plane-group=test-cplanes
+up test run tests/e2etest-xvpc-simple --e2e --control-plane-group=upbound-gcp-us-central-1
 ```
+
+### CI/CD Testing (GitHub Actions)
+
+**NOTE**: GitHub workflow configuration is separate and will be configured later. Do not modify `.github/workflows/` files yet.
 
 ### Available Flags
 
@@ -86,26 +90,26 @@ Test Complete (Pass/Fail)
 up ctx .
 # Output: Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
 
-# Run test - will use "upbound-aws-us-east-1" group from context
+# ❌ DON'T RUN without specifying group - uses current context group!
 up test run tests/e2etest-* --e2e
 ```
 
-### Explicit Group (Recommended for Tests)
+### Explicit Group (Required for Local Testing)
 
 ```bash
-# Run test on dedicated test control plane group
-up test run tests/e2etest-* --e2e --control-plane-group=test-cplanes
+# ✅ CORRECT - Run test on GCP control plane group for local testing
+up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
 
-# This overrides the context and creates control plane in "test-cplanes"
+# This overrides the context and creates control plane in "upbound-gcp-us-central-1"
 ```
 
 ## Best Practices
 
 ### 1. Always Use Dedicated Test Control Plane Group
 
-**✅ GOOD** - Dedicated test group:
+**✅ GOOD** - For local testing:
 ```bash
-up test run tests/e2etest-* --e2e --control-plane-group=test-cplanes
+up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
 ```
 
 **❌ BAD** - Using production control plane group:
@@ -113,12 +117,10 @@ up test run tests/e2etest-* --e2e --control-plane-group=test-cplanes
 up test run tests/e2etest-* --e2e  # Uses current context group!
 ```
 
-### 2. Naming Convention for Control Plane Groups
+### 2. Control Plane Groups by Environment
 
-Suggested naming:
-- `test-cplanes` - For all E2E tests
-- `ci-test-cplanes` - For CI/CD pipeline tests
-- `dev-test-cplanes` - For development/manual tests
+- **Local Testing**: `upbound-gcp-us-central-1` (manual developer testing)
+- **CI/CD Testing**: TBD (will be configured in GitHub workflows later)
 
 ### 3. Document the Required Group
 
@@ -127,18 +129,9 @@ In your project README or CI/CD docs, document:
 - How to create the control plane group if it doesn't exist
 - IAM roles and permissions required
 
-### 4. Set Default in CI/CD
+### 4. CI/CD Configuration
 
-In GitHub Actions or other CI:
-
-```yaml
-- name: Run E2E Tests
-  run: |
-    up test run tests/e2etest-* \
-      --e2e \
-      --control-plane-group=ci-test-cplanes \
-      --organization=solutions
-```
+**NOTE**: GitHub workflows will be configured separately later. Do not modify `.github/workflows/` files yet.
 
 ## Checking Current Configuration
 
@@ -215,7 +208,7 @@ up test run tests/e2etest-xvpc-simple \
   --use-current-context
 ```
 
-## Example: Complete E2E Test Workflow
+## Example: Complete E2E Test Workflow (Local Testing)
 
 ```bash
 # 1. Ensure logged into Upbound
@@ -223,15 +216,16 @@ up login
 
 # 2. Check current context
 up ctx .
+# Output: Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
 
-# 3. Run E2E tests on dedicated test group
+# 3. Run E2E tests on GCP control plane group (for local testing)
 up test run tests/e2etest-* \
   --e2e \
-  --control-plane-group=test-cplanes \
+  --control-plane-group=upbound-gcp-us-central-1 \
   --organization=solutions
 
 # 4. Tests will:
-#    - Create temporary control plane in "test-cplanes"
+#    - Create temporary control plane in "upbound-gcp-us-central-1"
 #    - Run tests
 #    - Clean up control plane
 #    - Report results
@@ -239,7 +233,7 @@ up test run tests/e2etest-* \
 # 5. If test fails and you need to debug:
 up test run tests/e2etest-xvpc-simple \
   --e2e \
-  --control-plane-group=test-cplanes \
+  --control-plane-group=upbound-gcp-us-central-1 \
   --skip-control-plane-cleanup
 
 # 6. Then inspect the control plane:
@@ -250,10 +244,13 @@ kubectl get all
 
 ## Summary
 
-- ✅ **ALWAYS** use `--control-plane-group=test-cplanes` for E2E tests
+### Local Testing
+- ✅ **ALWAYS** use `--control-plane-group=upbound-gcp-us-central-1` for local E2E tests
+- ✅ **NEVER** run E2E tests without specifying control plane group
 - ✅ **NEVER** run E2E tests on production control plane groups
 - ✅ E2E tests create temporary control planes automatically
 - ✅ Control planes are cleaned up automatically (unless `--skip-control-plane-cleanup`)
-- ✅ Use dedicated test control plane groups for isolation
-- ✅ Document which control plane group to use in project README
-- ✅ Set explicit control plane group in CI/CD pipelines
+
+### CI/CD Testing
+- ⏸️ GitHub workflows will be configured separately later
+- ⏸️ Do not modify `.github/workflows/` files yet

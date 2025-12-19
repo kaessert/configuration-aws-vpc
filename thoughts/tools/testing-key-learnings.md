@@ -207,13 +207,16 @@ You don't need to specify ALL fields - only the ones you want to assert:
 
 **CRITICAL**: E2E tests should NEVER run on production control plane groups!
 
+**For Local Testing:**
 ```bash
-# ✅ CORRECT - Dedicated test group
-up test run tests/e2etest-* --e2e --control-plane-group=test-cplanes
+# ✅ CORRECT - Use GCP control plane group for local testing
+up test run tests/e2etest-* --e2e --control-plane-group=upbound-gcp-us-central-1
 
 # ❌ WRONG - Uses current context (might be production!)
 up test run tests/e2etest-* --e2e
 ```
+
+**Note**: GitHub workflows are separate and will be configured later.
 
 ### How to Check Current Context
 
@@ -246,9 +249,11 @@ See `thoughts/tools/e2e-test-control-plane-setup.md` for complete documentation.
 - ❌ Don't leave metadata.name empty or the test will fail
 
 ### E2E Tests
-- ✅ ALWAYS specify `--control-plane-group=test-cplanes` for E2E tests
+- ✅ For local testing: `--control-plane-group=upbound-gcp-us-central-1`
 - ✅ Use IAM roles with `assumeRoleChain`, never static credentials
 - ✅ Set realistic timeouts (1800s for creation, 600s for cleanup)
 - ✅ Tests create temporary control planes automatically
 - ✅ Control planes are cleaned up after test (unless `--skip-control-plane-cleanup`)
+- ❌ NEVER run E2E tests without specifying control plane group
 - ❌ NEVER run E2E tests on production control plane groups
+- ⏸️ GitHub workflows will be configured separately (don't modify yet)
