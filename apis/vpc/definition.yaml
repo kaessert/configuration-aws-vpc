@@ -1,0 +1,509 @@
+---
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: xvpcs.aws.platform.upbound.io
+spec:
+  group: aws.platform.upbound.io
+  names:
+    kind: XVPC
+    plural: xvpcs
+  claimNames:
+    kind: VPC
+    plural: vpcs
+  versions:
+    - name: v1alpha1
+      served: true
+      referenceable: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            spec:
+              type: object
+              required:
+                - region
+                - cidr
+              properties:
+                # Core Network Configuration
+                region:
+                  type: string
+                  description: AWS region where the VPC will be created
+                  pattern: ^[a-z]{2}-[a-z]+-\d{1}$
+
+                cidr:
+                  type: string
+                  description: The IPv4 CIDR block for the VPC
+                  pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                secondaryCidrBlocks:
+                  type: array
+                  description: Additional IPv4 CIDR blocks to associate with the VPC
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                azs:
+                  type: array
+                  description: List of availability zones for subnet distribution
+                  items:
+                    type: string
+                  minItems: 1
+
+                # Subnet Configuration
+                publicSubnets:
+                  type: array
+                  description: List of CIDR blocks for public subnets
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                privateSubnets:
+                  type: array
+                  description: List of CIDR blocks for private subnets
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                databaseSubnets:
+                  type: array
+                  description: List of CIDR blocks for database subnets
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                elasticacheSubnets:
+                  type: array
+                  description: List of CIDR blocks for ElastiCache subnets
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                redshiftSubnets:
+                  type: array
+                  description: List of CIDR blocks for Redshift subnets
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                intraSubnets:
+                  type: array
+                  description: List of CIDR blocks for intra subnets (no internet access)
+                  items:
+                    type: string
+                    pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                # Gateway Configuration
+                createIgw:
+                  type: boolean
+                  description: Create an Internet Gateway for the VPC
+                  default: true
+
+                enableNatGateway:
+                  type: boolean
+                  description: Create NAT Gateways for private subnet internet access
+                  default: false
+
+                singleNatGateway:
+                  type: boolean
+                  description: Use a single NAT Gateway for all availability zones (cost optimization)
+                  default: false
+
+                oneNatGatewayPerAz:
+                  type: boolean
+                  description: Create one NAT Gateway per availability zone (high availability)
+                  default: false
+
+                # DNS Configuration
+                enableDnsHostnames:
+                  type: boolean
+                  description: Enable DNS hostnames in the VPC
+                  default: true
+
+                enableDnsSupport:
+                  type: boolean
+                  description: Enable DNS resolution in the VPC
+                  default: true
+
+                enableDns64:
+                  type: boolean
+                  description: Enable DNS64 for IPv6
+                  default: false
+
+                # DHCP Options
+                dhcpOptionsDomainName:
+                  type: string
+                  description: Custom domain name for DHCP options
+
+                dhcpOptionsDomainNameServers:
+                  type: array
+                  description: List of DNS servers for DHCP options
+                  items:
+                    type: string
+
+                dhcpOptionsNtpServers:
+                  type: array
+                  description: List of NTP servers for DHCP options
+                  items:
+                    type: string
+
+                dhcpOptionsNetbiosNameServers:
+                  type: array
+                  description: List of NetBIOS name servers for DHCP options
+                  items:
+                    type: string
+
+                dhcpOptionsNetbiosNodeType:
+                  type: integer
+                  description: NetBIOS node type (1, 2, 4, or 8)
+                  enum: [1, 2, 4, 8]
+
+                # VPC Endpoints
+                createVpcEndpoints:
+                  type: boolean
+                  description: Enable VPC endpoints
+                  default: false
+
+                enableS3Endpoint:
+                  type: boolean
+                  description: Enable S3 VPC endpoint
+                  default: false
+
+                s3EndpointType:
+                  type: string
+                  description: S3 VPC endpoint type (Gateway or Interface)
+                  enum: ["Gateway", "Interface"]
+                  default: "Gateway"
+
+                enableDynamodbEndpoint:
+                  type: boolean
+                  description: Enable DynamoDB VPC endpoint
+                  default: false
+
+                # Flow Logs
+                enableFlowLog:
+                  type: boolean
+                  description: Enable VPC Flow Logs
+                  default: false
+
+                createFlowLogCloudwatchLogGroup:
+                  type: boolean
+                  description: Create CloudWatch Log Group for Flow Logs
+                  default: false
+
+                createFlowLogS3Bucket:
+                  type: boolean
+                  description: Create S3 bucket for Flow Logs
+                  default: false
+
+                flowLogMaxAggregationInterval:
+                  type: integer
+                  description: Maximum aggregation interval for Flow Logs (60 or 600 seconds)
+                  enum: [60, 600]
+                  default: 600
+
+                flowLogTrafficType:
+                  type: string
+                  description: Type of traffic to log (ACCEPT, REJECT, or ALL)
+                  enum: ["ACCEPT", "REJECT", "ALL"]
+                  default: "ALL"
+
+                # Network Configuration
+                mapPublicIpOnLaunch:
+                  type: boolean
+                  description: Auto-assign public IP addresses to instances launched in public subnets
+                  default: true
+
+                enableVpnGateway:
+                  type: boolean
+                  description: Create a VPN Gateway attached to the VPC
+                  default: false
+
+                enableIpv6:
+                  type: boolean
+                  description: Enable IPv6 CIDR block for the VPC
+                  default: false
+
+                ipv6CidrBlock:
+                  type: string
+                  description: IPv6 CIDR block for the VPC
+
+                # Route Table Configuration
+                createDatabaseSubnetRouteTable:
+                  type: boolean
+                  description: Create separate route table for database subnets
+                  default: false
+
+                createDatabaseNatGatewayRoute:
+                  type: boolean
+                  description: Create NAT Gateway route for database subnets
+                  default: false
+
+                createElasticacheSubnetRouteTable:
+                  type: boolean
+                  description: Create separate route table for ElastiCache subnets
+                  default: false
+
+                createRedshiftSubnetRouteTable:
+                  type: boolean
+                  description: Create separate route table for Redshift subnets
+                  default: false
+
+                # Tagging
+                tags:
+                  type: object
+                  description: Common tags to apply to all resources
+                  additionalProperties:
+                    type: string
+
+                vpcTags:
+                  type: object
+                  description: Additional tags for the VPC
+                  additionalProperties:
+                    type: string
+
+                publicSubnetTags:
+                  type: object
+                  description: Additional tags for public subnets
+                  additionalProperties:
+                    type: string
+
+                privateSubnetTags:
+                  type: object
+                  description: Additional tags for private subnets
+                  additionalProperties:
+                    type: string
+
+                databaseSubnetTags:
+                  type: object
+                  description: Additional tags for database subnets
+                  additionalProperties:
+                    type: string
+
+                elasticacheSubnetTags:
+                  type: object
+                  description: Additional tags for ElastiCache subnets
+                  additionalProperties:
+                    type: string
+
+                redshiftSubnetTags:
+                  type: object
+                  description: Additional tags for Redshift subnets
+                  additionalProperties:
+                    type: string
+
+                vpcEndpointTags:
+                  type: object
+                  description: Additional tags for VPC endpoints
+                  additionalProperties:
+                    type: string
+
+            status:
+              type: object
+              properties:
+                # VPC Outputs
+                vpcId:
+                  type: string
+                  description: ID of the VPC
+
+                vpcArn:
+                  type: string
+                  description: ARN of the VPC
+
+                vpcCidrBlock:
+                  type: string
+                  description: The CIDR block of the VPC
+
+                vpcIpv6CidrBlock:
+                  type: string
+                  description: The IPv6 CIDR block of the VPC
+
+                vpcEnableDnsSupport:
+                  type: boolean
+                  description: Whether DNS support is enabled
+
+                vpcEnableDnsHostnames:
+                  type: boolean
+                  description: Whether DNS hostnames are enabled
+
+                # Subnet Outputs
+                publicSubnets:
+                  type: array
+                  description: List of IDs of public subnets
+                  items:
+                    type: string
+
+                publicSubnetsCidrBlocks:
+                  type: array
+                  description: List of CIDR blocks of public subnets
+                  items:
+                    type: string
+
+                publicSubnetArns:
+                  type: array
+                  description: List of ARNs of public subnets
+                  items:
+                    type: string
+
+                privateSubnets:
+                  type: array
+                  description: List of IDs of private subnets
+                  items:
+                    type: string
+
+                privateSubnetsCidrBlocks:
+                  type: array
+                  description: List of CIDR blocks of private subnets
+                  items:
+                    type: string
+
+                privateSubnetArns:
+                  type: array
+                  description: List of ARNs of private subnets
+                  items:
+                    type: string
+
+                databaseSubnets:
+                  type: array
+                  description: List of IDs of database subnets
+                  items:
+                    type: string
+
+                databaseSubnetsCidrBlocks:
+                  type: array
+                  description: List of CIDR blocks of database subnets
+                  items:
+                    type: string
+
+                elasticacheSubnets:
+                  type: array
+                  description: List of IDs of ElastiCache subnets
+                  items:
+                    type: string
+
+                elasticacheSubnetsCidrBlocks:
+                  type: array
+                  description: List of CIDR blocks of ElastiCache subnets
+                  items:
+                    type: string
+
+                redshiftSubnets:
+                  type: array
+                  description: List of IDs of Redshift subnets
+                  items:
+                    type: string
+
+                redshiftSubnetsCidrBlocks:
+                  type: array
+                  description: List of CIDR blocks of Redshift subnets
+                  items:
+                    type: string
+
+                intraSubnets:
+                  type: array
+                  description: List of IDs of intra subnets
+                  items:
+                    type: string
+
+                intraSubnetsCidrBlocks:
+                  type: array
+                  description: List of CIDR blocks of intra subnets
+                  items:
+                    type: string
+
+                # Gateway Outputs
+                igwId:
+                  type: string
+                  description: ID of the Internet Gateway
+
+                igwArn:
+                  type: string
+                  description: ARN of the Internet Gateway
+
+                natGatewayIds:
+                  type: array
+                  description: List of NAT Gateway IDs
+                  items:
+                    type: string
+
+                natEipPublicIps:
+                  type: array
+                  description: List of Elastic IP addresses for NAT Gateways
+                  items:
+                    type: string
+
+                vpnGatewayId:
+                  type: string
+                  description: ID of the VPN Gateway
+
+                vpnGatewayArn:
+                  type: string
+                  description: ARN of the VPN Gateway
+
+                # Route Table Outputs
+                publicRouteTableIds:
+                  type: array
+                  description: List of IDs of public route tables
+                  items:
+                    type: string
+
+                privateRouteTableIds:
+                  type: array
+                  description: List of IDs of private route tables
+                  items:
+                    type: string
+
+                databaseRouteTableIds:
+                  type: array
+                  description: List of IDs of database route tables
+                  items:
+                    type: string
+
+                elasticacheRouteTableIds:
+                  type: array
+                  description: List of IDs of ElastiCache route tables
+                  items:
+                    type: string
+
+                redshiftRouteTableIds:
+                  type: array
+                  description: List of IDs of Redshift route tables
+                  items:
+                    type: string
+
+                intraRouteTableIds:
+                  type: array
+                  description: List of IDs of intra route tables
+                  items:
+                    type: string
+
+                # VPC Endpoint Outputs
+                vpcEndpointS3Id:
+                  type: string
+                  description: ID of the S3 VPC endpoint
+
+                vpcEndpointDynamodbId:
+                  type: string
+                  description: ID of the DynamoDB VPC endpoint
+
+                # DHCP Options Outputs
+                dhcpOptionsId:
+                  type: string
+                  description: ID of the DHCP options set
+
+                dhcpOptionsAssociationId:
+                  type: string
+                  description: ID of the DHCP options association
+
+                # Flow Log Outputs
+                vpcFlowLogId:
+                  type: string
+                  description: ID of the VPC Flow Log
+
+                vpcFlowLogArn:
+                  type: string
+                  description: ARN of the VPC Flow Log
+
+                vpcFlowLogDestinationArn:
+                  type: string
+                  description: ARN of the destination for VPC Flow Logs

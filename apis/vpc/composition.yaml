@@ -1,0 +1,23 @@
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: xvpcs.aws.platform.upbound.io
+spec:
+  compositeTypeRef:
+    apiVersion: aws.platform.upbound.io/v1alpha1
+    kind: XVPC
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: solutions-configuration-aws-vpcvpc
+    step: vpc
+  - functionRef:
+      name: function-kcl
+    input:
+      apiVersion: krm.kcl.dev/v1alpha1
+      kind: KCLInput
+      metadata:
+        name: vpc-composition
+      spec:
+        source: oci://ghcr.io/upbound/configuration-aws-vpc/functions-vpc:latest
+    step: vpc-resources

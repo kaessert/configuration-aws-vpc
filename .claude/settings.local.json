@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(up --help:*)",
+      "WebFetch(domain:docs.upbound.io)",
+      "Bash(up project --help:*)",
+      "Bash(up controlplane --help:*)",
+      "Bash(up function --help:*)",
+      "Bash(cat:*)",
+      "Bash(up project build:*)",
+      "Bash(up dependency --help:*)",
+      "Bash(up dependency add:*)",
+      "Bash(up dependency remove:*)",
+      "Bash(up function generate --help:*)",
+      "Bash(up function generate vpc:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ]
+  }
+}
