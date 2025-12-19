@@ -92,10 +92,32 @@ up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 ### Actions Taken
 1. ✅ Fixed e2etest-xvpc-simple test file (Crossplane v2 + correct ProviderConfig)
 2. ✅ Created `claude-testing` group for E2E tests
-3. ✅ Started Test 1 with correct command: `up test run tests/e2etest-e2etest-xvpc-simple --e2e --control-plane-group=claude-testing`
+3. ✅ Started Test 1 with correct command
+4. ⚠️ **Test hung on "Applying Extra Resources"**
+
+#### Issue 5: E2E Test Framework Hangs on "Applying Extra Resources"
+**Problem**: Test stuck on "Applying Extra Resources" for 10+ minutes
+**Investigation**:
+- Manually applied ProviderConfig - SUCCESS (resource is valid)
+- Packages installed and healthy
+- No errors in events or logs
+**Root Cause**: Potential bug or timeout issue in `up test` E2E framework
+**Impact**: Cannot complete E2E tests with current approach
+
+**Evidence**:
+```bash
+# Manual apply worked fine
+kubectl apply -f providerconfig.yaml
+# providerconfig.aws.m.upbound.io/default created ✅
+
+# Test remained stuck:
+# Applying Extra Resources … (no progress for 10+ minutes)
+```
+
+**Next Steps**: Try alternative approach or investigate E2E test framework timeout settings
 
 ### Next Steps
 1. ✅ Run test with correct command and group
-2. ⏳ Monitor control plane creation in `claude-testing` group
-3. ⏳ Verify resources reach Ready/Synced
-4. ⏳ Verify cleanup after test completes
+2. ✅ Control plane created successfully
+3. ⚠️ Investigate E2E framework hang issue
+4. ⏳ Try alternative test approach or framework settings

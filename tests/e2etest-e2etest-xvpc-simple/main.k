@@ -48,6 +48,7 @@ _items = [
                     kind: "VPC"  # Using Claim, not XVPC
                     metadata: {
                         name: "e2e-test-vpc"
+                        namespace: "default"
                     }
                     spec: {
                         region: "us-west-2"
