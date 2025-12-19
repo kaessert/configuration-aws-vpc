@@ -164,31 +164,31 @@ For EVERY feature:
 
 ---
 
-### 2.2.1 Write Composition Tests for All Subnet Types (Catch-Up Testing)
+### 2.2.1 Write Composition Tests for All Subnet Types (Catch-Up Testing) ✅
 **Priority**: P1 (BLOCKING)
 **Effort**: Medium
 **Description**: Write comprehensive tests for all subnet types (features already implemented in 2.2)
 **Dependencies**: Task 2.2 ✅ COMPLETED
-**Status**: PENDING
+**Status**: COMPLETED
 
 **Note**: Task 2.2 already implemented all subnet types WITHOUT tests (not ideal TDD). This task adds missing test coverage.
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-subnets-public --language=kcl`
-- [ ] Write test: Assert public subnets with mapPublicIpOnLaunch
-- [ ] Generate test: `up test generate test-xvpc-subnets-private --language=kcl`
-- [ ] Write test: Assert private subnets (no public IP)
-- [ ] Generate test: `up test generate test-xvpc-subnets-database --language=kcl`
-- [ ] Write test: Assert database subnets with correct tags
-- [ ] Generate test: `up test generate test-xvpc-subnets-elasticache --language=kcl`
-- [ ] Write test: Assert elasticache subnets with correct tags
-- [ ] Generate test: `up test generate test-xvpc-subnets-redshift --language=kcl`
-- [ ] Write test: Assert redshift subnets with correct tags
-- [ ] Generate test: `up test generate test-xvpc-subnets-intra --language=kcl`
-- [ ] Write test: Assert intra subnets (no routing to NAT/IGW)
-- [ ] Run all tests: `up test run tests/test-xvpc-subnets-*`
-- [ ] **Expected: ALL PASS (features already implemented)**
-- [ ] Fix any issues found by tests
+- [x] Generate test: `up test generate test-xvpc-subnets-public --language=kcl`
+- [x] Write test: Assert public subnets with mapPublicIpOnLaunch
+- [x] Generate test: `up test generate test-xvpc-subnets-private --language=kcl`
+- [x] Write test: Assert private subnets (no public IP)
+- [x] Generate test: `up test generate test-xvpc-subnets-database --language=kcl`
+- [x] Write test: Assert database subnets with correct tags
+- [x] Generate test: `up test generate test-xvpc-subnets-elasticache --language=kcl`
+- [x] Write test: Assert elasticache subnets with correct tags
+- [x] Generate test: `up test generate test-xvpc-subnets-redshift --language=kcl`
+- [x] Write test: Assert redshift subnets with correct tags
+- [x] Generate test: `up test generate test-xvpc-subnets-intra --language=kcl`
+- [x] Write test: Assert intra subnets (no routing to NAT/IGW)
+- [x] Run all tests: `up test run tests/test-xvpc-subnets-*`
+- [x] **Expected: ALL PASS (features already implemented)**
+- [x] Fix any issues found by tests
 
 **Reference**:
 - thoughts/TDD_STRATEGY.md
