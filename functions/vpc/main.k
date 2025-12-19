@@ -69,6 +69,10 @@ enableNatGateway = oxrSpec.enableNatGateway if oxrSpec.enableNatGateway != None 
 singleNatGateway = oxrSpec.singleNatGateway if oxrSpec.singleNatGateway != None else False
 oneNatGatewayPerAz = oxrSpec.oneNatGatewayPerAz if oxrSpec.oneNatGatewayPerAz != None else False
 
+# Extract route table configuration
+createDatabaseSubnetRouteTable = oxrSpec.createDatabaseSubnetRouteTable if oxrSpec.createDatabaseSubnetRouteTable != None else False
+createDatabaseNatGatewayRoute = oxrSpec.createDatabaseNatGatewayRoute if oxrSpec.createDatabaseNatGatewayRoute != None else False
+
 # Extract DNS configuration
 enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames != None else True
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
@@ -137,7 +141,10 @@ _privateSubnetResources = [
     ec2v1beta1.Subnet{
         metadata = _metadata("private-subnet-${i}") | {
             name = "subnet-private-${vpcName}-${azs[i % len(azs)]}"
-            labels = tags | privateSubnetTags
+            labels = tags | privateSubnetTags | {
+                "subnet-type": "private"
+                "az": azs[i % len(azs)]
+            }
         }
         spec = _defaultV2Spec | {
             forProvider = {
@@ -163,7 +170,10 @@ _databaseSubnetResources = [
     ec2v1beta1.Subnet{
         metadata = _metadata("database-subnet-${i}") | {
             name = "subnet-database-${vpcName}-${azs[i % len(azs)]}"
-            labels = tags | databaseSubnetTags
+            labels = tags | databaseSubnetTags | {
+                "subnet-type": "database"
+                "az": azs[i % len(azs)]
+            }
         }
         spec = _defaultV2Spec | {
             forProvider = {
@@ -241,7 +251,10 @@ _intraSubnetResources = [
     ec2v1beta1.Subnet{
         metadata = _metadata("intra-subnet-${i}") | {
             name = "subnet-intra-${vpcName}-${azs[i % len(azs)]}"
-            labels = tags | intraSubnetTags
+            labels = tags | intraSubnetTags | {
+                "subnet-type": "intra"
+                "az": azs[i % len(azs)]
+            }
         }
         spec = _defaultV2Spec | {
             forProvider = {
@@ -377,6 +390,357 @@ _natGatewayResources = [
     }
 ] if enableNatGateway and singleNatGateway and len(azs) > 0 and len(publicSubnets) > 0 else []
 
+# ============================================================================
+# ROUTING RESOURCES
+# ============================================================================
+
+# Generate public route table - Using typed EC2 RouteTable model
+_publicRouteTable = [
+    ec2v1beta1.RouteTable{
+        metadata = _metadata("public-route-table") | {
+            name = "rtb-public-${vpcName}"
+            labels = tags | {
+                "route-table-type": "public"
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "rtb-public-${vpcName}"
+                    Type = "public"
+                }
+            }
+        }
+    }
+] if len(publicSubnets) > 0 else []
+
+# Generate public route to Internet Gateway - Using typed EC2 Route model
+_publicRoute = [
+    ec2v1beta1.Route{
+        metadata = _metadata("public-route-igw") | {
+            name = "route-public-igw-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "public"
+                    }
+                }
+                gatewayIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                destinationCidrBlock = "0.0.0.0/0"
+            }
+        }
+    }
+] if len(publicSubnets) > 0 and createIgw else []
+
+# Generate public route table associations - Using typed EC2 RouteTableAssociation model
+_publicRouteTableAssociations = [
+    ec2v1beta1.RouteTableAssociation{
+        metadata = _metadata("public-rtb-assoc-${i}") | {
+            name = "rtb-assoc-public-${vpcName}-${azs[i % len(azs)]}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "public"
+                    }
+                }
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "public"
+                        "az": azs[i % len(azs)]
+                    }
+                }
+                region = region
+            }
+        }
+    }
+    for i in range(len(publicSubnets))
+] if len(publicSubnets) > 0 else []
+
+# Generate private route tables - Using typed EC2 RouteTable model
+# For single NAT: one shared route table for all private subnets
+# For NAT per AZ: one route table per AZ
+_privateRouteTables = [
+    ec2v1beta1.RouteTable{
+        metadata = _metadata("private-route-table-${i}") | {
+            name = "rtb-private-${vpcName}-${azs[i]}"
+            labels = tags | {
+                "route-table-type": "private"
+                "az": azs[i]
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "rtb-private-${vpcName}-${azs[i]}"
+                    Type = "private"
+                    AZ = azs[i]
+                }
+            }
+        }
+    }
+    for i in range(len(azs))
+] if len(privateSubnets) > 0 and enableNatGateway and oneNatGatewayPerAz else [
+    # Single route table for all private subnets (single NAT strategy)
+    ec2v1beta1.RouteTable{
+        metadata = _metadata("private-route-table") | {
+            name = "rtb-private-${vpcName}"
+            labels = tags | {
+                "route-table-type": "private"
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "rtb-private-${vpcName}"
+                    Type = "private"
+                }
+            }
+        }
+    }
+] if len(privateSubnets) > 0 and enableNatGateway else []
+
+# Generate private routes to NAT Gateway - Using typed EC2 Route model
+_privateRoutes = [
+    ec2v1beta1.Route{
+        metadata = _metadata("private-route-nat-${i}") | {
+            name = "route-private-nat-${vpcName}-${azs[i]}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "private"
+                        "az": azs[i]
+                    }
+                }
+                natGatewayIdSelector = {
+                    matchLabels = {
+                        "az": azs[i]
+                    }
+                }
+                region = region
+                destinationCidrBlock = "0.0.0.0/0"
+            }
+        }
+    }
+    for i in range(len(azs))
+] if len(privateSubnets) > 0 and enableNatGateway and oneNatGatewayPerAz else [
+    # Single route for single NAT Gateway strategy
+    ec2v1beta1.Route{
+        metadata = _metadata("private-route-nat") | {
+            name = "route-private-nat-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "private"
+                    }
+                }
+                natGatewayIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                destinationCidrBlock = "0.0.0.0/0"
+            }
+        }
+    }
+] if len(privateSubnets) > 0 and enableNatGateway and singleNatGateway else []
+
+# Generate private route table associations - Using typed EC2 RouteTableAssociation model
+_privateRouteTableAssociations = [
+    ec2v1beta1.RouteTableAssociation{
+        metadata = _metadata("private-rtb-assoc-${i}") | {
+            name = "rtb-assoc-private-${vpcName}-${azs[i % len(azs)]}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "private"
+                        "az": azs[i % len(azs)]
+                    }
+                }
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "private"
+                        "az": azs[i % len(azs)]
+                    }
+                }
+                region = region
+            }
+        }
+    }
+    for i in range(len(privateSubnets))
+] if len(privateSubnets) > 0 and enableNatGateway and oneNatGatewayPerAz else [
+    # Single route table for single NAT strategy
+    ec2v1beta1.RouteTableAssociation{
+        metadata = _metadata("private-rtb-assoc-${i}") | {
+            name = "rtb-assoc-private-${vpcName}-${azs[i % len(azs)]}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "private"
+                    }
+                }
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "private"
+                        "az": azs[i % len(azs)]
+                    }
+                }
+                region = region
+            }
+        }
+    }
+    for i in range(len(privateSubnets))
+] if len(privateSubnets) > 0 and enableNatGateway else []
+
+# Generate database route table - Using typed EC2 RouteTable model
+_databaseRouteTable = [
+    ec2v1beta1.RouteTable{
+        metadata = _metadata("database-route-table") | {
+            name = "rtb-database-${vpcName}"
+            labels = tags | {
+                "route-table-type": "database"
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "rtb-database-${vpcName}"
+                    Type = "database"
+                }
+            }
+        }
+    }
+] if len(databaseSubnets) > 0 and createDatabaseSubnetRouteTable else []
+
+# Generate database route to NAT Gateway (optional) - Using typed EC2 Route model
+_databaseRoute = [
+    ec2v1beta1.Route{
+        metadata = _metadata("database-route-nat") | {
+            name = "route-database-nat-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "database"
+                    }
+                }
+                natGatewayIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                destinationCidrBlock = "0.0.0.0/0"
+            }
+        }
+    }
+] if len(databaseSubnets) > 0 and createDatabaseSubnetRouteTable and createDatabaseNatGatewayRoute and enableNatGateway else []
+
+# Generate database route table associations - Using typed EC2 RouteTableAssociation model
+_databaseRouteTableAssociations = [
+    ec2v1beta1.RouteTableAssociation{
+        metadata = _metadata("database-rtb-assoc-${i}") | {
+            name = "rtb-assoc-database-${vpcName}-${azs[i % len(azs)]}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "database"
+                    }
+                }
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "database"
+                        "az": azs[i % len(azs)]
+                    }
+                }
+                region = region
+            }
+        }
+    }
+    for i in range(len(databaseSubnets))
+] if len(databaseSubnets) > 0 and createDatabaseSubnetRouteTable else []
+
+# Generate intra (isolated) route table - Using typed EC2 RouteTable model
+_intraRouteTable = [
+    ec2v1beta1.RouteTable{
+        metadata = _metadata("intra-route-table") | {
+            name = "rtb-intra-${vpcName}"
+            labels = tags | {
+                "route-table-type": "intra"
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "rtb-intra-${vpcName}"
+                    Type = "intra"
+                }
+            }
+        }
+    }
+] if len(intraSubnets) > 0 else []
+
+# Generate intra route table associations - Using typed EC2 RouteTableAssociation model
+# Note: No routes are added - intra subnets are fully isolated
+_intraRouteTableAssociations = [
+    ec2v1beta1.RouteTableAssociation{
+        metadata = _metadata("intra-rtb-assoc-${i}") | {
+            name = "rtb-assoc-intra-${vpcName}-${azs[i % len(azs)]}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                routeTableIdSelector = {
+                    matchLabels = {
+                        "route-table-type": "intra"
+                    }
+                }
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "intra"
+                        "az": azs[i % len(azs)]
+                    }
+                }
+                region = region
+            }
+        }
+    }
+    for i in range(len(intraSubnets))
+] if len(intraSubnets) > 0 else []
+
 # Main composition logic - returns list of desired resources
 items = [
     # VPC Resource - Using typed EC2 VPC model
@@ -397,4 +761,4 @@ items = [
             }
         }
     }
-] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources
+] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations
