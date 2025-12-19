@@ -150,19 +150,19 @@ Each feature implementation task now has:
 **File**: `.github/workflows/e2e.yaml`
 
 **Changes**:
-- Set `UP_ORG` to `solutions` (hardcoded)
 - Set `UP_GROUP` to `configuration-aws-vpc-e2e` (dedicated E2E group)
-- Updated context switch to: `solutions/upbound-gcp-us-central-1/configuration-aws-vpc-e2e`
+- Updated context switch to use `UP_GROUP` environment variable
+- Uses `UP_ORG` from secrets for CI flexibility
 
 **Key configuration**:
 ```yaml
 env:
   UP_API_TOKEN: ${{ secrets.UP_API_TOKEN }}
-  UP_ORG: solutions
+  UP_ORG: ${{ secrets.UP_ORG }}
   UP_GROUP: configuration-aws-vpc-e2e
 ```
 
-**Context**:
+**Local testing context** (always use solutions org):
 ```bash
 up ctx solutions/upbound-gcp-us-central-1/configuration-aws-vpc-e2e
 ```
@@ -197,12 +197,19 @@ up ctx solutions/upbound-gcp-us-central-1/configuration-aws-vpc-e2e
 
 ### Upbound Cloud Configuration
 
-**Organization**: `solutions`
-**Control Plane**: `upbound-gcp-us-central-1/configuration-aws-vpc-e2e`
-**Full Context**: `solutions/upbound-gcp-us-central-1/configuration-aws-vpc-e2e`
+**For Local Testing**:
+- **Organization**: `solutions` (always use solutions org locally)
+- **Control Plane**: `upbound-gcp-us-central-1/configuration-aws-vpc-e2e`
+- **Full Context**: `solutions/upbound-gcp-us-central-1/configuration-aws-vpc-e2e`
+
+**For CI (GitHub Actions)**:
+- **Organization**: Uses `UP_ORG` from secrets
+- **Control Plane Group**: `configuration-aws-vpc-e2e`
 
 **Key Points**:
 - E2E tests always run on Upbound Cloud (not local)
+- Local testing: Always use solutions org
+- CI testing: Uses org from secrets
 - Use dedicated control plane group: `configuration-aws-vpc-e2e`
 - Don't worry about costs - validation is important
 
