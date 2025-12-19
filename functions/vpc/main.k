@@ -108,7 +108,10 @@ _publicSubnetResources = [
     ec2v1beta1.Subnet{
         metadata = _metadata("public-subnet-${i}") | {
             name = "subnet-public-${vpcName}-${azs[i % len(azs)]}"
-            labels = tags | publicSubnetTags
+            labels = tags | publicSubnetTags | {
+                "subnet-type": "public"
+                "az": azs[i % len(azs)]
+            }
         }
         spec = _defaultV2Spec | {
             forProvider = {
@@ -280,6 +283,100 @@ _igwResource = [
     }
 ] if createIgw else []
 
+# Generate EIP resources for NAT Gateways - Using typed EC2 EIP model
+_eipResources = [
+    ec2v1beta1.EIP{
+        metadata = _metadata("eip-nat-${i}") | {
+            name = "eip-nat-${vpcName}-${azs[i]}"
+            labels = tags | {"az": azs[i]}
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                domain = "vpc"
+                region = region
+                tags = tags | {
+                    Name = "eip-nat-${vpcName}-${azs[i]}"
+                    AZ = azs[i]
+                }
+            }
+        }
+    }
+    for i in range(len(azs))
+] if enableNatGateway and oneNatGatewayPerAz and len(azs) > 0 and len(publicSubnets) > 0 else [
+    # Single EIP for single NAT Gateway strategy
+    ec2v1beta1.EIP{
+        metadata = _metadata("eip-nat-0") | {
+            name = "eip-nat-${vpcName}-${azs[0]}"
+            labels = tags
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                domain = "vpc"
+                region = region
+                tags = tags | {
+                    Name = "eip-nat-${vpcName}-${azs[0]}"
+                }
+            }
+        }
+    }
+] if enableNatGateway and singleNatGateway and len(azs) > 0 and len(publicSubnets) > 0 else []
+
+# Generate NAT Gateway resources - Using typed EC2 NATGateway model
+_natGatewayResources = [
+    ec2v1beta1.NATGateway{
+        metadata = _metadata("nat-${i}") | {
+            name = "nat-${vpcName}-${azs[i]}"
+            labels = tags | {"az": azs[i]}
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "public"
+                        "az": azs[i]
+                    }
+                }
+                allocationIdSelector = {
+                    matchLabels = {
+                        "az": azs[i]
+                    }
+                }
+                region = region
+                tags = tags | {
+                    Name = "nat-${vpcName}-${azs[i]}"
+                    AZ = azs[i]
+                }
+            }
+        }
+    }
+    for i in range(len(azs))
+] if enableNatGateway and oneNatGatewayPerAz and len(azs) > 0 and len(publicSubnets) > 0 else [
+    # Single NAT Gateway for single NAT strategy
+    ec2v1beta1.NATGateway{
+        metadata = _metadata("nat-0") | {
+            name = "nat-${vpcName}-${azs[0]}"
+            labels = tags
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                subnetIdSelector = {
+                    matchLabels = {
+                        "subnet-type": "public"
+                        "az": azs[0]
+                    }
+                }
+                allocationIdSelector = {
+                    matchControllerRef = True
+                }
+                region = region
+                tags = tags | {
+                    Name = "nat-${vpcName}-${azs[0]}"
+                }
+            }
+        }
+    }
+] if enableNatGateway and singleNatGateway and len(azs) > 0 and len(publicSubnets) > 0 else []
+
 # Main composition logic - returns list of desired resources
 items = [
     # VPC Resource - Using typed EC2 VPC model
@@ -300,4 +397,4 @@ items = [
             }
         }
     }
-] + _igwResource + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources
+] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources

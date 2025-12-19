@@ -368,29 +368,29 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 
 ---
 
-### 2.4 Implement NAT Gateway (GREEN)
+### 2.4 Implement NAT Gateway (GREEN) ✅
 **Priority**: P1
 **Effort**: Medium
 **Description**: **🟢 GREEN** - Implement NAT Gateway to pass tests from 2.4.1
 **Dependencies**: Task 2.4.1 (tests written)
-**Status**: PENDING
+**Status**: ✅ COMPLETED
 
 **TDD Workflow**: This is the GREEN phase - make failing tests pass
 
 **Tasks**:
-- [ ] Create or update `functions/vpc/gateway.k` module
-- [ ] Implement _generateNATGateways() function
-- [ ] Implement _generateEIPs() function
-- [ ] Support three strategies:
-  - [ ] Single NAT Gateway (singleNatGateway: true)
-  - [ ] One NAT Gateway per AZ (oneNatGatewayPerAz: true)
-  - [ ] No NAT Gateway (enableNatGateway: false)
-- [ ] Place NAT Gateways in public subnets using subnetIdSelector
-- [ ] Update main.k to include NAT and EIP resources
-- [ ] Run tests: `up test run tests/test-xvpc-nat-*`
-- [ ] **Expected: ALL PASS**
-- [ ] Run all tests: `up test run tests/test-*`
-- [ ] **Expected: ALL PASS (no regressions)**
+- [x] Create or update `functions/vpc/gateway.k` module (implemented inline in main.k)
+- [x] Implement _generateNATGateways() function
+- [x] Implement _generateEIPs() function
+- [x] Support three strategies:
+  - [x] Single NAT Gateway (singleNatGateway: true)
+  - [x] One NAT Gateway per AZ (oneNatGatewayPerAz: true)
+  - [x] No NAT Gateway (enableNatGateway: false)
+- [x] Place NAT Gateways in public subnets using subnetIdSelector
+- [x] Update main.k to include NAT and EIP resources
+- [x] Run tests: `up test run tests/test-xvpc-nat-*`
+- [x] **Expected: ALL PASS** ✅ 3/3 passing
+- [x] Run all tests: `up test run tests/test-*`
+- [x] **Expected: ALL PASS (no regressions)** ✅ 12/12 passing
 
 **AWS Resources**:
 - `ec2.aws.upbound.io/v1beta1/NATGateway`
@@ -402,6 +402,13 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 - ✅ EIPs allocated and associated correctly
 - ✅ All tests pass (including new NAT tests)
 - ✅ No regressions in existing tests
+
+**Implementation Notes**:
+- EIPs use `domain: "vpc"` field (not `vpc: True`)
+- NAT Gateways use label selectors to match EIPs and subnets
+- Public subnets labeled with `subnet-type: "public"` and `az: <availability-zone>`
+- For per-AZ strategy, EIPs labeled with `az` for precise matching
+- For single NAT strategy, EIP uses matchControllerRef for simpler selection
 - ✅ Cost-optimized single-NAT option available
 
 **Reference**:
