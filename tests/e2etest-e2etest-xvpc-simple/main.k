@@ -24,6 +24,7 @@ _items = [
         spec= {
             # Crossplane configuration
             crossplane: {
+                version: "2.0.2-up.5"
                 autoUpgrade: {
                     channel: "Rapid"
                 }
@@ -71,12 +72,15 @@ _items = [
             # Spec: Uses solutions org IAM role for E2E testing
             extraResources: [
                 {
-                    apiVersion: "aws.upbound.io/v1beta1"
+                    apiVersion: "aws.m.upbound.io/v1beta1"
                     kind: "ProviderConfig"
                     metadata: {
                         name: "default"
                     }
                     spec: {
+                        credentials: {
+                            source: "Upbound"
+                        }
                         # Use assumeRoleChain with IAM role (never static credentials!)
                         assumeRoleChain: [
                             {
