@@ -8,6 +8,12 @@ spec:
   azs:
     - us-west-2a
     - us-west-2b
+  publicSubnets:
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+  mapPublicIpOnLaunch: true
   tags:
     Environment: test
     ManagedBy: upbound
+  publicSubnetTags:
+    Tier: public

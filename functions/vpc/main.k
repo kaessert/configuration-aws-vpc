@@ -71,6 +71,39 @@ oneNatGatewayPerAz = oxrSpec.oneNatGatewayPerAz if oxrSpec.oneNatGatewayPerAz !=
 enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames != None else True
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
 
+# Extract subnet configuration
+publicSubnets = oxrSpec.publicSubnets or []
+mapPublicIpOnLaunch = oxrSpec.mapPublicIpOnLaunch if oxrSpec.mapPublicIpOnLaunch != None else True
+publicSubnetTags = oxrSpec.publicSubnetTags or {}
+
+# Generate public subnets distributed across AZs
+_publicSubnetResources = [
+    {
+        apiVersion = "ec2.aws.upbound.io/v1beta1"
+        kind = "Subnet"
+        metadata = _metadata("public-subnet-${i}") | {
+            name = "subnet-public-${vpcName}-${azs[i % len(azs)]}"
+            labels = tags | publicSubnetTags
+        }
+        spec = {
+            forProvider = {
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                availabilityZone = azs[i % len(azs)]
+                cidrBlock = subnetCidr
+                mapPublicIpOnLaunch = mapPublicIpOnLaunch
+                region = region
+                tags = tags | publicSubnetTags | {
+                    Name = "subnet-public-${vpcName}-${azs[i % len(azs)]}"
+                    Type = "public"
+                }
+            }
+        }
+    }
+    for i, subnetCidr in publicSubnets
+] if len(publicSubnets) > 0 and len(azs) > 0 else []
+
 # Main composition logic - returns list of desired resources
 items = [
     # VPC Resource
@@ -93,4 +126,4 @@ items = [
             }
         }
     }
-]
+] + _publicSubnetResources
