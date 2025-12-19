@@ -11,7 +11,8 @@ on:
 
 env:
   UP_API_TOKEN: ${{ secrets.UP_API_TOKEN }}
-  UP_ORG: ${{ secrets.UP_ORG }}
+  UP_ORG: solutions
+  UP_GROUP: configuration-aws-vpc-e2e
 
 jobs:
   e2e:
@@ -34,7 +35,7 @@ jobs:
 
       - name: Switch up context
         if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        run: up ctx ${{ secrets.UP_ORG }}/upbound-gcp-us-central-1/default
+        run: up ctx ${{ env.UP_ORG }}/upbound-gcp-us-central-1/${{ env.UP_GROUP }}
 
       - name: Run e2e tests
         if: env.UP_API_TOKEN != '' && env.UP_ORG != ''

@@ -330,7 +330,8 @@ Build a production-ready Upbound configuration package that provides the same fu
 **Tasks**:
 - [ ] Generate test: `up test generate e2etest-xvpc-basic --e2e --language=kcl`
 - [ ] Configure test with VPC, public subnets, IGW
-- [ ] Add ProviderConfig to extraResources
+- [ ] Add ProviderConfig to extraResources with IAM role: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
+- [ ] IMPORTANT: Use assumeRoleChain, NEVER static credentials
 - [ ] Set realistic timeout (1800 seconds / 30 minutes)
 - [ ] Add defaultConditions: ["Ready", "Synced"]
 - [ ] Test locally (requires `up login`): `up test run tests/e2etest-xvpc-basic --e2e`
@@ -344,10 +345,10 @@ Build a production-ready Upbound configuration package that provides the same fu
 - E2E test creates real VPC in AWS
 - All resources reach Ready/Synced conditions
 - Resources are properly cleaned up
+- Test uses IAM role (no static credentials)
 - Test can run in CI with proper secrets
-- Test documented with cost estimates (~$0.05-0.10)
 
-**Important**: Only run E2E tests when needed (labeled PRs or pre-release)
+**Important**: Run E2E tests on Upbound Cloud for validation
 
 ---
 
@@ -658,13 +659,14 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Create `e2etest-xvpc-nat` - VPC with NAT Gateway
 - [ ] Create `e2etest-xvpc-complete` - All features enabled
 - [ ] Configure tests with proper timeouts (1800+ seconds)
-- [ ] Add ProviderConfig to all E2E tests
+- [ ] Add ProviderConfig with IAM role to all E2E tests: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
+- [ ] IMPORTANT: Use assumeRoleChain, NEVER static credentials
 - [ ] Set skipDelete=false to ensure cleanup
 - [ ] Test locally with `up test run tests/e2etest-* --e2e`
 - [ ] Verify resources created in AWS
 - [ ] Verify resources cleaned up after test
-- [ ] Document E2E test costs and requirements
-- [ ] Add README.md for E2E tests with cost estimates
+- [ ] Document E2E test IAM role requirements
+- [ ] Add README.md for E2E tests
 
 **Reference**: thoughts/tools/testing-guide.md, thoughts/tools/testing-notes-platform-ref.md
 
@@ -672,8 +674,8 @@ Build a production-ready Upbound configuration package that provides the same fu
 - E2E tests create real AWS resources
 - All resources reach Ready/Synced
 - Resources properly cleaned up
+- Tests use IAM role (no static credentials)
 - Tests run in CI with "run-e2e-tests" label
-- Cost documented (estimated $0.50-2.00 per full run)
 - Tests can run on Upbound Cloud
 
 ---

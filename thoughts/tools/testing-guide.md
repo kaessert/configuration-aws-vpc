@@ -218,12 +218,19 @@ test = E2ETest {
     skipDelete = False
     defaultConditions = ["Ready", "Synced"]
     extraResources = [
-        # ProviderConfig for AWS
+        # ProviderConfig for AWS using IAM role
+        # IMPORTANT: NEVER use static credentials, always use IAM role
         {
             apiVersion = "aws.upbound.io/v1beta1"
             kind = "ProviderConfig"
             metadata.name = "default"
-            spec.credentials.source = "InjectedIdentity"
+            spec = {
+                assumeRoleChain = [
+                    {
+                        roleARN = "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                    }
+                ]
+            }
         }
     ]
     manifests = [
@@ -278,12 +285,13 @@ up test run tests/xvpc-e2e-simple/main.k --e2e
 ### E2E Test Best Practices
 
 1. **Use realistic timeouts**: AWS resources can take 5-30 minutes
-2. **Test in non-production accounts**: E2E creates real resources
-3. **Clean up resources**: Ensure skipDelete=false in CI
-4. **Use ProviderConfig**: Test with real credentials
-5. **Test critical paths only**: E2E is slow and expensive
-6. **Run in CI with labels**: Use "run-e2e-tests" label to trigger
-7. **Monitor costs**: E2E tests create billable resources
+2. **Run on Upbound Cloud**: Always run E2E tests in the "solutions" org on Upbound Cloud
+3. **Use dedicated control plane group**: Tests run in `configuration-aws-vpc-e2e` group
+4. **Clean up resources**: Ensure skipDelete=false in CI
+5. **Use IAM role for credentials**: Use `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws` (NEVER static credentials)
+6. **Test critical paths**: E2E validates real cloud integration
+7. **Run in CI with labels**: Use "run-e2e-tests" label to trigger
+8. **Don't worry about costs**: E2E tests are important for validation
 
 ---
 
@@ -503,28 +511,48 @@ up test run tests/e2e/* --e2e
 
 ---
 
-## Cost Considerations
+## E2E Test Configuration
 
-### E2E Test Costs
+### AWS Credentials
 
-E2E tests create real AWS resources that incur costs:
+**IMPORTANT**: E2E tests MUST use IAM role assumption, NEVER static credentials.
+
+**IAM Role for E2E Tests**: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
+
+This role should be configured in the ProviderConfig:
+
+```kcl
+{
+    apiVersion = "aws.upbound.io/v1beta1"
+    kind = "ProviderConfig"
+    metadata.name = "default"
+    spec = {
+        assumeRoleChain = [
+            {
+                roleARN = "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+            }
+        ]
+    }
+}
+```
+
+### Cost Considerations
+
+E2E tests create real AWS resources. While costs should not prevent running necessary tests, it's good to understand what resources are created:
 
 - **VPC**: Free
 - **Subnets**: Free
 - **Internet Gateway**: Free
-- **NAT Gateway**: ~$0.045/hour (~$0.023 per test if 30 min)
+- **NAT Gateway**: ~$0.045/hour
 - **VPC Endpoints**: ~$0.01/hour per endpoint
 - **Elastic IP**: $0.005/hour when not attached
 - **Control Plane**: Free (dev control planes are free for 24h)
 
-**Estimated cost per full E2E test run**: $0.05 - $0.50
-
-**Optimization strategies**:
-1. Run E2E tests only on labeled PRs
+**Best practices**:
+1. Run E2E tests when needed for validation
 2. Use skipDelete=false to ensure cleanup
-3. Set reasonable timeouts to avoid long-running tests
-4. Test in us-east-1 (often cheaper)
-5. Use composition tests for most validation
+3. Set reasonable timeouts to avoid stuck resources
+4. Use composition tests for most validation (faster feedback)
 
 ---
 

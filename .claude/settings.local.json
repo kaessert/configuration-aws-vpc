@@ -15,7 +15,12 @@
       "Bash(up function generate vpc:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "WebFetch(domain:marketplace.upbound.io)"
+      "WebFetch(domain:marketplace.upbound.io)",
+      "WebSearch",
+      "WebFetch(domain:blog.upbound.io)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:api.github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)"
     ]
   }
 }

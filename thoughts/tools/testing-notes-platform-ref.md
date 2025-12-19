@@ -273,8 +273,8 @@ jobs:
       - run: up project build
 
       - name: Switch up context
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        run: up ctx ${{ env.UP_ORG }}/upbound-gcp-us-central-1/${{ env.UP_GROUP }}
+        if: env.UP_API_TOKEN != ''
+        run: up ctx solutions/upbound-gcp-us-central-1/configuration-aws-vpc-e2e
 
       - name: Run e2e tests
         if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
