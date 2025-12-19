@@ -120,10 +120,11 @@ Build a production-ready Upbound configuration package that provides the same fu
 **Priority**: P1
 **Effort**: Large
 **Description**: Create subnets across availability zones
+**Status**: IN PROGRESS (public subnets done)
 
 **Tasks**:
-- [ ] Create `functions/vpc/subnet.k` module
-- [ ] Implement public subnet generation
+- [x] Create `functions/vpc/subnet.k` module
+- [x] Implement public subnet generation
 - [ ] Implement private subnet generation
 - [ ] Support database subnets
 - [ ] Support elasticache subnets
@@ -131,15 +132,42 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Support intra subnets (no internet access)
 - [ ] Distribute subnets across AZs
 - [ ] Implement CIDR block assignment
-- [ ] Add mapPublicIpOnLaunch for public subnets
+- [x] Add mapPublicIpOnLaunch for public subnets
 
-**AWS Resources**: `aws_subnet` (multiple types)
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/Subnet` (multiple types)
 
 **Acceptance Criteria**:
 - Subnets created in specified AZs
 - CIDR blocks assigned correctly
 - Subnet types differentiated properly
 - All 6 subnet types supported
+
+---
+
+### 2.2.1 Add Composition Tests for Subnets
+**Priority**: P1
+**Effort**: Small
+**Description**: Create composition tests to validate subnet creation logic
+**Dependencies**: Task 2.2
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-public-subnets --language=kcl`
+- [ ] Write test asserting public subnets are created with correct specs
+- [ ] Test single AZ scenario
+- [ ] Test multi-AZ scenario
+- [ ] Verify mapPublicIpOnLaunch is set correctly
+- [ ] Run test locally: `up test run tests/test-xvpc-public-subnets`
+- [ ] Fix any broken tests from previous features (VPC)
+- [ ] Ensure all tests pass
+
+**Reference**: thoughts/tools/testing-notes-platform-ref.md
+
+**Acceptance Criteria**:
+- Test validates correct number of subnets created
+- Test validates subnet CIDR blocks
+- Test validates subnet placement across AZs
+- All existing tests still pass
+- Test runs in < 10 seconds
 
 ---
 
@@ -154,12 +182,34 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Attach IGW to VPC
 - [ ] Make creation conditional (create_igw parameter)
 
-**AWS Resources**: `aws_internet_gateway`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/InternetGateway`
 
 **Acceptance Criteria**:
 - IGW created when public subnets exist
 - Properly attached to VPC
 - Conditional creation works
+
+---
+
+### 2.3.1 Add Composition Tests for Internet Gateway
+**Priority**: P1
+**Effort**: Small
+**Description**: Create composition tests for IGW functionality
+**Dependencies**: Task 2.3
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-igw --language=kcl`
+- [ ] Test IGW is created when public subnets exist
+- [ ] Test IGW is NOT created when no public subnets
+- [ ] Verify IGW attachment to VPC
+- [ ] Run test: `up test run tests/test-xvpc-igw`
+- [ ] Fix any broken tests from subnet changes
+- [ ] Ensure all tests pass
+
+**Acceptance Criteria**:
+- Test validates conditional IGW creation
+- Test validates VPC attachment
+- All existing tests still pass
 
 ---
 
@@ -178,13 +228,40 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Place NAT Gateways in public subnets
 - [ ] Make strategy configurable
 
-**AWS Resources**: `aws_nat_gateway`, `aws_eip`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/NATGateway`, `ec2.aws.upbound.io/v1beta1/EIP`
 
 **Acceptance Criteria**:
 - All three strategies work correctly
 - NAT Gateways placed in public subnets
 - EIPs allocated properly
 - Cost-optimized single-NAT option available
+
+---
+
+### 2.4.1 Add Composition Tests for NAT Gateway
+**Priority**: P1
+**Effort**: Medium
+**Description**: Create composition tests for all NAT Gateway strategies
+**Dependencies**: Task 2.4
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-nat-single --language=kcl`
+- [ ] Test single NAT Gateway strategy (1 NAT, 1 EIP)
+- [ ] Generate test: `up test generate test-xvpc-nat-per-az --language=kcl`
+- [ ] Test NAT per AZ strategy (N NATs, N EIPs)
+- [ ] Generate test: `up test generate test-xvpc-nat-disabled --language=kcl`
+- [ ] Test no NAT Gateway (0 NATs, 0 EIPs)
+- [ ] Verify NAT placement in public subnets
+- [ ] Verify EIP allocation
+- [ ] Run tests: `up test run tests/test-xvpc-nat-*`
+- [ ] Fix any broken tests
+- [ ] Ensure all tests pass
+
+**Acceptance Criteria**:
+- All three NAT strategies have tests
+- Tests validate correct number of NATs and EIPs
+- Tests validate placement in public subnets
+- All existing tests still pass
 
 ---
 
@@ -205,7 +282,7 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Support per-AZ route tables
 - [ ] Support custom routes
 
-**AWS Resources**: `aws_route_table`, `aws_route`, `aws_route_table_association`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/RouteTable`, `ec2.aws.upbound.io/v1beta1/Route`, `ec2.aws.upbound.io/v1beta1/RouteTableAssociation`
 
 **Acceptance Criteria**:
 - Public subnets route to IGW
@@ -213,6 +290,64 @@ Build a production-ready Upbound configuration package that provides the same fu
 - Specialized subnets have proper isolation
 - Custom routes can be added
 - Route table associations correct
+
+---
+
+### 2.5.1 Add Composition Tests for Route Tables
+**Priority**: P1
+**Effort**: Medium
+**Description**: Create composition tests for routing logic
+**Dependencies**: Task 2.5
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-routes-public --language=kcl`
+- [ ] Test public route table points to IGW
+- [ ] Test route table associations for public subnets
+- [ ] Generate test: `up test generate test-xvpc-routes-private --language=kcl`
+- [ ] Test private route tables point to NAT Gateway
+- [ ] Test per-AZ route tables (if NAT per AZ)
+- [ ] Generate test: `up test generate test-xvpc-routes-isolated --language=kcl`
+- [ ] Test database/intra subnets have no external routes
+- [ ] Verify route table association correctness
+- [ ] Run tests: `up test run tests/test-xvpc-routes-*`
+- [ ] Fix any broken tests
+- [ ] Ensure all tests pass
+
+**Acceptance Criteria**:
+- Tests validate route destinations (IGW, NAT, none)
+- Tests validate route table associations
+- Tests cover all subnet types
+- All existing tests still pass
+
+---
+
+### 2.5.2 Add E2E Test for Core VPC
+**Priority**: P1
+**Effort**: Medium
+**Description**: Create E2E test validating complete VPC with real AWS resources
+**Dependencies**: Tasks 2.1-2.5
+
+**Tasks**:
+- [ ] Generate test: `up test generate e2etest-xvpc-basic --e2e --language=kcl`
+- [ ] Configure test with VPC, public subnets, IGW
+- [ ] Add ProviderConfig to extraResources
+- [ ] Set realistic timeout (1800 seconds / 30 minutes)
+- [ ] Add defaultConditions: ["Ready", "Synced"]
+- [ ] Test locally (requires `up login`): `up test run tests/e2etest-xvpc-basic --e2e`
+- [ ] Verify resources created in AWS
+- [ ] Verify resources cleaned up after test
+- [ ] Document E2E test requirements in test README
+
+**Reference**: thoughts/tools/testing-notes-platform-ref.md, thoughts/tools/testing-guide.md
+
+**Acceptance Criteria**:
+- E2E test creates real VPC in AWS
+- All resources reach Ready/Synced conditions
+- Resources are properly cleaned up
+- Test can run in CI with proper secrets
+- Test documented with cost estimates (~$0.05-0.10)
+
+**Important**: Only run E2E tests when needed (labeled PRs or pre-release)
 
 ---
 
@@ -232,13 +367,39 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Support endpoint security groups
 - [ ] Make endpoints optional with feature flags
 
-**AWS Resources**: `aws_vpc_endpoint`, `aws_security_group`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/VPCEndpoint`, Security Groups
 
 **Acceptance Criteria**:
 - Gateway endpoints (S3, DynamoDB) work
 - Interface endpoints can be created
 - Endpoint policies applied
 - Cost consideration documented
+
+---
+
+### 3.1.1 Add Composition Tests for VPC Endpoints
+**Priority**: P2
+**Effort**: Medium
+**Description**: Create composition tests for VPC Endpoints
+**Dependencies**: Task 3.1
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-endpoints-gateway --language=kcl`
+- [ ] Test S3 gateway endpoint creation
+- [ ] Test DynamoDB gateway endpoint creation
+- [ ] Generate test: `up test generate test-xvpc-endpoints-interface --language=kcl`
+- [ ] Test interface endpoint creation (EC2, SSM, etc.)
+- [ ] Test endpoint policies
+- [ ] Test endpoint security groups
+- [ ] Run tests: `up test run tests/test-xvpc-endpoints-*`
+- [ ] Fix any broken tests
+- [ ] Ensure all tests pass
+
+**Acceptance Criteria**:
+- Tests validate gateway endpoint creation
+- Tests validate interface endpoint creation
+- Tests validate endpoint policies and security groups
+- All existing tests still pass
 
 ---
 
@@ -256,12 +417,36 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Associate NACLs with subnets
 - [ ] Provide sensible defaults
 
-**AWS Resources**: `aws_network_acl`, `aws_network_acl_rule`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/NetworkACL`, `ec2.aws.upbound.io/v1beta1/NetworkACLRule`
 
 **Acceptance Criteria**:
 - Custom NACL rules can be defined
 - Rules applied to correct subnets
 - Default rules are permissive
+
+---
+
+### 3.2.1 Add Composition Tests for Network ACLs
+**Priority**: P2
+**Effort**: Small
+**Description**: Create composition tests for Network ACLs
+**Dependencies**: Task 3.2
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-nacl --language=kcl`
+- [ ] Test NACL creation with custom rules
+- [ ] Test inbound and outbound rules
+- [ ] Test NACL association with subnets
+- [ ] Test default permissive rules
+- [ ] Run test: `up test run tests/test-xvpc-nacl`
+- [ ] Fix any broken tests
+- [ ] Ensure all tests pass
+
+**Acceptance Criteria**:
+- Test validates NACL creation
+- Test validates rule configuration
+- Test validates subnet associations
+- All existing tests still pass
 
 ---
 
@@ -302,13 +487,38 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Create necessary IAM roles
 - [ ] Create log groups/buckets as needed
 
-**AWS Resources**: `aws_flow_log`, `aws_cloudwatch_log_group`, `aws_s3_bucket`, `aws_iam_role`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/FlowLog`, CloudWatch Log Group, S3 Bucket, IAM Role
 
 **Acceptance Criteria**:
 - Flow logs to CloudWatch work
 - Flow logs to S3 work
 - Traffic filtering works
 - IAM permissions correct
+
+---
+
+### 3.4.1 Add Composition Tests for Flow Logs
+**Priority**: P2
+**Effort**: Small
+**Description**: Create composition tests for VPC Flow Logs
+**Dependencies**: Task 3.4
+
+**Tasks**:
+- [ ] Generate test: `up test generate test-xvpc-flow-logs-cloudwatch --language=kcl`
+- [ ] Test flow logs to CloudWatch destination
+- [ ] Generate test: `up test generate test-xvpc-flow-logs-s3 --language=kcl`
+- [ ] Test flow logs to S3 destination
+- [ ] Test traffic type filtering (All/Accept/Reject)
+- [ ] Test IAM role creation
+- [ ] Run tests: `up test run tests/test-xvpc-flow-logs-*`
+- [ ] Fix any broken tests
+- [ ] Ensure all tests pass
+
+**Acceptance Criteria**:
+- Tests validate flow log destinations
+- Tests validate IAM role configuration
+- Tests validate traffic type filtering
+- All existing tests still pass
 
 ---
 
@@ -385,13 +595,16 @@ Build a production-ready Upbound configuration package that provides the same fu
 **Description**: Create comprehensive examples matching Terraform module test cases
 
 **Tasks**:
-- [ ] Create `examples/simple-vpc.yaml` - Minimal VPC
+- [x] Create `examples/simple-vpc.yaml` - Minimal VPC (done)
 - [ ] Create `examples/complete-vpc.yaml` - All features
 - [ ] Create `examples/private-only.yaml` - No IGW
 - [ ] Create `examples/multi-az.yaml` - Multiple AZs
 - [ ] Create `examples/with-endpoints.yaml` - VPC endpoints
 - [ ] Create `examples/with-flow-logs.yaml` - Flow logs enabled
+- [ ] Create `examples/nat-single.yaml` - Single NAT Gateway
+- [ ] Create `examples/nat-per-az.yaml` - NAT per AZ
 - [ ] Document each example thoroughly
+- [ ] Add README.md in examples/ directory
 
 **Reference**: thoughts/spec/terraform-vpc-analysis.md (Test Cases section)
 
@@ -399,32 +612,73 @@ Build a production-ready Upbound configuration package that provides the same fu
 - All major use cases covered
 - Examples match Terraform module examples
 - Documentation clear and helpful
+- Each example has inline comments
 
 ---
 
-### 5.2 Implement Automated Tests
+### 5.2 Implement Composition Test Suite
 **Priority**: P1
 **Effort**: Large
-**Description**: Create test suite using `up test`
+**Description**: Create comprehensive composition tests for all features
 
 **Tasks**:
-- [ ] Create test configurations in `tests/` directory
-- [ ] Test basic VPC creation
-- [ ] Test all subnet types
-- [ ] Test NAT Gateway strategies
-- [ ] Test conditional resource creation
-- [ ] Test outputs are populated
-- [ ] Test with different regions/AZs
-- [ ] Test deletion and cleanup
+- [ ] Organize tests by feature in `tests/` directory
+- [ ] Create test for basic VPC (test-xvpc-basic)
+- [ ] Create tests for all subnet types
+- [ ] Create tests for NAT Gateway strategies (see tasks 2.4.1)
+- [ ] Create tests for route tables (see tasks 2.5.1)
+- [ ] Create tests for conditional resource creation
+- [ ] Create tests for VPC endpoints (after implementing)
+- [ ] Create tests for Network ACLs (after implementing)
+- [ ] Create tests for Flow Logs (after implementing)
+- [ ] Create test for complete VPC with all features
+- [ ] Add README.md in tests/ directory explaining test organization
+- [ ] Run all tests: `up test run tests/test-*`
+- [ ] Ensure all tests pass in < 60 seconds total
+
+**Reference**: thoughts/tools/testing-notes-platform-ref.md
 
 **Acceptance Criteria**:
-- All tests pass with `up test run`
+- At least one test per major feature
+- Tests follow platform-ref-upbound patterns
+- Tests organized by resource type
+- All tests pass locally
+- Tests run automatically in CI
 - Edge cases covered
-- Cleanup verified
 
 ---
 
-### 5.3 Validate Feature Parity
+### 5.3 Implement E2E Test Suite
+**Priority**: P1
+**Effort**: Large
+**Description**: Create E2E tests for critical scenarios
+
+**Tasks**:
+- [ ] Create e2etest-xvpc-basic (see task 2.5.2)
+- [ ] Create `e2etest-xvpc-nat` - VPC with NAT Gateway
+- [ ] Create `e2etest-xvpc-complete` - All features enabled
+- [ ] Configure tests with proper timeouts (1800+ seconds)
+- [ ] Add ProviderConfig to all E2E tests
+- [ ] Set skipDelete=false to ensure cleanup
+- [ ] Test locally with `up test run tests/e2etest-* --e2e`
+- [ ] Verify resources created in AWS
+- [ ] Verify resources cleaned up after test
+- [ ] Document E2E test costs and requirements
+- [ ] Add README.md for E2E tests with cost estimates
+
+**Reference**: thoughts/tools/testing-guide.md, thoughts/tools/testing-notes-platform-ref.md
+
+**Acceptance Criteria**:
+- E2E tests create real AWS resources
+- All resources reach Ready/Synced
+- Resources properly cleaned up
+- Tests run in CI with "run-e2e-tests" label
+- Cost documented (estimated $0.50-2.00 per full run)
+- Tests can run on Upbound Cloud
+
+---
+
+### 5.4 Validate Feature Parity
 **Priority**: P1
 **Effort**: Medium
 **Description**: Ensure all Terraform module features are implemented
@@ -434,7 +688,9 @@ Build a production-ready Upbound configuration package that provides the same fu
 - [ ] Verify all inputs supported
 - [ ] Verify all outputs available
 - [ ] Test each feature against Terraform behavior
+- [ ] Run side-by-side comparison (Terraform vs Upbound)
 - [ ] Document any intentional differences
+- [ ] Create migration guide from Terraform module
 
 **Reference**: thoughts/spec/terraform-vpc-analysis.md (complete feature list)
 
@@ -442,6 +698,56 @@ Build a production-ready Upbound configuration package that provides the same fu
 - Feature parity achieved (or documented gaps)
 - Behavior matches Terraform module
 - Outputs match expected values
+- Migration guide available
+
+---
+
+### 5.5 Setup Test Automation in CI/CD
+**Priority**: P1
+**Effort**: Small
+**Description**: Ensure tests run automatically in CI/CD
+
+**Tasks**:
+- [x] Composition test workflow exists (`.github/workflows/composition-test.yaml`)
+- [x] E2E test workflow exists (`.github/workflows/e2e.yaml`)
+- [ ] Verify composition tests run on every PR
+- [ ] Verify E2E tests run on labeled PRs ("run-e2e-tests")
+- [ ] Add test status badges to README
+- [ ] Configure test failure notifications
+- [ ] Document how to run tests locally
+- [ ] Add pre-commit hook for running tests (optional)
+
+**Reference**: thoughts/tools/testing-notes-platform-ref.md
+
+**Acceptance Criteria**:
+- Composition tests run automatically on all PRs
+- E2E tests run on labeled PRs
+- Test failures block merging
+- Documentation clear on running tests locally
+
+---
+
+### 5.6 Create Testing Documentation
+**Priority**: P1
+**Effort**: Small
+**Description**: Document testing strategy and how to write tests
+
+**Tasks**:
+- [x] Testing guide created (thoughts/tools/testing-guide.md)
+- [x] Platform-ref patterns documented (thoughts/tools/testing-notes-platform-ref.md)
+- [ ] Add TESTING.md at project root for contributors
+- [ ] Document test organization and naming
+- [ ] Document how to generate new tests
+- [ ] Document how to run tests locally
+- [ ] Document E2E test requirements (credentials, costs)
+- [ ] Add testing section to CONTRIBUTING.md
+- [ ] Include testing in README.md
+
+**Acceptance Criteria**:
+- Contributors know how to write tests
+- Testing strategy documented
+- Examples provided
+- Common issues documented
 
 ---
 
