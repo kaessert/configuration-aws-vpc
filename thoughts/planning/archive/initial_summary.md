@@ -1,3 +1,13 @@
+# 🔒 ARCHIVED: Planning Phase Summary
+
+**Status**: Completed (2025-12-19)
+**Purpose**: Documents initial planning and research phase
+**Current Documentation**:
+- See `../tasks.md` for current tasks and status
+- See `../../CLAUDE.md` for current instructions
+
+---
+
 # Project Foundation Setup - Summary
 
 This document summarizes the initial project planning and research phase completed on 2025-12-19.
@@ -46,13 +56,22 @@ This document summarizes the initial project planning and research phase complet
   - Testing strategies
 
 #### 5. Git Operations
-- **thoughts/git/common-operations.md** - Complete git workflow guide:
-  - Making commits with conventional format
+- **thoughts/git/git-workflow.md** - Complete git workflow guide:
+  - Commit message conventions (NO AI attribution)
   - Branch management strategies
+  - Making commits with conventional format
   - Creating pull requests with gh CLI
-  - Syncing with remote
-  - Viewing history and changes
+  - Standard workflows for features, bugs, tests, docs
+  - Best practices and git hooks
+- **thoughts/git/git-reference.md** - Git command reference:
+  - Status and information commands
+  - Staging and committing
+  - Branch operations
+  - History and changes
+  - Remote sync operations
   - Undoing changes safely
+  - Conflict resolution
+  - Stashing and advanced operations
 
 #### 6. Task Breakdown
 - **thoughts/tasks.md** - Detailed, prioritized task list organized into 9 phases:
@@ -68,6 +87,8 @@ This document summarizes the initial project planning and research phase complet
   - Total: 28 well-defined tasks with clear acceptance criteria
 
 ## What's Next?
+
+**NOTE**: This "Next Steps" section reflects the state at project inception. For current status and tasks, see `../tasks.md`.
 
 To continue working on this project, any coding agent (including you in future sessions) should:
 
@@ -127,7 +148,8 @@ configuration-aws-vpc/
 │   ├── coding/
 │   │   └── upbound-patterns.md        # Coding standards and patterns
 │   └── git/
-│       └── common-operations.md        # Git workflow reference
+│       ├── git-workflow.md             # Git workflows and commit conventions
+│       └── git-reference.md            # Git command reference
 └── (ready for implementation files)
 ```
 

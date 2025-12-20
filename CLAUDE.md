@@ -35,6 +35,82 @@ See `thoughts/tasks.md` for the new critical task (0.1) that blocks all other wo
 
 **Status**: Project is in the planning/foundation phase. All research and documentation is complete. Ready for implementation.
 
+---
+
+## 🔄 Self-Correcting Documentation System
+
+**CRITICAL FOR ALL AGENTS**: This project implements a self-correcting documentation mechanism.
+
+### When Your Actions Are Corrected
+
+If a human user **corrects, denies, or de-validates** any of your actions or assumptions:
+
+1. **IMMEDIATELY** launch the Documentation Correction Agent
+2. **DO NOT** continue with the main task until documentation is corrected
+3. **DO NOT** pollute the main context with documentation investigation
+
+### How to Invoke the Correction Agent
+
+```bash
+# Use the Task tool to launch the specialized agent
+Task(
+  subagent_type="general-purpose",
+  description="Investigate documentation issue",
+  prompt="""
+You are the Documentation Correction Agent for this project.
+
+CONTEXT:
+- Incorrect action taken: [describe what was wrong]
+- Correct approach: [describe what should have happened]
+- Problem being solved: [original problem]
+
+Follow the instructions in .claude/agents/documentation-correction-agent.md to:
+1. Investigate why the wrong path was taken
+2. Find contradicting/missing/duplicate documentation
+3. Fix all documentation issues
+4. Implement prevention measures
+
+Your goal: Ensure this mistake never happens again.
+"""
+)
+```
+
+### Why This Matters
+
+- **Prevents repeated mistakes**: Fix root causes in documentation
+- **Improves agent performance**: Future agents learn from corrections
+- **Keeps main context clean**: Investigation happens in sub-agent
+- **Systemic improvement**: Don't just fix the issue, fix the documentation
+
+### Examples of When to Invoke
+
+1. **Wrong assumption made**: "I assumed E2E tests were optional" → INVOKE
+2. **Contradicting guidance followed**: "File A said X, but Y was correct" → INVOKE
+3. **Missed critical requirement**: "I didn't know Z was mandatory" → INVOKE
+4. **Used wrong pattern**: "I followed pattern A, but pattern B was correct" → INVOKE
+
+### Agent Responsibilities
+
+The Documentation Correction Agent (see `.claude/agents/documentation-correction-agent.md`) will:
+- ✅ Audit all documentation for contradictions
+- ✅ Find missing or hard-to-find information
+- ✅ Resolve conflicts between documents
+- ✅ Improve discoverability of critical information
+- ✅ Implement prevention measures
+- ✅ Ensure consistency across all documentation
+
+### Your Responsibility
+
+When corrected by a human:
+1. Acknowledge the correction
+2. Launch the Documentation Correction Agent immediately
+3. Wait for the agent to complete its investigation
+4. Only then resume your main task with correct information
+
+**Remember**: Every correction is an opportunity to improve the project's documentation system. Take it seriously.
+
+---
+
 ## First-Time Setup
 
 If this is your first time working on this project:
@@ -42,17 +118,21 @@ If this is your first time working on this project:
 1. **Read the project context**:
    - Review `thoughts/initial_prompt.md` for the original requirements
    - Read `thoughts/tasks.md` for the complete task breakdown
-   - Scan `thoughts/spec/terraform-vpc-analysis.md` to understand what we're building
+   - Read `thoughts/SPECIFICATION.md` - Complete specification of what we're building
 
-2. **Familiarize yourself with the tools**:
+2. **Understand the implementation approach**:
+   - `thoughts/IMPLEMENTATION_GUIDE.md` - Architecture, workflow, testing strategy
+
+3. **Learn KCL patterns**:
+   - `thoughts/KCL_PATTERNS.md` - KCL coding patterns and reference
+
+4. **Familiarize yourself with the tools**:
    - `thoughts/tools/up-cli-guide.md` - Upbound CLI reference
    - `thoughts/tools/kcl-guide.md` - KCL language guide
 
-3. **Understand the coding patterns**:
-   - `thoughts/coding/upbound-patterns.md` - Critical patterns from platform-ref-upbound
-
-4. **Learn git workflows**:
-   - `thoughts/git/common-operations.md` - Git operations reference
+5. **Learn git workflows**:
+   - `thoughts/git/git-workflow.md` - Git workflows and commit conventions
+   - `thoughts/git/git-reference.md` - Git command reference
 
 ## The "thoughts" Directory Structure
 
@@ -60,17 +140,17 @@ All operational knowledge lives in the `thoughts/` directory:
 
 ```
 thoughts/
+├── SPECIFICATION.md            # Complete feature specification (WHAT to build)
+├── IMPLEMENTATION_GUIDE.md     # Architecture and workflow (HOW to build)
+├── KCL_PATTERNS.md             # KCL coding patterns reference
 ├── initial_prompt.md           # Original project requirements
 ├── tasks.md                    # Prioritized task list (START HERE)
-├── spec/
-│   └── terraform-vpc-analysis.md   # Complete feature specification
 ├── tools/
 │   ├── up-cli-guide.md         # How to use up CLI
 │   └── kcl-guide.md            # KCL language reference
-├── coding/
-│   └── upbound-patterns.md     # Coding patterns and standards
 └── git/
-    └── common-operations.md    # Git workflow reference
+    ├── git-workflow.md         # Git workflows and commit conventions
+    └── git-reference.md        # Git command reference
 ```
 
 ## Current Project Status
@@ -106,9 +186,9 @@ Start with tasks from `thoughts/tasks.md`:
 ### Before Writing Code
 
 **ALWAYS** check these documents first:
-- `thoughts/coding/upbound-patterns.md` - Ensure you follow established patterns
-- `thoughts/spec/terraform-vpc-analysis.md` - Understand the feature requirements
-- `thoughts/tools/kcl-guide.md` - Reference for KCL syntax/patterns
+- `thoughts/KCL_PATTERNS.md` - Ensure you follow established patterns
+- `thoughts/SPECIFICATION.md` - Understand the feature requirements
+- `thoughts/IMPLEMENTATION_GUIDE.md` - Architecture and workflow guidance
 
 ### Testing Your Changes
 
@@ -270,7 +350,7 @@ up project stop
 
 ## Working with KCL
 
-Key patterns (see thoughts/tools/kcl-guide.md and thoughts/coding/upbound-patterns.md):
+Key patterns (see thoughts/KCL_PATTERNS.md):
 
 ```kcl
 # Import dependencies
@@ -298,10 +378,10 @@ items = [
 **A**: Open `thoughts/tasks.md` and start with task 1.1 (Initialize Upbound Project)
 
 ### Q: How do I understand what features to implement?
-**A**: Read `thoughts/spec/terraform-vpc-analysis.md` - it has the complete feature list from the Terraform module
+**A**: Read `thoughts/SPECIFICATION.md` - it has the complete feature list from the Terraform module
 
 ### Q: What coding patterns should I follow?
-**A**: Follow patterns in `thoughts/coding/upbound-patterns.md` - it's based on production Upbound projects
+**A**: Follow patterns in `thoughts/KCL_PATTERNS.md` - it's based on production Upbound projects
 
 ### Q: How do I use up-cli?
 **A**: Check `thoughts/tools/up-cli-guide.md` for comprehensive up-cli documentation
@@ -310,19 +390,19 @@ items = [
 **A**: Reference `thoughts/tools/kcl-guide.md` for language syntax and patterns
 
 ### Q: How do I commit my changes?
-**A**: Follow the git workflows in `thoughts/git/common-operations.md`
+**A**: Follow the git workflows in `thoughts/git/git-workflow.md`
 
 ### Q: What if I'm stuck?
 **A**:
 1. Re-read the relevant docs in thoughts/
-2. Look at the platform-ref-upbound patterns
-3. Check the KCL guide for syntax
-4. Review the terraform-vpc-analysis for feature requirements
+2. Check thoughts/KCL_PATTERNS.md for patterns
+3. Review thoughts/SPECIFICATION.md for feature requirements
+4. Consult thoughts/IMPLEMENTATION_GUIDE.md for workflow guidance
 
 ## Important Principles
 
 ### 1. Follow the Patterns
-The patterns in `thoughts/coding/upbound-patterns.md` are based on real Upbound projects. Don't reinvent the wheel.
+The patterns in `thoughts/KCL_PATTERNS.md` are based on real Upbound projects. Don't reinvent the wheel.
 
 ### 2. Test Early and Often
 Use `up project run` frequently to test your changes locally before pushing.
@@ -335,6 +415,9 @@ If you learn something new or make a decision, document it in the appropriate th
 
 ### 5. Keep tasks.md Updated
 Always keep the task list current. It's the source of truth for project status.
+
+### 6. Self-Correct When Wrong
+When corrected by a human, **immediately** launch the Documentation Correction Agent (see Self-Correcting Documentation System above). Every mistake is an opportunity to improve documentation for future agents.
 
 ## Task Workflow
 
@@ -455,7 +538,7 @@ If you need more context:
 If something is fundamentally broken:
 1. Check `up project stop` to clean up local runs
 2. Review recent commits for issues
-3. Consult thoughts/git/common-operations.md for recovery
+3. Consult thoughts/git/git-workflow.md for recovery
 
 ## Success Criteria
 
@@ -486,7 +569,7 @@ kubectl describe xvpc <name>      # Inspect VPC
 up test run tests/*               # Run tests
 kubectl get events --sort-by='.lastTimestamp'  # Check events
 
-# Git Operations (see thoughts/git/common-operations.md)
+# Git Operations (see thoughts/git/git-workflow.md and git-reference.md)
 git status                        # Check status
 git add .                         # Stage changes
 git commit -m "feat: ..."         # Commit
@@ -498,7 +581,7 @@ git push                          # Push changes
 - **tasks.md is your source of truth** for what to work on next
 - **thoughts/ directory has all the knowledge** you need
 - **Test frequently** with `up project run`
-- **Follow the patterns** in upbound-patterns.md
+- **Follow the patterns** in KCL_PATTERNS.md
 - **Keep documentation updated** as you work
 - **Commit often** with clear messages
 

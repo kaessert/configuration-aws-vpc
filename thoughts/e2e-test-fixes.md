@@ -121,3 +121,56 @@ kubectl apply -f providerconfig.yaml
 2. ✅ Control plane created successfully
 3. ⚠️ Investigate E2E framework hang issue
 4. ⏳ Try alternative test approach or framework settings
+
+---
+
+## Date: 2025-12-20 - CRITICAL FIX FOUND
+
+#### Issue 6: ProviderConfig Missing Namespace Field
+**Problem**: E2E test still hanging on "Applying Extra Resources..." even with correct API version
+**Root Cause**: **ProviderConfig was missing the `namespace` field!**
+**Discovery**: User identified that namespaced claims REQUIRE namespaced ProviderConfigs
+
+**The Critical Fix**:
+```kcl
+{
+    apiVersion: "aws.m.upbound.io/v1beta1"
+    kind: "ProviderConfig"
+    metadata: {
+        name: "default"
+        namespace: "default"  # <-- THIS WAS MISSING!
+    }
+    spec: {
+        credentials: {
+            source: "Upbound"
+        }
+        assumeRoleChain: [
+            {
+                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+            }
+        ]
+    }
+}
+```
+
+**Why This Was The Issue**:
+- The test uses a **namespaced VPC claim** (`kind: "VPC"` with `namespace: "default"`)
+- Namespaced claims require **namespaced ProviderConfigs** in the same namespace
+- Without the namespace field, Kubernetes cannot create the ProviderConfig
+- This caused the "Applying Extra Resources" phase to hang indefinitely
+
+**Key Rule**:
+- **Namespaced claims** → ProviderConfig MUST have `namespace` field
+- **Cluster-scoped composites** (XVPC) → ProviderConfig can be cluster-scoped (no namespace)
+
+**Repository Fix**:
+Also changed repository from `solutions` to `upbound`:
+- FROM: `xpkg.upbound.io/solutions/configuration-aws-vpc`
+- TO: `xpkg.upbound.io/upbound/configuration-aws-vpc`
+
+**All 5 E2E Tests Need This Fix**:
+1. e2etest-e2etest-xvpc-simple ← FIXING NOW
+2. e2etest-e2etest-xvpc-basic
+3. e2etest-e2etest-xvpc-nat-single
+4. e2etest-e2etest-xvpc-nat-per-az
+5. e2etest-e2etest-xvpc-complete

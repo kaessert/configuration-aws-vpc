@@ -1,3 +1,11 @@
+# 🔒 ARCHIVED: Initial Project Prompt
+
+**Status**: Historical Reference Only
+**Date**: 2025-12-19
+**Current Documentation**: See `../tasks.md` for current status
+
+---
+
 # Initial Project Prompt
 
 Help me plan a bigger project in this directory. We need to leave instructions in CLAUDE.md for futher runs with coding agents. The goal is to build and upbound control plane project which has feature parity with this terraform aws vpc module: https://github.com/terraform-aws-modules/terraform-aws-vpc

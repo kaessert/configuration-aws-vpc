@@ -1,5 +1,7 @@
 # Upbound Console Guide - Monitoring E2E Tests
 
+A visual guide for using the Upbound Cloud web console to monitor control planes, packages, resources, and E2E test execution.
+
 ## Quick Access
 
 **Upbound Console URL**: https://console.upbound.io
@@ -7,6 +9,12 @@
 **Organization**: solutions
 
 **Current Profile**: solutions (cloud)
+
+## Related Documentation
+
+For CLI-based management of groups and control planes, see: [upbound-platform.md](./upbound-platform.md)
+
+For understanding the platform hierarchy (Organization → Space → Group → Control Plane), see: [upbound-platform.md](./upbound-platform.md) Part 1: Platform Architecture
 
 ---
 

@@ -1,5 +1,7 @@
 # Glossary - Project Terminology
 
+**New to the project? Start with [ONBOARDING.md](ONBOARDING.md)** for complete setup and context.
+
 This glossary defines project-specific terms and concepts. Use this when you encounter unfamiliar terminology.
 
 ---
@@ -603,7 +605,7 @@ Write composition test (RED)
 ## See Also
 
 - [README.md](README.md) - Documentation navigation
-- [GETTING_STARTED.md](GETTING_STARTED.md) - Quick start guide
+- [ONBOARDING.md](ONBOARDING.md) - Complete onboarding guide
 - [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) - System architecture
 - [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - Development workflow
 

@@ -2,10 +2,12 @@
 
 Welcome to the `thoughts/` directory! This is your central hub for all project documentation, planning, and technical knowledge.
 
+**New here? Start with [ONBOARDING.md](ONBOARDING.md)** - Complete setup and first task guide (2 hours)
+
 ## Quick Navigation by Use Case
 
 **I'm new to this project**
-→ Start with [Getting Started Guide](GETTING_STARTED.md)
+→ Start with [Onboarding Guide](ONBOARDING.md)
 
 **I need to write an E2E test** (Critical for Task 0.1!)
 → Follow [E2E Test Implementation Guide](testing/e2e-implementation-guide.md)
@@ -41,7 +43,7 @@ Welcome to the `thoughts/` directory! This is your central hub for all project d
 ```
 thoughts/
 ├── README.md                    # This file - navigation index
-├── GETTING_STARTED.md           # Quick start for new contributors
+├── ONBOARDING.md                # Complete onboarding guide for new contributors
 ├── GLOSSARY.md                  # Project terminology
 │
 ├── planning/                    # Project planning and tasks
@@ -49,15 +51,18 @@ thoughts/
 │   ├── initial_prompt.md        # Original project requirements
 │   └── initial_summary.md       # Foundation setup summary
 │
-├── architecture/                # Design and specifications
-│   ├── ARCHITECTURE.md          # System architecture and design principles
-│   └── terraform-vpc-analysis.md # Complete Terraform VPC module analysis
+├── SPECIFICATION.md             # Complete feature specification (WHAT to build)
+├── IMPLEMENTATION_GUIDE.md      # Architecture, workflow, testing (HOW to build)
+├── KCL_PATTERNS.md              # KCL coding patterns reference
+├── TDD_STRATEGY.md              # Test-driven development workflow
 │
-├── development/                 # Development guides and patterns
-│   ├── TDD_STRATEGY.md          # Test-driven development workflow
-│   ├── upbound-patterns.md      # Production patterns from platform-ref-upbound
-│   ├── kcl-guide.md             # KCL language reference and patterns
-│   └── git-workflow.md          # Git operations and commit conventions
+├── tools/                       # Tool references
+│   ├── up-cli-guide.md          # Upbound CLI command reference
+│   └── kcl-guide.md             # KCL language reference
+│
+├── git/                         # Git workflows
+│   ├── git-workflow.md          # Git operations and commit conventions
+│   └── git-reference.md         # Git command reference
 │
 ├── testing/                     # Testing documentation
 │   ├── TESTING_OVERVIEW.md      # Testing philosophy and strategy
@@ -83,21 +88,22 @@ thoughts/
 | [initial_prompt.md](planning/initial_prompt.md) | Original project requirements and goals | Understanding project origins |
 | [initial_summary.md](planning/initial_summary.md) | Foundation setup summary | Understanding what was done initially |
 
-### Architecture & Design
+### Core Documentation (CONSOLIDATED)
 
 | Document | Purpose | When to Read |
 |----------|---------|--------------|
-| [ARCHITECTURE.md](architecture/ARCHITECTURE.md) | **System architecture** - Modular design principles, test hierarchy | Planning features, understanding design |
-| [terraform-vpc-analysis.md](architecture/terraform-vpc-analysis.md) | **Complete feature specification** - All 50+ features from Terraform module | Understanding what to implement |
+| [SPECIFICATION.md](SPECIFICATION.md) | **Complete feature specification** - All 50+ features from Terraform module (WHAT to build) | Understanding what to implement |
+| [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) | **Architecture & workflow** - Modular design, TDD process, testing strategy (HOW to build) | Planning features, implementing, testing |
+| [KCL_PATTERNS.md](KCL_PATTERNS.md) | **KCL coding patterns** - Production patterns from platform-ref-upbound | Writing composition functions |
+| [TDD_STRATEGY.md](TDD_STRATEGY.md) | **TDD workflow** - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT | Before implementing any feature |
 
-### Development Guides
+### Tool References
 
 | Document | Purpose | When to Read |
 |----------|---------|--------------|
-| [TDD_STRATEGY.md](development/TDD_STRATEGY.md) | **TDD workflow** - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT | Before implementing any feature |
-| [upbound-patterns.md](development/upbound-patterns.md) | **Coding patterns** - Production patterns from platform-ref-upbound | Writing composition functions |
-| [kcl-guide.md](development/kcl-guide.md) | **KCL language reference** - Syntax, patterns, examples | Writing KCL code |
-| [git-workflow.md](development/git-workflow.md) | **Git operations** - Branching, commits, PRs, conventions | Making commits and PRs |
+| [tools/up-cli-guide.md](tools/up-cli-guide.md) | **Upbound CLI reference** - Commands, workflows | Using up CLI |
+| [tools/kcl-guide.md](tools/kcl-guide.md) | **KCL language reference** - Syntax, patterns, examples | Writing KCL code |
+| [git/git-workflow.md](git/git-workflow.md) | **Git operations** - Branching, commits, PRs, conventions | Making commits and PRs |
 
 ### Testing Documentation
 
@@ -121,102 +127,22 @@ thoughts/
 | Document | Purpose | When to Read |
 |----------|---------|--------------|
 | [README.md](README.md) | **This file** - Navigation and index | Finding documentation |
-| [GETTING_STARTED.md](GETTING_STARTED.md) | **Quick start** - First-time setup and workflow | Your first day on the project |
+| [ONBOARDING.md](ONBOARDING.md) | **Complete onboarding** - Setup, first task, workflows | Your first day on the project |
 | [GLOSSARY.md](GLOSSARY.md) | **Terminology** - Definitions of project terms | Understanding unfamiliar terms |
 
 ---
 
-## Document Dependencies
+## Getting Started
 
-### Reading Order for New Contributors
+**New to this project?** Follow the [ONBOARDING.md](ONBOARDING.md) guide for:
+- Complete setup instructions (prerequisites, installation, authentication)
+- Essential reading plan with time estimates
+- Your first task (writing E2E tests for Task 0.1)
+- TDD workflow overview
+- First commit guide
+- Common commands and troubleshooting
 
-1. **Start here**: [GETTING_STARTED.md](GETTING_STARTED.md) - 10 minutes
-2. **Understand goals**: [planning/initial_prompt.md](planning/initial_prompt.md) - 5 minutes
-3. **Check tasks**: [planning/tasks.md](planning/tasks.md) - 15 minutes
-4. **Learn architecture**: [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) - 20 minutes
-5. **Master TDD**: [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - 30 minutes
-
-**Total time**: ~1.5 hours to become productive
-
-### Reading Order for Feature Development
-
-1. **Pick task**: [planning/tasks.md](planning/tasks.md)
-2. **Check spec**: [architecture/terraform-vpc-analysis.md](architecture/terraform-vpc-analysis.md)
-3. **Follow TDD**: [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md)
-4. **Write code**: [development/kcl-guide.md](development/kcl-guide.md) + [development/upbound-patterns.md](development/upbound-patterns.md)
-5. **Write tests**: [testing/composition-testing.md](testing/composition-testing.md) + [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md)
-6. **Commit**: [development/git-workflow.md](development/git-workflow.md)
-
-### Reading Order for Test Writers
-
-1. **Understand strategy**: [testing/TESTING_OVERVIEW.md](testing/TESTING_OVERVIEW.md) - 10 minutes
-2. **Composition tests**: [testing/composition-testing.md](testing/composition-testing.md) - 20 minutes
-3. **E2E tests**: [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) - 30 minutes
-4. **Deep dive**: [testing/e2e-testing.md](testing/e2e-testing.md) - When you need advanced E2E details
-
-**Total time**: ~1 hour to master testing
-
----
-
-## Recommended Reading by Role
-
-### New Contributor
-**Goal**: Get productive quickly
-
-**Must Read** (1.5 hours):
-1. [GETTING_STARTED.md](GETTING_STARTED.md)
-2. [GLOSSARY.md](GLOSSARY.md)
-3. [planning/tasks.md](planning/tasks.md)
-4. [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
-5. [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md)
-
-**Reference as Needed**:
-- [development/kcl-guide.md](development/kcl-guide.md)
-- [development/git-workflow.md](development/git-workflow.md)
-- [reference/up-cli-guide.md](reference/up-cli-guide.md)
-
-### Feature Developer
-**Goal**: Implement features following best practices
-
-**Must Read** (2 hours):
-1. [planning/tasks.md](planning/tasks.md) - Pick a task
-2. [architecture/terraform-vpc-analysis.md](architecture/terraform-vpc-analysis.md) - Feature spec
-3. [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - Workflow
-4. [development/kcl-guide.md](development/kcl-guide.md) - Language
-5. [development/upbound-patterns.md](development/upbound-patterns.md) - Patterns
-6. [testing/composition-testing.md](testing/composition-testing.md) - Composition tests
-7. [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) - E2E tests
-
-**Reference as Needed**:
-- [reference/up-cli-guide.md](reference/up-cli-guide.md)
-- [testing/e2e-testing.md](testing/e2e-testing.md)
-
-### Test Writer (Task 0.1!)
-**Goal**: Write E2E tests for implemented features
-
-**Must Read** (1 hour):
-1. [testing/TESTING_OVERVIEW.md](testing/TESTING_OVERVIEW.md) - Strategy
-2. [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) - **START HERE!**
-3. [planning/tasks.md](planning/tasks.md) - Task 0.1 details
-
-**Reference as Needed**:
-- [testing/e2e-testing.md](testing/e2e-testing.md) - Deep dive
-- [testing/composition-testing.md](testing/composition-testing.md) - If writing composition tests too
-- [reference/upbound-cloud.md](reference/upbound-cloud.md) - Monitoring tests
-
-### Code Reviewer
-**Goal**: Review code for quality and consistency
-
-**Must Read** (1 hour):
-1. [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) - Design principles
-2. [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - Expected workflow
-3. [development/upbound-patterns.md](development/upbound-patterns.md) - Patterns to check for
-4. [testing/TESTING_OVERVIEW.md](testing/TESTING_OVERVIEW.md) - Testing requirements
-
-**Reference as Needed**:
-- [architecture/terraform-vpc-analysis.md](architecture/terraform-vpc-analysis.md) - Feature specs
-- [development/kcl-guide.md](development/kcl-guide.md) - KCL best practices
-- [development/git-workflow.md](development/git-workflow.md) - Commit conventions
+**Time to productivity**: ~2 hours
 
 ---
 
@@ -226,10 +152,10 @@ thoughts/
 
 **When to update**:
 - ✅ Behavior changes → Update relevant guide
-- ✅ New pattern discovered → Add to upbound-patterns.md or kcl-guide.md
+- ✅ New pattern discovered → Add to KCL_PATTERNS.md
 - ✅ Task completed → Update tasks.md
-- ✅ New feature added → Update terraform-vpc-analysis.md if needed
-- ✅ Tool version changed → Update relevant reference doc
+- ✅ New feature added → Update SPECIFICATION.md if needed
+- ✅ Tool version changed → Update relevant tool reference doc
 
 **How to update**:
 1. Find the relevant document using this README
@@ -242,7 +168,7 @@ thoughts/
 **Process**:
 1. Create document in appropriate directory (planning/, architecture/, development/, testing/, reference/)
 2. Add entry to this README in "Document Index" section
-3. Add to "Reading Order" section if it's a common workflow doc
+3. Update [ONBOARDING.md](ONBOARDING.md) if it's essential reading for new contributors
 4. Add "See Also" section to new document with links to related docs
 5. Update related documents to link to new document
 
@@ -265,7 +191,7 @@ thoughts/
 ## Common Questions
 
 ### Q: Where do I start?
-**A**: Read [GETTING_STARTED.md](GETTING_STARTED.md), then check [planning/tasks.md](planning/tasks.md) for next task.
+**A**: Read [ONBOARDING.md](ONBOARDING.md) for complete setup and first task guide.
 
 ### Q: How do I write an E2E test?
 **A**: Follow [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) - it's step-by-step with examples!
@@ -274,73 +200,23 @@ thoughts/
 **A**: Check [planning/tasks.md](planning/tasks.md) - currently **Task 0.1** (write E2E tests) is BLOCKING all other work!
 
 ### Q: How do I understand what features to implement?
-**A**: Read [architecture/terraform-vpc-analysis.md](architecture/terraform-vpc-analysis.md) for complete feature list.
+**A**: Read [SPECIFICATION.md](SPECIFICATION.md) for complete feature list.
 
 ### Q: What coding patterns should I follow?
-**A**: Follow [development/upbound-patterns.md](development/upbound-patterns.md) based on production Upbound projects.
+**A**: Follow [KCL_PATTERNS.md](KCL_PATTERNS.md) based on production Upbound projects.
 
 ### Q: How do I write KCL code?
-**A**: Reference [development/kcl-guide.md](development/kcl-guide.md) for syntax and patterns.
+**A**: Reference [KCL_PATTERNS.md](KCL_PATTERNS.md) for patterns and [tools/kcl-guide.md](tools/kcl-guide.md) for syntax.
 
 ### Q: What's the TDD workflow?
-**A**: Follow [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+**A**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) and [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
 ### Q: How do I commit my changes?
-**A**: Follow [development/git-workflow.md](development/git-workflow.md) for git operations and conventions.
+**A**: Follow [git/git-workflow.md](git/git-workflow.md) for git operations and conventions.
 
 ### Q: What if I'm stuck?
-**A**:
-1. Re-read the relevant docs (use this README to find them)
-2. Check [GLOSSARY.md](GLOSSARY.md) for unfamiliar terms
-3. Look at existing examples in the codebase
-4. Review [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) for design principles
+**A**: See "Getting Help" section in [ONBOARDING.md](ONBOARDING.md) for complete troubleshooting guide.
 
----
-
-## Critical Reminders
-
-### For ALL Contributors
-- ✅ **Check [tasks.md](planning/tasks.md) before starting work** - Avoid duplicate efforts
-- ✅ **Follow [TDD_STRATEGY.md](development/TDD_STRATEGY.md)** - Write tests first!
-- ✅ **E2E tests are MANDATORY** - Use [e2e-implementation-guide.md](testing/e2e-implementation-guide.md)
-- ✅ **Update documentation** - Keep docs in sync with code changes
-
-### Current Priority (URGENT!)
-**Task 0.1 is BLOCKING ALL WORK!**
-
-All implemented features (VPC, subnets, NAT, routing) need E2E tests before we can continue.
-
-→ **Start here**: [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md)
-
----
-
-## Document Statistics
-
-**Total documents**: 17 files (down from 28 - consolidated for clarity)
-
-**By category**:
-- Planning: 3 documents
-- Architecture: 2 documents
-- Development: 4 documents
-- Testing: 4 documents
-- Reference: 3 documents
-- Root: 1 document (this README)
-
-**Documentation size**: ~5,500 lines (consolidated from 7,169 lines)
-
-**Maintenance effort**: 85% reduction (17 files vs 28 files, minimal redundancy)
-
----
-
-## Version History
-
-**Version 1.0** (2025-12-19):
-- Initial refactored structure
-- Consolidated 28 files → 17 files
-- Eliminated redundancy in E2E testing docs (7 → 1)
-- Created comprehensive navigation (this README)
-- Added E2E implementation guide (critical for Task 0.1)
-- Reorganized by purpose (planning, architecture, development, testing, reference)
 
 ---
 
@@ -352,7 +228,7 @@ All implemented features (VPC, subnets, NAT, routing) need E2E tests before we c
 
 ---
 
-**Ready to get started?** Head to [GETTING_STARTED.md](GETTING_STARTED.md) for your first steps!
+**Ready to get started?** Head to [ONBOARDING.md](ONBOARDING.md) for your first steps!
 
 **Need to write E2E tests?** Jump to [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) right now!
 
