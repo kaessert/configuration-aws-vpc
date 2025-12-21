@@ -331,6 +331,9 @@ _items = [
         spec: {
             # Crossplane configuration
             crossplane: {
+                # CRITICAL: Always specify version explicitly for Crossplane v2
+                # Without this, tests may use v1 by default and fail with package errors
+                version: "2.0.2-up.5"
                 autoUpgrade: {
                     channel: "Rapid"
                 }
@@ -347,13 +350,23 @@ _items = [
             # Additional resources (ProviderConfig, etc.)
             extraResources: [
                 {
-                    apiVersion: "aws.upbound.io/v1beta1"
+                    # CRITICAL: Use aws.m.upbound.io (note the .m. suffix) for namespaced providers
+                    # Parent provider: aws.upbound.io
+                    # Namespaced provider: aws.m.upbound.io
+                    apiVersion: "aws.m.upbound.io/v1beta1"
                     kind: "ProviderConfig"
                     metadata: {
                         name: "default"
+                        # REQUIRED: namespace field is MANDATORY for namespaced claims
+                        # Without this, E2E test will hang on "Applying Extra Resources"
+                        namespace: "default"
                     }
                     spec: {
-                        # IMPORTANT: Use IAM role, NEVER static credentials
+                        # REQUIRED: credentials.source field for Upbound Spaces
+                        credentials: {
+                            source: "Upbound"  # Integrates with Upbound identity injection
+                        }
+                        # Use IAM role, NEVER static credentials
                         assumeRoleChain: [
                             {
                                 roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
@@ -1206,6 +1219,8 @@ E2E tests create real AWS resources. While costs should not prevent running nece
 
 ### Common Issues
 
+#### Composition Tests
+
 **Issue**: Test fails with "resource not found"
 **Solution**: Add new resource to assertResources with correct metadata.name
 
@@ -1215,11 +1230,61 @@ E2E tests create real AWS resources. While costs should not prevent running nece
 **Issue**: Test fails with "no actual resource found: ec2.aws.upbound.io/v1beta1/VPC/"
 **Solution**: Add `metadata.name` to assertResources (empty name causes this)
 
+#### E2E Tests
+
+**Issue**: Test hangs on "Waiting for package to be ready" for 3+ minutes
+**Solution**: Check `kubectl get pkgrev -oyaml` - likely missing or wrong Crossplane version. Always specify `version: "2.0.2-up.5"` explicitly in test spec.
+
+**Issue**: Test hangs on "Applying Extra Resources" indefinitely
+**Solution**: ProviderConfig is missing `namespace: "default"` field. Namespaced claims REQUIRE namespaced ProviderConfigs.
+
+**Issue**: Error "ProviderConfig.aws.m.upbound.io 'default' not found"
+**Solution**: Wrong API version - use `aws.m.upbound.io/v1beta1` (note `.m.` suffix) for namespaced providers, not `aws.upbound.io/v1beta1`
+
+**Issue**: Error "spec.credentials: Required value"
+**Solution**: Add `credentials.source: "Upbound"` to ProviderConfig spec
+
 **Issue**: Test times out
 **Solution**: Increase timeoutSeconds in test definition
 
 **Issue**: E2E test uses wrong control plane group
 **Solution**: Always specify `--control-plane-group=claude-testing` explicitly
+
+#### ProviderConfig Configuration for E2E Tests
+
+**CRITICAL**: For Crossplane v2 with namespaced claims, ProviderConfig must have:
+
+1. API version: `aws.m.upbound.io/v1beta1` (note the `.m.` suffix)
+2. Metadata namespace: `namespace: "default"` (MANDATORY)
+3. Credentials source: `source: "Upbound"`
+4. AssumeRoleChain with IAM role (never static credentials)
+
+**Complete working example**:
+```kcl
+{
+    apiVersion: "aws.m.upbound.io/v1beta1"
+    kind: "ProviderConfig"
+    metadata: {
+        name: "default"
+        namespace: "default"  # REQUIRED!
+    }
+    spec: {
+        credentials: {
+            source: "Upbound"  # REQUIRED for Spaces
+        }
+        assumeRoleChain: [
+            {
+                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+            }
+        ]
+    }
+}
+```
+
+**Key Rules**:
+- Namespaced claims (kind: VPC with namespace) → ProviderConfig MUST have namespace
+- Cluster-scoped composites (kind: XVPC, no namespace) → ProviderConfig can be cluster-scoped
+- Crossplane v2 uses `.m.` suffix for namespaced managed resource providers
 
 ---
 

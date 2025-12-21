@@ -539,7 +539,7 @@ functions/vpc/
 
 **Benefits**: Testable, maintainable, scalable
 
-**Read more**: [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md)
+**Read more**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
 
 ---
 
@@ -606,8 +606,8 @@ Write composition test (RED)
 
 - [README.md](README.md) - Documentation navigation
 - [ONBOARDING.md](ONBOARDING.md) - Complete onboarding guide
-- [architecture/ARCHITECTURE.md](architecture/ARCHITECTURE.md) - System architecture
-- [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - Development workflow
+- [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) - Architecture and implementation patterns
+- [TDD_STRATEGY.md](TDD_STRATEGY.md) - Development workflow
 
 ---
 

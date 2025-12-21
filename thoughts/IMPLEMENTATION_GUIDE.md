@@ -167,21 +167,13 @@ project-root/
 
 ## Development Workflow
 
-> 📖 **Complete TDD Workflow**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) for the detailed step-by-step TDD process
-
-### TDD Workflow Summary
-
-**MANDATORY**: This project follows strict Test-Driven Development:
+This project follows **strict Test-Driven Development (TDD)**:
 
 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-1. **Write test FIRST** - Test must fail initially
-2. **Implement minimum code** - Make test pass
-3. **Refactor** - Improve code while keeping tests green
-4. **E2E test** - Validate in real AWS (MANDATORY for major features)
-5. **Commit** - Only when ALL tests pass
+> 📖 **Complete TDD Workflow**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) for the detailed step-by-step process
 
-> 📖 **Git & Commits**: See [git-workflow.md](git/git-workflow.md) for commit conventions and workflow details
+> 📖 **Git & Commits**: See [GIT_WORKFLOW.md](GIT_WORKFLOW.md) for commit conventions and workflow details
 
 ## Dependencies and Performance
 
@@ -355,5 +347,5 @@ functions/vpc/route.k → tests/test-xvpc-routes-*/main.k
 - [Upbound Platform Ref](https://github.com/upbound/platform-ref-upbound)
 - [Crossplane Composition Functions](https://docs.crossplane.io/latest/concepts/composition-functions/)
 - [KCL Language Documentation](https://kcl-lang.io/docs)
-- [thoughts/SPECIFICATION.md](SPECIFICATION.md) - What to build
-- [thoughts/KCL_PATTERNS.md](KCL_PATTERNS.md) - Code reference
+- [SPECIFICATION.md](SPECIFICATION.md) - What to build
+- [KCL_REFERENCE.md](KCL_REFERENCE.md) - KCL language reference and patterns

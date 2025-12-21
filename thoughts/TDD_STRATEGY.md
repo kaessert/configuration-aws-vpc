@@ -653,7 +653,7 @@ test "public subnets created with correct specs"
 
 ## Quick Reference
 
-> 📖 **Command Syntax**: See [testing-reference.md](tools/testing-reference.md) and [upbound-reference.md](tools/upbound-reference.md) for complete command reference
+> 📖 **Command Syntax**: See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) and [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) for complete command reference
 
 **Essential Commands**:
 ```bash
@@ -664,8 +664,8 @@ up test run tests/e2etest-* --e2e                       # Run all E2E tests
 
 ## Related Documentation
 
-- **Commands**: [upbound-reference.md](tools/upbound-reference.md) - Complete `up` CLI reference
-- **Git Workflow**: [git-workflow.md](git/git-workflow.md) - TDD commit workflow
+- **Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) - Complete `up` CLI reference
+- **Git Workflow**: [GIT_WORKFLOW.md](GIT_WORKFLOW.md) - TDD commit workflow
 - **Implementation**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) - Architecture and patterns
 - **Specification**: [SPECIFICATION.md](SPECIFICATION.md) - Feature requirements
 
