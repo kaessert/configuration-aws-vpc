@@ -76,7 +76,13 @@
       "Bash(curl:*)",
       "Bash(ping:*)",
       "Bash(rmdir:*)",
-      "Read(file_path:/tmp/claude/*)"
+      "Read(file_path:/tmp/claude/*)",
+      "Bash(test:*)",
+      "Bash(up org list:*)",
+      "Bash(up ctp list:*)",
+      "Bash(up ctp delete:*)",
+      "Bash(tee:*)",
+      "Bash(/tasks)"
     ]
   }
 }

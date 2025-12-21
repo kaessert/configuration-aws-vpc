@@ -64,6 +64,55 @@ Your goal: Ensure this mistake never happens again.
 - Improved discoverability of critical information
 - Prevention measures implemented
 
+### E2E Test Runner Agent
+
+**File**: `e2e-test-runner.md`
+
+**Purpose**: Runs E2E tests, monitors progress, cancels on hang conditions, and provides detailed error reports.
+
+**When to use**:
+- Running E2E tests for features
+- Investigating E2E test failures
+- Before marking features complete (E2E tests are MANDATORY)
+
+**What it does**:
+- Runs E2E tests in background with proper flags
+- Monitors test progress actively
+- Cancels tests early if hung on known problem points
+- Investigates failures systematically
+- Maps errors to known issues
+- Provides exact fixes with file paths
+
+**How to invoke**:
+
+```bash
+Task(
+  subagent_type="general-purpose",
+  description="Run E2E tests",
+  prompt="""
+You are the E2E Test Runner Agent for this project.
+
+TASK: [Run E2E tests for <feature> | Investigate E2E test failure for <test-name>]
+
+Follow the instructions in .claude/agents/e2e-test-runner.md to:
+1. Run pre-flight checks
+2. Execute E2E tests with monitoring
+3. Cancel if hung on known conditions
+4. Investigate failures systematically
+5. Provide detailed error report
+
+Your goal: Validate features in real AWS and report any issues with actionable fixes.
+"""
+)
+```
+
+**Expected outcomes**:
+- E2E tests executed with correct flags (`--control-plane-group=claude-testing`)
+- Hang conditions detected early (saves 20-40 minutes)
+- Failures diagnosed with root cause from known issues table
+- Exact fixes provided for common problems
+- Resource cleanup status verified
+
 ## Adding New Agents
 
 When creating a new specialized agent:
