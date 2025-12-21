@@ -120,61 +120,6 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ---
 
-## ✅ Crossplane v2 Migration (COMPLETED)
-
-**Date**: 2025-12-19
-**Status**: ✅ COMPLETED - All tests passing
-
-The project has been successfully migrated from Crossplane v1 to v2. This was a **P0 (Critical)** task that updated the entire codebase to use the v2 API.
-
-### What Changed:
-
-1. **XRD (apis/vpc/definition.yaml)**:
-   - Updated `apiVersion` from `apiextensions.crossplane.io/v1` to `v2`
-   - Added `scope: Namespaced` (v2 requirement)
-   - Removed `claimNames` section (v2 doesn't support XR/Claim pattern)
-   - Changed kind from `XVPC` to `VPC` (removed X prefix)
-   - Updated metadata.name from `xvpcs.aws.platform.upbound.io` to `vpcs.aws.platform.upbound.io`
-
-2. **Composition (apis/vpc/composition.yaml)**:
-   - Updated compositeTypeRef kind from `XVPC` to `VPC`
-
-3. **Function Code (functions/vpc/main.k)**:
-   - Updated imports from `aws.ec2` to `awsm.ec2` (v2 uses `.m` suffix for namespaced resources)
-   - Changed all `XVPC` references to `VPC`
-   - Added v2-required fields to all managed resources:
-     - `providerConfigRef.kind = "ProviderConfig"` (explicit kind now required)
-     - `managementPolicies = ["*"]` (replaces deletionPolicy)
-
-4. **Examples (examples/*.yaml)**:
-   - Changed kind from `XVPC` to `VPC`
-   - Added `namespace: default` to all resources (v2 namespaced requirement)
-
-5. **Tests (tests/*/main.k)**:
-   - Updated imports to use `awsm.ec2`
-   - Changed kind from `XVPC` to `VPC`
-   - Added namespace to test XRs
-   - Updated test-xvpc-simple with v2 assertions (providerConfigRef.kind and managementPolicies)
-
-### Migration Results:
-
-- ✅ **Build**: `up project build` succeeds
-- ✅ **All Tests Pass**: 7/7 composition tests passing
-  - test-xvpc-simple
-  - test-xvpc-subnets-public
-  - test-xvpc-subnets-private
-  - test-xvpc-subnets-database
-  - test-xvpc-subnets-elasticache
-  - test-xvpc-subnets-redshift
-  - test-xvpc-subnets-intra
-
-### Reference:
-
-See the comprehensive v2 migration guide that was provided for this migration. Key resources:
-- [Crossplane v2 Upgrade Guide](https://docs.crossplane.io/latest/guides/upgrade-to-crossplane-v2/)
-- Provider package: `xpkg.upbound.io/upbound/provider-aws-ec2:v2.3.0`
-
----
 
 ## Phase 1: Project Foundation (P0)
 
@@ -626,22 +571,6 @@ See the comprehensive v2 migration guide that was provided for this migration. K
 
 ---
 
-### 2.5.2 Add E2E Test for Core VPC (SUPERSEDED BY TASK 0.1)
-**Priority**: P1
-**Effort**: Medium
-**Description**: ~~Create E2E test validating complete VPC with real AWS resources~~
-**Dependencies**: Tasks 2.1-2.5
-**Status**: ⚠️ SUPERSEDED - See Task 0.1 for comprehensive E2E testing
-
-**⚠️ NOTE**: This task has been superseded by the new critical task 0.1, which includes this test plus additional E2E tests for NAT Gateway and complete VPC scenarios. Please complete Task 0.1 instead.
-
-**Original scope now covered by Task 0.1**:
-- E2E Test 1: Basic VPC with public subnets and IGW (this task)
-- E2E Test 2: VPC with single NAT Gateway
-- E2E Test 3: VPC with NAT per AZ
-- E2E Test 4: Complete VPC with all subnet types
-
----
 
 ## Phase 3: Enhanced Networking Features (P2)
 
@@ -1284,14 +1213,18 @@ For someone picking up this project, start with these tasks in order:
 
 ## Current Status
 
-Project is at the planning stage. All foundational research has been completed:
-- ✅ Terraform module analysis complete
-- ✅ Upbound patterns documented
-- ✅ KCL language guide created
-- ✅ up-cli reference available
-- ✅ Git operations documented
+**Phase 2: Core VPC Features Implementation** - In Progress
 
-Ready to begin Phase 1 implementation.
+**Completed**:
+- ✅ Phase 1: Project Foundation (tasks 1.1-1.3)
+- ✅ VPC creation (task 2.1)
+- ✅ All subnet types (task 2.2)
+- ✅ Internet Gateway (task 2.3)
+- ✅ NAT Gateway with strategies (task 2.4)
+- ✅ Route tables and routing (task 2.5)
+- ✅ All composition tests passing (17 tests)
+
+**Next Priority**: Task 0.1 - Add E2E tests for implemented features (BLOCKING)
 
 ---
 

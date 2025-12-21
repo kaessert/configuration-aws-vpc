@@ -129,12 +129,6 @@ The terraform-aws-vpc module is a comprehensive, production-ready Terraform modu
 - `vpc_flow_log_id`: Flow Log ID
 - `vpc_flow_log_arn`: Flow Log ARN
 
-**For test scenarios, see [TESTING_REFERENCE.md → Test Scenarios](TESTING_REFERENCE.md#test-scenarios)**
-
-**For AWS resources list, see [IMPLEMENTATION_GUIDE.md → AWS Resources](IMPLEMENTATION_GUIDE.md#aws-resources)**
-
-**For implementation phases and task breakdown, see [TASKS.md](TASKS.md)**
-
 ## Field Mapping
 
 Terraform to Upbound XRD (capitalization differences acceptable):
@@ -197,8 +191,6 @@ private_subnet_tags      →  privateSubnetTags
 - Type-specific tags for resource categorization
 - Name tags automatically generated
 
-**For feature coverage validation, see [TESTING_REFERENCE.md → Feature Coverage](TESTING_REFERENCE.md#feature-coverage)**
-
 ## Special Considerations
 
 1. **Region Handling**: Auto-detection of available AZs
@@ -209,8 +201,6 @@ private_subnet_tags      →  privateSubnetTags
 6. **Monitoring**: Built-in Flow Logs integration
 7. **Compliance**: DHCP customization for corporate requirements
 8. **Scalability**: Support for secondary CIDR blocks
-
-**For success criteria and task completion status, see [TASKS.md](TASKS.md)**
 
 ## References
 

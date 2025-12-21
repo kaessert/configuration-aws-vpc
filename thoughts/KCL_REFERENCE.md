@@ -514,32 +514,21 @@ vpc_tags = mergeTags(
 
 ## Part 3: Typed Models (CRITICAL)
 
-### IMPORTANT DISCOVERY: Provider Version Requirements
+### Provider Version Requirements
 
-**CRITICAL**: When using AWS EC2 provider, the KCL typed models for EC2 managed resources (VPC, Subnet, InternetGateway, etc.) are ONLY properly generated with **provider v2.x or later**.
+**CRITICAL**: KCL typed models for EC2 managed resources require **provider-aws-ec2 v2.x or later**. Version v1.x does not properly generate KCL models.
 
-**Problem**: Using an old provider version (v1.x) will NOT properly generate KCL models.
-
-**Solution**:
-1. Update to `provider-aws-ec2` v2.3.0 (or latest v2.x)
-2. Remove unnecessary dependencies from `upbound.yaml`:
-   - `function-kcl` - Not needed (implicit dependency)
-   - `provider-family-aws` - Not needed (implicit dependency of provider-aws-ec2)
-3. Run `up dep update-cache` to pull new provider versions
-4. Run `up project build` to regenerate models
-
-### Correct upbound.yaml Dependencies
-
+**Required configuration** in `upbound.yaml`:
 ```yaml
 spec:
   dependsOn:
   - apiVersion: pkg.crossplane.io/v1
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-aws-ec2
-    version: v2.3.0  # Use v2.x for proper model generation
+    version: v2.3.0  # v2.x required
 ```
 
-**Note**: Only explicitly declare direct dependencies. Implicit dependencies (like provider-family-aws) will be pulled in automatically.
+After updating dependencies: `up dep update-cache && up project build`
 
 ### Workflow for Typed Models
 
@@ -668,7 +657,7 @@ spec:
     step: crossplane-contrib-function-auto-ready
 ```
 
-**Why**: Without function-auto-ready, XRs never reach "Ready" status and E2E tests will fail. See [IMPLEMENTATION_GUIDE.md → Composition Pipeline Requirements](IMPLEMENTATION_GUIDE.md#composition-pipeline-requirements) for details.
+**Why This Matters**: Without function-auto-ready, XRs never reach "Ready" status and E2E tests will timeout. This is a COMPOSITION PIPELINE REQUIREMENT for all Crossplane v2 compositions.
 
 ### KCL Module Dependencies
 

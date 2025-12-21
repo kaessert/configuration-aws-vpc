@@ -65,7 +65,6 @@ Welcome to the `thoughts/` directory! This is your central hub for all project d
 
 | Document | Purpose | When to Read |
 |----------|---------|--------------|
-| [CONSOLE_MONITORING.md](CONSOLE_MONITORING.md) | **Upbound Console guide** - Web UI monitoring, troubleshooting | Monitoring E2E tests in console |
 | [GLOSSARY.md](GLOSSARY.md) | **Terminology** - Definitions of project terms | Understanding unfamiliar terms |
 
 ---

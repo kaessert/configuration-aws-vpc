@@ -284,55 +284,7 @@ git push
 
 ## Test Organization
 
-### Directory Structure
-
-```
-tests/
-├── test-xvpc-basic/              # VPC creation
-├── test-xvpc-public-subnets/     # Public subnets
-├── test-xvpc-private-subnets/    # Private subnets
-├── test-xvpc-database-subnets/   # Database subnets
-├── test-xvpc-igw/                # Internet Gateway
-├── test-xvpc-nat-single/         # Single NAT Gateway
-├── test-xvpc-nat-per-az/         # NAT per AZ
-├── test-xvpc-nat-disabled/       # No NAT Gateway
-├── test-xvpc-routes-public/      # Public routing
-├── test-xvpc-routes-private/     # Private routing
-├── test-xvpc-routes-isolated/    # Isolated routing
-├── test-xvpc-endpoints-gateway/  # Gateway endpoints
-├── test-xvpc-endpoints-interface/# Interface endpoints
-├── test-xvpc-nacl/               # Network ACLs
-├── test-xvpc-dhcp/               # DHCP options
-├── test-xvpc-flowlogs-cw/        # Flow logs CloudWatch
-├── test-xvpc-flowlogs-s3/        # Flow logs S3
-├── test-xvpc-secondary-cidr/     # Secondary CIDRs
-├── test-xvpc-ipv6/               # IPv6 support
-├── test-xvpc-vpn/                # VPN Gateway
-├── e2etest-xvpc-basic/           # E2E: Basic VPC
-├── e2etest-xvpc-nat/             # E2E: VPC with NAT
-└── e2etest-xvpc-complete/        # E2E: All features
-```
-
-### Naming Convention
-
-**Composition Tests**:
-```
-test-xvpc-<feature>[-<variant>]
-
-Examples:
-- test-xvpc-basic
-- test-xvpc-nat-single
-- test-xvpc-routes-private
-```
-
-**E2E Tests**:
-```
-e2etest-xvpc-<scenario>
-
-Examples:
-- e2etest-xvpc-basic
-- e2etest-xvpc-complete
-```
+**For complete test organization, directory structure, and naming conventions, see [TESTING_REFERENCE.md → Test Organization](TESTING_REFERENCE.md#test-organization)**
 
 ## Test Content Standards
 
@@ -573,22 +525,7 @@ test "public subnets created with correct specs"
 
 ## Success Metrics
 
-### Code Coverage
-- ✅ 100% of features have composition tests
-- ✅ 100% of critical paths have E2E tests
-- ✅ All tests documented with expected behavior
-
-### Test Health
-- ✅ All tests pass before every commit
-- ✅ No flaky tests (99.9% pass rate)
-- ✅ Fast tests (< 10s per composition test)
-- ✅ E2E tests clean up resources (no orphans)
-
-### Feature Parity
-- ✅ All Terraform inputs tested
-- ✅ All Terraform outputs tested
-- ✅ Side-by-side validation passes
-- ✅ Behavior matches Terraform module
+**For detailed success metrics and validation criteria, see [TESTING_REFERENCE.md → Success Metrics](TESTING_REFERENCE.md#success-metrics)**
 
 ---
 
@@ -730,7 +667,7 @@ E2E tests create real AWS resources. Understanding costs helps make informed tes
 3. **Ensure cleanup** with `skipDelete=false` (default in E2E framework)
 4. **Set reasonable timeouts** to avoid stuck resources
 5. **Run E2E locally** before PR if making significant changes
-6. **Monitor control plane** in Upbound Console during E2E tests
+6. **Monitor control plane** with kubectl during E2E tests
 
 **Typical Test Run Cost**: $0.10 - $0.50 per E2E test (mostly NAT Gateway charges)
 

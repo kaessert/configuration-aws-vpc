@@ -38,7 +38,7 @@ Welcome! This guide will get you productive in under 2 hours.
    ```
 
 4. **Upbound Account**
-   - Sign up at https://console.upbound.io
+   - Sign up via `up login` command
    - Free tier available
 
 ### Optional Tools

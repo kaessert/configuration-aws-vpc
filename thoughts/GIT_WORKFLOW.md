@@ -901,13 +901,7 @@ git reflog
 git reset --hard HEAD@{N}
 ```
 
-**Create backup before risky operations**:
-```bash
-git branch backup-before-rebase
-git rebase main
-# If something goes wrong:
-git checkout backup-before-rebase
-```
+**For safety tips and backup strategies, see [GIT_REFERENCE.md → Safety Reminders](GIT_REFERENCE.md#safety-reminders)**
 
 ---
 

@@ -1,6 +1,6 @@
 # Upbound Platform Reference
 
-Comprehensive guide for the Upbound CLI (`up`) and Upbound Cloud platform, covering CLI commands, web console monitoring, authentication, control plane management, and resource hierarchy.
+Comprehensive guide for the Upbound CLI (`up`) and Upbound Cloud platform, covering CLI commands, authentication, control plane management, and resource hierarchy.
 
 ## Table of Contents
 
@@ -110,9 +110,7 @@ up profile current
 up profile list
 ```
 
-### Console Access
-
-**Upbound Console URL**: https://console.upbound.io
+### Organization
 
 **Organization**: solutions
 
@@ -634,15 +632,6 @@ up controlplane pull-secret create my-secret \
 
 ---
 
-## Console Monitoring
-
-**For web console monitoring guide, see [CONSOLE_MONITORING.md](CONSOLE_MONITORING.md)**
-
-Visual guide for using Upbound Cloud web console to monitor control planes, packages, resources, and troubleshoot E2E tests.
-
-**Quick access**: https://console.upbound.io/solutions/spaces
-
----
 
 ## Context Management
 
@@ -895,32 +884,35 @@ up controlplane list -A
 # Note: Protection might require console or API access
 ```
 
-### Workflow 9: Monitor E2E Test via Console
+### Workflow 9: Monitor E2E Test
 
 ```bash
 # 1. Run E2E test from CLI
 up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing
 
-# 2. Open Upbound Console
-# Browser: https://console.upbound.io/solutions/spaces
+# 2. Monitor with kubectl (in separate terminal)
+kubectl get managed -w
+kubectl get vpc,subnet,internetgateway,routetable -w
 
-# 3. Find the test control plane
-# Look for: dev-e2etest-xvpc-basic-<id>
+# 3. Check package status
+kubectl get pkgrev
+up ctp package list
 
-# 4. Click on control plane to see:
-# - Packages tab: Verify package installation
-# - Managed Resources tab: Watch resources being created
-# - Events tab: Monitor events and errors
-# - Composite Resources tab: Check XR status
+# 4. View events
+kubectl get events --sort-by='.lastTimestamp'
 
-# 5. Wait for all resources to reach Ready/Synced
+# 5. Check XR status
+kubectl get vpc -o yaml
+kubectl describe vpc <vpc-name>
 
-# 6. Verify in AWS Console (optional)
+# 6. Wait for all resources to reach Ready/Synced
+
+# 7. Verify in AWS Console (optional)
 # Open AWS Console → VPC Dashboard
 # Verify VPC, subnets, IGW, route tables exist
 
-# 7. Test completes and cleans up
-# Control plane disappears from Spaces list
+# 8. Test completes and cleans up
+# Control plane is automatically deleted
 ```
 
 ---
@@ -1300,7 +1292,6 @@ up completion powershell > up.ps1
 ## Additional Resources
 
 - [Upbound Documentation](https://docs.upbound.io/)
-- [Upbound Cloud Console](https://console.upbound.io/)
 - [Crossplane Documentation](https://docs.crossplane.io/)
 - [Upbound Marketplace](https://marketplace.upbound.io/)
 - [up CLI GitHub](https://github.com/upbound/up)
@@ -1308,4 +1299,4 @@ up completion powershell > up.ps1
 
 ---
 
-**Note**: This guide consolidates CLI and console information from multiple sources and is based on up CLI v0.42.0. Commands and options may vary in different versions. Always check `up --help` for the most current information.
+**Note**: This guide consolidates CLI information from multiple sources and is based on up CLI v0.42.0. Commands and options may vary in different versions. Always check `up --help` for the most current information.

@@ -1025,17 +1025,6 @@ Add to `~/.gitconfig`:
 - `git branch -D` - Force deletes branch
 - `git restore .` - Discards all local changes
 
-### Best Practices
-
-1. **Always pull before push** - Avoid conflicts
-2. **Never force push to main/master** - Unless absolutely necessary
-3. **Don't amend pushed commits** - On shared branches
-4. **Use `--force-with-lease`** - Instead of `--force` if you must force push
-5. **Create backup branches** - Before risky operations
-6. **Use `--dry-run`** - To preview operations
-7. **Check `git status`** - Before committing
-8. **Review `git diff`** - Before staging
-
 ---
 
-**For workflow guidance and commit conventions, see [git-workflow.md](git-workflow.md)**
+**For workflow guidance, best practices, and commit conventions, see [GIT_WORKFLOW.md](GIT_WORKFLOW.md)**

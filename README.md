@@ -159,7 +159,7 @@ configuration-aws-vpc/
 
 This project follows **strict Test-Driven Development (TDD)**:
 
-🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT
+🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
 ### Run Tests
 

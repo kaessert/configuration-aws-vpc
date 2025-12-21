@@ -145,7 +145,6 @@ spec:
 
 **Usage**: All E2E tests run on Spaces (auto-provisioned control planes)
 
-**Console**: https://console.upbound.io
 
 ---
 
@@ -415,8 +414,6 @@ spec.defaultConditions: ["Ready", "Synced"]
 
 **High availability**: Redundant and scalable by default (AWS managed)
 
-**Cost**: Free
-
 ---
 
 ### NAT Gateway
@@ -427,10 +424,6 @@ spec.defaultConditions: ["Ready", "Synced"]
 **Strategies**:
 - **Single**: One NAT for all AZs (cheap but not HA)
 - **One per AZ**: NAT in each AZ (expensive but HA)
-
-**Cost**: $0.045/hour ($32/month) + data transfer fees
-
-**Critical**: EXPENSIVE! Must verify cleanup after E2E tests!
 
 ---
 
@@ -452,10 +445,6 @@ spec.defaultConditions: ["Ready", "Synced"]
 **Definition**: Static public IPv4 address that can be assigned to AWS resources (NAT Gateway, EC2, etc.).
 
 **Usage**: Required for NAT Gateway (NAT needs public IP)
-
-**Cost**: Free if attached, $0.005/hour if unattached
-
-**E2E tests**: One EIP per NAT Gateway
 
 ---
 
@@ -492,14 +481,6 @@ spec.defaultConditions: ["Ready", "Synced"]
 
 ---
 
-### Task 0.1
-**Definition**: CRITICAL BLOCKING TASK to write E2E tests for all implemented features.
-
-**Why it's blocking**: E2E tests are now MANDATORY to validate real AWS behavior.
-
-**See [TASKS.md](TASKS.md) for complete task details and status**
-
----
 
 ### Composition Function
 **Definition**: KCL code that transforms an XR into managed resources. The "brain" of the composition.

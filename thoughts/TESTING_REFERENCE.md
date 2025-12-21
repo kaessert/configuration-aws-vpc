@@ -83,53 +83,19 @@ The test suite validates:
 
 ## Testing Types
 
-### 1. Composition Tests (Unit Tests)
+**For detailed workflow and test strategy, see [TDD_STRATEGY.md](TDD_STRATEGY.md)**
 
-**Purpose**: Validate composition logic without requiring a live Kubernetes environment by simulating the composition controller's behavior.
+### Quick Reference
 
-**When to use**:
-- Testing resource creation logic
-- Validating conditional resource generation
-- Testing resource dependencies and ordering
-- Verifying resource specifications match inputs
-- Fast feedback during development
+| Test Type | Speed | Command | Purpose |
+|-----------|-------|---------|---------|
+| **Composition Test** | Seconds | `up test run tests/test-*` | Validate KCL logic, resource generation |
+| **E2E Test** | 10-30 min | `up test run tests/e2etest-* --e2e` | Validate real AWS resources |
+| **Composition Render** | Instant | `up composition render <composition> <example>` | Preview resources before deployment |
 
-**Key characteristics**:
-- Models a single composition controller loop
-- Uses mock data instead of live resources
-- Fast execution (seconds, no cluster required)
-- Can test with various XR inputs
-- Validates resource structure and relationships
-- Run with: `up test run tests/test-*`
+### Composition Rendering
 
-### 2. End-to-End (E2E) Tests
-
-**Purpose**: Validate compositions in real cloud environments, ensuring resources are actually created, configured, and can be deleted properly.
-
-**When to use**:
-- Verifying actual AWS resource creation
-- Testing provider authentication
-- Validating resource readiness conditions
-- Testing complete lifecycle (create, update, delete)
-- Final validation before release
-
-**Key characteristics**:
-- Requires real control plane (auto-provisioned)
-- Creates actual cloud resources
-- Slower execution (10-30 minutes)
-- Tests complete system integration
-- Requires cloud credentials and Upbound account
-- Run with: `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing`
-
-### 3. Composition Rendering (Preview)
-
-**Purpose**: Preview composed resources locally before deployment.
-
-**When to use**:
-- Quick validation during development
-- Understanding what resources will be created
-- Debugging composition logic
-- Documentation and examples
+Preview composed resources locally:
 
 ```bash
 # Preview what resources will be created
@@ -137,6 +103,55 @@ up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml
 
 # Save output for inspection
 up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml > /tmp/rendered.yaml
+```
+
+---
+
+## Test Organization
+
+### Directory Structure
+
+```
+tests/
+├── test-xvpc-basic/              # VPC creation
+├── test-xvpc-subnets-public/     # Public subnets
+├── test-xvpc-subnets-private/    # Private subnets
+├── test-xvpc-subnets-database/   # Database subnets
+├── test-xvpc-igw-enabled/        # Internet Gateway enabled
+├── test-xvpc-igw-disabled/       # Internet Gateway disabled
+├── test-xvpc-nat-single/         # Single NAT Gateway
+├── test-xvpc-nat-per-az/         # NAT per AZ
+├── test-xvpc-nat-disabled/       # No NAT Gateway
+├── test-xvpc-routes-public/      # Public routing
+├── test-xvpc-routes-private-single-nat/  # Private routing (single NAT)
+├── test-xvpc-routes-private-per-az/      # Private routing (NAT per AZ)
+├── test-xvpc-routes-isolated/            # Isolated routing
+├── test-xvpc-routes-database-nat/        # Database routing with NAT
+├── e2etest-xvpc-basic/           # E2E: Basic VPC
+├── e2etest-xvpc-nat-single/      # E2E: VPC with single NAT
+├── e2etest-xvpc-nat-per-az/      # E2E: VPC with NAT per AZ
+└── e2etest-xvpc-complete/        # E2E: All features
+```
+
+### Naming Convention
+
+**Composition Tests**:
+```
+test-xvpc-<feature>[-<variant>]
+
+Examples:
+- test-xvpc-basic
+- test-xvpc-nat-single
+- test-xvpc-routes-private-single-nat
+```
+
+**E2E Tests**:
+```
+e2etest-xvpc-<scenario>
+
+Examples:
+- e2etest-xvpc-basic
+- e2etest-xvpc-complete
 ```
 
 ---
@@ -853,9 +868,24 @@ You don't need to specify ALL fields - only the ones you want to assert:
 
 ---
 
-## Test Organization
+## Success Metrics
 
-**See [TDD_STRATEGY.md → Test Organization](TDD_STRATEGY.md#test-organization) for complete test organization patterns and naming conventions.**
+### Code Coverage
+- ✅ 100% of features have composition tests
+- ✅ 100% of critical paths have E2E tests
+- ✅ All tests documented with expected behavior
+
+### Test Health
+- ✅ All tests pass before every commit
+- ✅ No flaky tests (99.9% pass rate)
+- ✅ Fast tests (< 10s per composition test)
+- ✅ E2E tests clean up resources (no orphans)
+
+### Feature Parity
+- ✅ All Terraform inputs tested
+- ✅ All Terraform outputs tested
+- ✅ Side-by-side validation passes
+- ✅ Behavior matches Terraform module
 
 ---
 
@@ -877,7 +907,7 @@ You don't need to specify ALL fields - only the ones you want to assert:
 **E2E Tests**:
 - Check resource status: `kubectl describe xvpc my-vpc`
 - View events: `kubectl get events --sort-by='.lastTimestamp'`
-- Monitor in Upbound Console while test runs (see UPBOUND_REFERENCE → Console Monitoring)
+- Monitor with kubectl: `kubectl get managed`, `kubectl describe <resource>`
 
 ### Common Issues
 
@@ -942,6 +972,47 @@ You don't need to specify ALL fields - only the ones you want to assert:
     }
 }
 ```
+
+#### Console Troubleshooting (E2E Tests)
+
+**Problem: Package stuck "Installing"**
+
+**Steps:**
+1. Navigate to: Control Plane → Packages
+2. Click on: configuration-aws-vpc package
+3. Check: Conditions section
+4. Look for: "HealthyPackageRevision: False"
+5. Read: Message field for error details
+
+**Common causes:**
+- Missing dependency
+- Invalid KCL syntax
+- Image pull failure
+
+**Problem: Resource stuck "Creating"**
+
+**Steps:**
+1. Navigate to: Control Plane → Managed Resources
+2. Filter by: Kind (e.g., VPC)
+3. Click on: The stuck resource
+4. Check: Status → Conditions
+5. Look for: "LastAsyncOperation: Failed"
+6. Read: Message for AWS error
+
+**Common causes:**
+- IAM permission denied
+- AWS quota exceeded
+- Invalid configuration
+
+**Problem: All resources stuck**
+
+**Steps:**
+1. Navigate to: Control Plane → Managed Resources
+2. Filter by: ProviderConfig kind
+3. Check: ProviderConfig status
+4. If not Ready: IAM auth failed
+5. Verify: IAM role ARN is correct
+
 
 **Key Rules**:
 - Namespaced claims (kind: VPC with namespace) → ProviderConfig MUST have namespace

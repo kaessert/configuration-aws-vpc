@@ -57,8 +57,6 @@ Each module has a **single responsibility**:
 
 Every module MUST be testable independently.
 
-**For test organization and naming conventions, see [TDD_STRATEGY.md → Test Organization](TDD_STRATEGY.md#test-organization)**
-
 ### 4. Scalability
 
 Design for growth:
@@ -70,38 +68,11 @@ Design for growth:
 
 ## Composition Pipeline Requirements
 
-**CRITICAL**: All Crossplane compositions using `mode: Pipeline` MUST include `function-auto-ready` as the **LAST** pipeline step.
+**CRITICAL**: All compositions MUST include `function-auto-ready` as the last pipeline step.
 
-### Why function-auto-ready is Mandatory
+**See [KCL_REFERENCE.md → Generating Functions](KCL_REFERENCE.md#generating-functions) for complete details and troubleshooting.**
 
-Without function-auto-ready, composite resources (XRs) will NEVER reach "Ready" status:
-- E2E tests will timeout waiting for Ready condition
-- Users can't determine when resources are fully provisioned
-- Status reporting is incomplete
-
-### Correct Pipeline Structure
-
-```yaml
-# apis/vpc/composition.yaml
-spec:
-  mode: Pipeline
-  pipeline:
-  - functionRef:
-      name: <your-function>              # Resource generation function(s)
-    step: <resource-generation>
-  - functionRef:
-      name: crossplane-contrib-function-auto-ready  # MANDATORY LAST STEP
-    step: crossplane-contrib-function-auto-ready
-```
-
-**Key Points**:
-- ✅ function-auto-ready MUST be the last step
-- ✅ Detects when all composed resources are Ready
-- ✅ Propagates Ready status to the XR
-- ✅ Standard pattern in ALL Upbound configurations
-- ❌ NOT project-specific - required for ANY composition
-
-**Reference**: [crossplane-contrib/function-auto-ready](https://github.com/crossplane-contrib/function-auto-ready)
+Without this, XRs never reach Ready status and E2E tests timeout.
 
 ## Project Structure
 
@@ -215,10 +186,6 @@ Resources created by this configuration:
 This project follows **strict Test-Driven Development (TDD)**:
 
 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
-
-> 📖 **Complete TDD Workflow**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) for the detailed step-by-step process
-
-> 📖 **Git & Commits**: See [GIT_WORKFLOW.md](GIT_WORKFLOW.md) for commit conventions and workflow details
 
 ## Dependencies and Performance
 
@@ -337,10 +304,6 @@ Every module has corresponding tests. See [TDD_STRATEGY.md](TDD_STRATEGY.md) for
 - ✅ 100% of functions documented
 - ✅ No code duplication
 - ✅ Clear separation of concerns
-
-**For test coverage goals and feature parity metrics, see [TDD_STRATEGY.md → Success Metrics](TDD_STRATEGY.md#success-metrics)**
-
-> 📖 **Development Workflow**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) for adding features, refactoring, and bug fixes
 
 ## References
 
