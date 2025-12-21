@@ -232,265 +232,106 @@ Read these documents in order to understand the project:
 
 ## Part 4: Workflows
 
+> 📖 **Complete Workflows**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) and [git-workflow.md](git/git-workflow.md) for detailed processes
+
 ### TDD Overview
-
-This project follows **strict Test-Driven Development** with **MANDATORY E2E validation**.
-
-#### The Iron Rule
 
 **🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT**
 
-For every feature, you must:
+This project follows **strict Test-Driven Development**:
 
-1. **🔴 RED Phase**: Write composition test FIRST (test MUST fail)
-2. **🟢 GREEN Phase**: Write minimum code to pass test
-3. **🔵 REFACTOR Phase**: Improve code while keeping tests green
-4. **🧪 E2E TEST Phase**: Write and pass E2E test (**MANDATORY**)
-5. **✅ COMMIT Phase**: Only commit when ALL tests pass
+1. **Write test FIRST** - Composition test must fail initially
+2. **Implement minimum code** - Make test pass
+3. **Refactor** - Improve code while keeping tests green
+4. **E2E test** - Validate in real AWS (**MANDATORY**)
+5. **Commit** - Only when ALL tests pass
 
-#### Why This Workflow?
+**Why?** Composition tests validate KCL logic; E2E tests validate AWS behavior. Both are required.
 
-- **Composition tests** (fast) - Validate KCL logic is correct
-- **E2E tests** (slow) - Validate AWS behavior is correct
-- **Both are required** - Code may pass composition tests but fail in real AWS
+### Your First Task: Write an E2E Test
 
-**Read the complete workflow**: [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md)
+> 📖 **Detailed E2E Guide**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) lines 289-317 and [testing-reference.md](tools/testing-reference.md) for complete E2E testing documentation
 
-### Your First Task
+**Quick Start** (assumes you've read Part 3):
 
-Since Task 0.1 is blocking all work, your first task will be writing an E2E test for an implemented feature.
+```bash
+# 1. Generate test
+up test generate e2etest-vpc-<feature> --e2e --language=kcl
 
-#### Step-by-Step Process
+# 2. Configure test (see TDD_STRATEGY.md for details)
+#    - ProviderConfig: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
+#    - timeout: 1800-3000 seconds
+#    - skipDelete: false
+#    - defaultConditions: ["Ready", "Synced"]
 
-1. **Read the E2E guide** (30 minutes)
-   → [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md)
+# 3. Run test
+up test run tests/e2etest-vpc-<feature> --e2e --control-plane-group=claude-testing
 
-2. **Pick a feature from Task 0.1** (5 minutes)
-   → [planning/tasks.md](planning/tasks.md)
-   - Look for unchecked items in Task 0.1
-   - Start with simpler features (VPC creation) before complex ones (multi-AZ NAT)
+# 4. Verify AWS cleanup (CRITICAL!)
+#    Check AWS Console - VPCs, NAT Gateways, EIPs should all be EMPTY
 
-3. **Generate E2E test template** (2 minutes)
-   ```bash
-   up test generate e2etest-xvpc-<feature> --e2e --language=kcl
-   ```
-
-4. **Configure the E2E test** (15 minutes)
-   - Edit `tests/e2etest-xvpc-<feature>/main.k`
-   - Set ProviderConfig with IAM role: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
-   - Set timeout: 1800-3000 seconds (30-50 minutes)
-   - Set skipDelete: false (ensure cleanup)
-   - Set validate: true
-   - Add defaultConditions: ["Ready", "Synced"]
-
-5. **Run the E2E test** (30-40 minutes)
-   ```bash
-   # CRITICAL: Must specify --control-plane-group
-   up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
-   ```
-   - Test creates ephemeral control plane
-   - Installs configuration and providers
-   - Creates real AWS resources
-   - Waits for resources to reach Ready/Synced
-   - Deletes resources
-   - Destroys control plane
-
-6. **Verify cleanup** (5 minutes)
-   - Check AWS Console for orphaned resources
-   - VPCs: https://console.aws.amazon.com/vpc → Your VPCs → Should be EMPTY
-   - NAT Gateways: Check for expensive resources → Should be EMPTY
-   - Elastic IPs: Check for billable resources → Should be EMPTY
-
-7. **Iterate if needed** (variable)
-   - If test fails, check logs and troubleshoot
-   - Common issues: timeout too short, conditions not met, cleanup failed
-   - Fix issues and re-run
-
-8. **Commit when passing** (5 minutes)
-   ```bash
-   git add .
-   git commit -m "test: add E2E test for <feature>
-
-   - Add E2E test validating real AWS <feature> behavior
-   - Configure ProviderConfig with IAM role
-   - Set timeout to 30 minutes
-   - Verify cleanup after test
-   - E2E test passes, all resources cleaned up
-   "
-   git push
-   ```
+# 5. Commit when passing (see git-workflow.md for conventions)
+up test run tests/test-*  # All composition tests
+up project build          # Project builds
+git add .
+git commit -m "test: add E2E test for <feature>"
+```
 
 **Total time**: 1-2 hours (including AWS wait time)
 
-### Your First Commit
+### Commit Checklist
 
-When you've completed a task (e.g., written an E2E test), follow this workflow:
+Before every commit:
+- ✅ All composition tests pass: `up test run tests/test-*`
+- ✅ Your E2E test passes: `up test run tests/e2etest-vpc-<feature> --e2e --control-plane-group=claude-testing`
+- ✅ Project builds: `up project build`
+- ✅ AWS resources cleaned up (for E2E tests)
+- ✅ Conventional commit format: `<type>: <subject>`
 
-#### 1. Run ALL Tests
-
-```bash
-# Run ALL composition tests (MUST pass)
-up test run tests/test-*
-
-# Run ALL E2E tests (MUST pass) - takes 2-4 hours!
-# WARNING: This is expensive in time and AWS costs
-# Only run if you've changed multiple features
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
-
-# For your specific E2E test only
-up test run tests/e2etest-xvpc-<your-feature> --e2e --control-plane-group=claude-testing
-
-# Build project (MUST pass)
-up project build
-```
-
-**CRITICAL**: NEVER commit if ANY test fails!
-
-#### 2. Verify AWS Cleanup (for E2E tests)
-
-If you ran E2E tests, verify NO resources remain in AWS:
-- VPCs: https://console.aws.amazon.com/vpc → Your VPCs → Filter by TestName tag → Should be EMPTY
-- NAT Gateways: Check for expensive resources! → Should be EMPTY
-- Elastic IPs: Check for billable resources! → Should be EMPTY
-
-#### 3. Update Documentation
-
-- Update [planning/tasks.md](planning/tasks.md) - Mark tasks complete
-- Update relevant guides if you learned something new
-
-#### 4. Commit with Conventional Commits
-
-```bash
-# Stage changes
-git add .
-
-# Commit with conventional commit message
-git commit -m "test: add E2E test for VPC creation
-
-- Add E2E test validating real AWS VPC behavior
-- Configure ProviderConfig with IAM role
-- Set timeout to 30 minutes
-- Verify cleanup after test
-- E2E test passes, all resources cleaned up
-"
-
-# Push to remote
-git push
-```
-
-**Commit message format**: `<type>: <subject>`
-- `feat:` New feature
-- `fix:` Bug fix
-- `test:` Add or update tests
-- `docs:` Documentation changes
-- `refactor:` Code refactoring
-
-**Read the full guide**: [development/git-workflow.md](development/git-workflow.md)
+> 📖 **Full Git Workflow**: See [git-workflow.md](git/git-workflow.md) for complete commit conventions
 
 ---
 
 ## Part 5: Reference
 
-### Common Commands
+> 📖 **Complete Command Reference**: See [tools/upbound-reference.md](tools/upbound-reference.md) for all `up` CLI commands
 
-#### Build and Test
+### Essential Commands
 
+**Build and Test**:
 ```bash
-# Build project
-up project build
-
-# Run specific composition test
-up test run tests/test-xvpc-simple
-
-# Run all composition tests (fast - <1 min)
-up test run tests/test-*
-
-# Run specific E2E test (slow - 20-40 min)
-# CRITICAL: Must specify --control-plane-group
-up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing
-
-# Run all E2E tests (very slow - 2-4 hours!)
-# WARNING: Expensive in time and AWS costs
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
+up project build                              # Build project
+up test run tests/test-*                      # Run all composition tests
+up test run tests/e2etest-vpc-<feature> --e2e --control-plane-group=claude-testing  # Run E2E test
 ```
 
-#### Local Development
-
+**Upbound Cloud**:
 ```bash
-# Preview composition output
-up composition render examples/simple-vpc.yaml
-
-# Run project locally (starts local control plane)
-up project run
-
-# In another terminal: Apply example
-kubectl apply -f examples/simple-vpc.yaml
-
-# Check resources
-kubectl get composite
-kubectl get managed
-kubectl describe xvpc my-vpc
-
-# Stop local run
-up project stop
-```
-
-#### Upbound Cloud
-
-```bash
-# Login
-up login
-
-# Check authentication
-up whoami
-
-# List control plane groups (needed for E2E tests)
-up group list
-
-# List control planes in a group
-up controlplane list --group=claude-testing
-
-# Push package to registry (for production)
-up project push
+up login           # Authenticate
+up whoami          # Verify authentication
+up group list      # List control plane groups
 ```
 
 ### Getting Help
 
-#### Where to Find Answers
+#### Documentation Quick Links
 
-**New to the project?**
-→ [ONBOARDING.md](ONBOARDING.md) (this guide)
+- **Testing & TDD**: [TDD_STRATEGY.md](TDD_STRATEGY.md)
+- **Git & Commits**: [git-workflow.md](git/git-workflow.md)
+- **Up CLI Commands**: [tools/upbound-reference.md](tools/upbound-reference.md)
+- **KCL Language**: [tools/kcl-reference.md](tools/kcl-reference.md)
+- **Implementation**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
+- **Feature Spec**: [SPECIFICATION.md](SPECIFICATION.md)
+- **Tasks**: [planning/tasks.md](planning/tasks.md)
+- **Glossary**: [GLOSSARY.md](GLOSSARY.md)
+- **Index**: [README.md](README.md)
 
-**KCL syntax questions?**
-→ [development/kcl-guide.md](development/kcl-guide.md)
+#### External Resources
 
-**Coding patterns?**
-→ [development/upbound-patterns.md](development/upbound-patterns.md)
-
-**Testing questions?**
-→ [testing/TESTING_OVERVIEW.md](testing/TESTING_OVERVIEW.md)
-
-**E2E test issues?**
-→ [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) (troubleshooting section)
-
-**Git operations?**
-→ [development/git-workflow.md](development/git-workflow.md)
-
-**Upbound CLI commands?**
-→ [reference/up-cli-guide.md](reference/up-cli-guide.md)
-
-**Terminology?**
-→ [GLOSSARY.md](GLOSSARY.md)
-
-**Navigation?**
-→ [README.md](README.md) (documentation index)
-
-#### External Documentation
-
-**Upbound Docs**: https://docs.upbound.io
-**Crossplane Docs**: https://docs.crossplane.io
-**KCL Docs**: https://kcl-lang.io/docs
-**Terraform VPC Module**: https://github.com/terraform-aws-modules/terraform-aws-vpc
+- **Upbound**: https://docs.upbound.io
+- **Crossplane**: https://docs.crossplane.io
+- **KCL**: https://kcl-lang.io/docs
+- **Terraform VPC**: https://github.com/terraform-aws-modules/terraform-aws-vpc
 
 ### Common Mistakes to Avoid
 
@@ -603,24 +444,24 @@ up project build
 
 **You're ready to**:
 - ✅ Pick a task from [planning/tasks.md](planning/tasks.md)
-- ✅ Write E2E tests following [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md)
-- ✅ Follow TDD workflow from [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md)
+- ✅ Write E2E tests following [TDD_STRATEGY.md](TDD_STRATEGY.md)
+- ✅ Follow git workflow from [git-workflow.md](git/git-workflow.md)
 - ✅ Make meaningful contributions to the project
 
-**Your first task**: Write E2E test for an implemented feature (Task 0.1)
+**Your first task**: Write E2E test for an implemented feature
 
-**Time to productivity**: ~2 hours (reading docs: 75 min + first E2E test: 1-2 hours)
+**Time to productivity**: ~2 hours
 
 ---
 
 ## See Also
 
-- [README.md](README.md) - Documentation navigation index
-- [GLOSSARY.md](GLOSSARY.md) - Project terminology
-- [planning/tasks.md](planning/tasks.md) - What to work on
-- [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) - Your first task!
-- [development/TDD_STRATEGY.md](development/TDD_STRATEGY.md) - Development workflow
+- [README.md](README.md) - Documentation index
+- [TDD_STRATEGY.md](TDD_STRATEGY.md) - Complete testing workflow
+- [git-workflow.md](git/git-workflow.md) - Git and commit conventions
+- [planning/tasks.md](planning/tasks.md) - Current tasks
+- [GLOSSARY.md](GLOSSARY.md) - Terminology
 
 ---
 
-**Welcome to the team!** Now head to [testing/e2e-implementation-guide.md](testing/e2e-implementation-guide.md) and write your first E2E test. You've got this!
+**Welcome to the team!** Now read [TDD_STRATEGY.md](TDD_STRATEGY.md) and write your first E2E test. You've got this!

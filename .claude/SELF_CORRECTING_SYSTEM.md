@@ -15,6 +15,10 @@ Invoke the Documentation Correction Agent when:
 
 ## How to Invoke
 
+**FIRST**: Ask human for deep understanding (What, Why, When, How)
+
+**THEN**: Launch agent with understanding:
+
 ```bash
 Task(
   subagent_type="general-purpose",
@@ -31,7 +35,11 @@ WHAT SHOULD HAVE HAPPENED:
 ORIGINAL PROBLEM:
 [What were you trying to solve?]
 
+DEEP UNDERSTANDING (What/Why/When/How):
+[Fill in from human's explanation]
+
 Follow .claude/agents/documentation-correction-agent.md to:
+0. Start with deep understanding (Phase 0)
 1. Find why wrong path was taken
 2. Audit documentation for issues
 3. Fix all documentation problems
@@ -51,6 +59,7 @@ Goal: This mistake never happens again.
 
 ## What the Agent Does
 
+0. Ensures deep understanding of right solution (Phase 0)
 1. Investigates why you made the wrong decision
 2. Finds contradicting/missing/duplicate docs
 3. Proposes specific fixes
@@ -64,7 +73,9 @@ Human corrects you
     ↓
 Acknowledge the correction
     ↓
-Launch Documentation Correction Agent
+Ask for DEEP understanding (What/Why/When/How)
+    ↓
+Launch Documentation Correction Agent with understanding
     ↓
 Wait for agent to complete
     ↓
@@ -75,7 +86,16 @@ Resume main task with correct info
 
 **Scenario**: You assumed E2E tests were optional, but they're mandatory.
 
-**Action**:
+**First**: Ask human for deep understanding:
+```
+I need to understand WHY E2E tests are mandatory:
+- Why not just composition tests?
+- When did this become mandatory?
+- What risks does E2E testing prevent?
+- How should E2E tests be structured?
+```
+
+**Then**: Launch agent with understanding:
 ```bash
 Task(
   subagent_type="general-purpose",
@@ -87,12 +107,18 @@ INCORRECT: I assumed E2E tests were optional
 CORRECT: E2E tests are mandatory for all features
 PROBLEM: Was implementing feature without E2E test
 
+UNDERSTANDING:
+- What: E2E tests validate actual AWS behavior, not just KCL logic
+- Why: Composition tests can pass while AWS deployment fails
+- When: Required for ALL features before commit
+- How: Use up test run --e2e with real control plane
+
 Follow .claude/agents/documentation-correction-agent.md to fix this.
 """
 )
 ```
 
-**Result**: Agent finds conflicting docs, updates all locations, adds prominent warnings, improves discoverability.
+**Result**: Agent finds conflicting docs, updates with full context and reasoning.
 
 ## Remember
 

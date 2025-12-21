@@ -21,12 +21,16 @@ Specialized agents handle specific tasks that:
 **When to use**: Immediately after a human corrects, denies, or de-validates an agent's action or assumption.
 
 **What it does**:
+- Starts with deep understanding of the RIGHT solution (Phase 0)
 - Audits project documentation for contradictions, gaps, and duplications
 - Identifies root causes of incorrect decisions
 - Proposes and implements documentation fixes
 - Adds prevention measures to avoid future mistakes
 
 **How to invoke**:
+
+First ask human for deep understanding (What/Why/When/How), then:
+
 ```bash
 Task(
   subagent_type="general-purpose",
@@ -39,7 +43,11 @@ CONTEXT:
 - Correct approach: [describe what should have happened]
 - Problem being solved: [original problem]
 
+DEEP UNDERSTANDING:
+[What/Why/When/How from human]
+
 Follow the instructions in .claude/agents/documentation-correction-agent.md to:
+0. Start with deep understanding (Phase 0)
 1. Investigate why the wrong path was taken
 2. Find contradicting/missing/duplicate documentation
 3. Fix all documentation issues

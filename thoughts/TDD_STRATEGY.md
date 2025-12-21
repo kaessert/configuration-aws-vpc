@@ -653,52 +653,24 @@ test "public subnets created with correct specs"
 
 ## Quick Reference
 
-### Generate Test
-```bash
-# Composition test
-up test generate test-xvpc-<feature> --language=kcl
+> 📖 **Command Syntax**: See [testing-reference.md](tools/testing-reference.md) and [upbound-reference.md](tools/upbound-reference.md) for complete command reference
 
-# E2E test
-up test generate e2etest-xvpc-<scenario> --e2e --language=kcl
+**Essential Commands**:
+```bash
+up test generate test-xvpc-<feature> --language=kcl    # Generate composition test
+up test run tests/test-*                                # Run all composition tests
+up test run tests/e2etest-* --e2e                       # Run all E2E tests
 ```
 
-### Run Tests
-```bash
-# Single test
-up test run tests/test-xvpc-<feature>
+## Related Documentation
 
-# All composition tests
-up test run tests/test-*
-
-# All E2E tests (requires up login)
-up test run tests/e2etest-* --e2e
-
-# Specific E2E test
-up test run tests/e2etest-xvpc-basic --e2e
-```
-
-### Debugging Tests
-```bash
-# Build project first
-up project build
-
-# Run test with verbose output
-up test run tests/test-xvpc-<feature> -v
-
-# Check generated resources
-cat .upbound/build/debug/<test-name>/resources.yaml
-```
-
-## Resources
-
-- [Testing Guide](../tools/testing-guide.md)
-- [Testing Patterns](../tools/testing-kcl-patterns.md)
-- [Platform Ref Examples](../tools/testing-notes-platform-ref.md)
-- [E2E Test Setup](../tools/e2e-test-control-plane-setup.md)
-- [Architecture Guide](ARCHITECTURE.md)
+- **Commands**: [upbound-reference.md](tools/upbound-reference.md) - Complete `up` CLI reference
+- **Git Workflow**: [git-workflow.md](git/git-workflow.md) - TDD commit workflow
+- **Implementation**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) - Architecture and patterns
+- **Specification**: [SPECIFICATION.md](SPECIFICATION.md) - Feature requirements
 
 ---
 
-**Remember**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → ✅ COMMIT
+**Remember**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-**Never commit failing tests. Never write code before tests.**
+**Never commit failing tests. Never write code before tests. E2E tests are MANDATORY.**

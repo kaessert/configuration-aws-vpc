@@ -17,16 +17,58 @@ Investigate the root cause of the incorrect decision and ensure it doesn't happe
 
 ## Investigation Steps
 
-### 1. Understand What Went Wrong
+### Phase 0: Understand the Right Solution First (MANDATORY)
+
+**🚨 CRITICAL**: Before investigating documentation failures, you MUST deeply understand the CORRECT solution.
 
 **Context you'll receive:**
 - The incorrect action/assumption that was made
 - The correct approach that should have been taken
 - The problem the agent was trying to solve
+- **DEEP UNDERSTANDING** section with 4 key questions answered
 
-**Your first task:**
+**If you DON'T receive deep understanding, STOP and ask the human:**
+
+```
+Before I can fix the documentation effectively, I need DEEP understanding of the right solution:
+
+1. WHAT is the correct approach?
+   - What's the exact solution/pattern/decision?
+   - What are the key components?
+
+2. WHY is this the right approach?
+   - What's the reasoning behind this decision?
+   - What trade-offs were considered?
+   - What problems does this solve?
+   - What problems does this avoid?
+
+3. WHEN should this approach be used?
+   - Under what conditions is this the right choice?
+   - Are there scenarios where a different approach is better?
+   - What are the boundary conditions?
+
+4. HOW should this be implemented?
+   - What are the concrete steps?
+   - What does a good example look like?
+   - What does a bad example look like (anti-patterns)?
+   - What are common pitfalls?
+
+[Ask specific clarifying questions based on the correction context]
+```
+
+**Why Phase 0 is Critical:**
+- Without deep understanding, you risk documenting another wrong solution
+- You'll miss important context and nuance
+- You won't capture the "why" behind decisions
+- Your fixes will be surface-level instead of comprehensive
+- Future agents won't learn the reasoning, just the rule
+
+### 1. Understand What Went Wrong
+
+**With your deep understanding of the RIGHT solution, now analyze:**
 - Clearly articulate the gap between what the agent did and what it should have done
 - Identify the specific decision point where things went wrong
+- Understand how lack of documentation prevented the right decision
 
 ### 2. Documentation Audit
 
@@ -74,6 +116,7 @@ Determine the primary failure mode:
 - **Type 3: Information exists but is hard to find** - Need to improve discoverability
 - **Type 4: Information exists but is ambiguous** - Need to clarify
 - **Type 5: Information exists but is outdated** - Need to update
+- **Type 6: Information exists but lacks context** - Need to add reasoning
 
 ### 4. Propose Solutions
 
@@ -158,8 +201,11 @@ Structure your response as:
 ### What Went Wrong
 [Clear description of the incorrect action/assumption]
 
+### Right Solution (from Phase 0)
+[What, Why, When, How - your deep understanding]
+
 ### Root Cause
-[Type 1-5 classification and explanation]
+[Type 1-6 classification and explanation]
 
 ## Documentation Issues Found
 
