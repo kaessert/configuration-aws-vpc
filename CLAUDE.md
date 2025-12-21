@@ -35,6 +35,23 @@ See `thoughts/tasks.md` for the new critical task (0.1) that blocks all other wo
 
 **Status**: Project is in the planning/foundation phase. All research and documentation is complete. Ready for implementation.
 
+## Architecture Decision: Namespaced VPC Claims
+
+**CRITICAL**: This project uses Crossplane v2 with **namespaced claims**.
+
+**What This Means**:
+- XRD kind: `VPC` (NO X prefix)
+- All resources require: `namespace: default`
+- ProviderConfigs must be namespaced
+
+**Common Mistake**:
+- DO NOT use `kind: XVPC` (cluster-scoped composite)
+- ALWAYS use `kind: VPC` (namespaced claim)
+
+If you see `kind: XVPC` anywhere in examples or user-facing documentation, it's a documentation error. Report it immediately.
+
+See `thoughts/ARCHITECTURE_DECISIONS.md` for full details.
+
 ---
 
 ## 🔄 Self-Correcting Documentation System
@@ -252,7 +269,7 @@ up project stop
 4. **🧪 E2E TEST Phase - MANDATORY Real AWS Validation**
    ```bash
    # Generate E2E test (MANDATORY for ALL major features)
-   up test generate e2etest-xvpc-<feature> --e2e --language=kcl
+   up test generate xvpc-<feature> --e2e --language=kcl
 
    # Edit test: tests/e2etest-xvpc-<feature>/main.k
    # Configure:
@@ -263,11 +280,18 @@ up project stop
    # - Set validate: true
    # - Add defaultConditions: ["Ready", "Synced"]
 
-   # Run E2E test (requires up login and group specification)
-   up login
+   # Run E2E test (requires correct up profile and group specification)
+   up profile current # Should be solutions profile
+   # if profile does not match, STOP! PROMPT USER TO LOGIN AND SWITCH PROFILE
+   up ctx solutions/upbound-gcp-us-central-1 # switches to correct up context
    up group list  # Check available groups
+   # Launch a test agent and let it run the test:
    up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
-   # Wait 30+ minutes for AWS resource creation
+   # Check output every 5 minutes. If output does not change between two checks
+   # and assuming no resources are in "Creating" state, CANCEL THE TEST, then launch
+   # a troubleshooting agent to fix the issue with the test
+   # After potential fixes have been done, start this process again with a fresh 
+   # test agent
    # ✅ PASS - Resources created, reached Ready/Synced, cleaned up
 
    # CRITICAL: Do NOT skip this step!
@@ -298,7 +322,7 @@ up project stop
 ### Before Committing (CRITICAL CHECKS)
 
 1. **✅ ALL composition tests pass** - Run `up test run tests/test-*`
-2. **✅ ALL E2E tests pass** - Run `up test run tests/e2etest-* --e2e` (MANDATORY)
+2. **✅ ALL E2E tests pass** - Run `up test run tests/e2etest-* --e2e` (MANDATORY, LAUNCH IN PARALLEL WITH SUBAGENTS)
 3. **✅ Project builds** - Run `up project build`
 4. **✅ No regressions** - All existing tests still pass
 5. **✅ AWS cleanup verified** - No orphaned resources after E2E tests
@@ -323,116 +347,6 @@ up project stop
 - `CLAUDE.md` (this file) - Instructions for coding agents
 - `README.md` - User-facing documentation (create in task 6.1)
 - `thoughts/tasks.md` - Always up-to-date task list
-
-## Working with Upbound CLI
-
-Quick reference (see thoughts/tools/up-cli-guide.md for details):
-
-```bash
-# Initialize project
-up project init .
-
-# Build project
-up project build
-
-# Run locally for testing
-up project run
-
-# Push to registry
-up project push
-
-# Login to Upbound
-up login
-
-# Stop local run
-up project stop
-```
-
-## Working with KCL
-
-Key patterns (see thoughts/KCL_PATTERNS.md):
-
-```kcl
-# Import dependencies
-import models.io.upbound.sa.v1 as sav1
-import utils
-
-# Access composition parameters
-oxr = option("params").oxr
-oxrSpec = sav1.XVPC.spec{**oxr.spec}
-
-# Create resources with proper metadata
-items = [
-    Object{
-        metadata = utils._metadata("vpc") | {
-            name = "my-vpc"
-        }
-        spec = { /* ... */ }
-    }
-]
-```
-
-## Common Questions
-
-### Q: Where do I start?
-**A**: Open `thoughts/tasks.md` and start with task 1.1 (Initialize Upbound Project)
-
-### Q: How do I understand what features to implement?
-**A**: Read `thoughts/SPECIFICATION.md` - it has the complete feature list from the Terraform module
-
-### Q: What coding patterns should I follow?
-**A**: Follow patterns in `thoughts/KCL_PATTERNS.md` - it's based on production Upbound projects
-
-### Q: How do I use up-cli?
-**A**: Check `thoughts/tools/up-cli-guide.md` for comprehensive up-cli documentation
-
-### Q: How do I write KCL code?
-**A**: Reference `thoughts/tools/kcl-guide.md` for language syntax and patterns
-
-### Q: How do I commit my changes?
-**A**: Follow the git workflows in `thoughts/git/git-workflow.md`
-
-### Q: What if I'm stuck?
-**A**:
-1. Re-read the relevant docs in thoughts/
-2. Check thoughts/KCL_PATTERNS.md for patterns
-3. Review thoughts/SPECIFICATION.md for feature requirements
-4. Consult thoughts/IMPLEMENTATION_GUIDE.md for workflow guidance
-
-## Important Principles
-
-### 1. Follow the Patterns
-The patterns in `thoughts/KCL_PATTERNS.md` are based on real Upbound projects. Don't reinvent the wheel.
-
-### 2. Test Early and Often
-Use `up project run` frequently to test your changes locally before pushing.
-
-### 3. Incremental Development
-Build features incrementally. Get VPC working before adding complex features.
-
-### 4. Document as You Go
-If you learn something new or make a decision, document it in the appropriate thoughts/ file.
-
-### 5. Keep tasks.md Updated
-Always keep the task list current. It's the source of truth for project status.
-
-### 6. Self-Correct When Wrong
-When corrected by a human, **immediately** launch the Documentation Correction Agent (see Self-Correcting Documentation System above). Every mistake is an opportunity to improve documentation for future agents.
-
-## Task Workflow
-
-For each task in tasks.md:
-
-```
-1. Read task description and acceptance criteria
-2. Review relevant documentation in thoughts/
-3. Plan implementation approach
-4. Implement with frequent local testing
-5. Verify acceptance criteria met
-6. Update tasks.md to mark complete
-7. Commit with conventional commit message
-8. Move to next task
-```
 
 ## File Naming Conventions
 

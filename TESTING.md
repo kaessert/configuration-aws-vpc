@@ -150,7 +150,10 @@ metav1alpha1.CompositionTest{
 
         xr: {
             apiVersion: "aws.platform.upbound.io/v1alpha1"
-            kind: "XVPC"
+            kind: "VPC"
+            metadata: {
+                namespace: "default"
+            }
             spec: {
                 publicSubnets: ["10.0.1.0/24", "10.0.2.0/24"]
                 azs: ["us-west-2a", "us-west-2b"]

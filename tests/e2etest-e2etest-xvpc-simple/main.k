@@ -45,7 +45,7 @@ _items = [
             manifests: [
                 {
                     apiVersion: "aws.platform.upbound.io/v1alpha1"
-                    kind: "VPC"  # Using Claim, not XVPC
+                    kind: "VPC"  # Using namespaced claim
                     metadata: {
                         name: "e2e-test-vpc"
                         namespace: "default"
@@ -69,8 +69,8 @@ _items = [
             ]
 
             # Extra resources - ProviderConfig for AWS authentication
-            # IMPORTANT: Use IAM role, NEVER static credentials
-            # Spec: Uses solutions org IAM role for E2E testing
+            # IMPORTANT: Use IAM role with Upbound Identity, NEVER static credentials
+            # Spec: Uses solutions org IAM role for E2E testing via Upbound webIdentity
             extraResources: [
                 {
                     apiVersion: "aws.m.upbound.io/v1beta1"
@@ -82,13 +82,12 @@ _items = [
                     spec: {
                         credentials: {
                             source: "Upbound"
-                        }
-                        # Use assumeRoleChain with IAM role (never static credentials!)
-                        assumeRoleChain: [
-                            {
-                                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                            upbound: {
+                                webIdentity: {
+                                    roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                                }
                             }
-                        ]
+                        }
                     }
                 }
             ]

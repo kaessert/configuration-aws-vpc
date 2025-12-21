@@ -78,9 +78,10 @@ Create a simple VPC:
 
 ```yaml
 apiVersion: aws.platform.upbound.io/v1alpha1
-kind: XVPC
+kind: VPC
 metadata:
   name: my-vpc
+  namespace: default
 spec:
   region: us-west-2
   cidr: 10.0.0.0/16
@@ -293,13 +294,14 @@ See [thoughts/tasks.md](thoughts/tasks.md) for the complete roadmap.
 
 ## API Reference
 
-### XVPC Resource
+### VPC Resource
 
 ```yaml
 apiVersion: aws.platform.upbound.io/v1alpha1
-kind: XVPC
+kind: VPC
 metadata:
   name: string
+  namespace: default  # REQUIRED for namespaced resources
 spec:
   # Core Configuration
   region: string                    # AWS region (required)
