@@ -85,12 +85,12 @@ _items = [
                     spec: {
                         credentials: {
                             source: "Upbound"
-                        }
-                        assumeRoleChain: [
-                            {
-                                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                            upbound: {
+                                webIdentity: {
+                                    roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                                }
                             }
-                        ]
+                        }
                     }
                 }
             ]
