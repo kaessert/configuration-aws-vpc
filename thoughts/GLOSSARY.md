@@ -488,25 +488,16 @@ spec.defaultConditions: ["Ready", "Synced"]
 
 **Our workflow**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-**Phases**:
-1. **🔴 RED**: Write failing test
-2. **🟢 GREEN**: Write minimal code to pass
-3. **🔵 REFACTOR**: Improve code quality
-4. **🧪 E2E**: Validate in real AWS
-5. **✅ COMMIT**: Commit when all pass
-
-**Benefits**: Fewer bugs, better design, living documentation
+**See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete workflow and best practices**
 
 ---
 
 ### Task 0.1
-**Definition**: CRITICAL BLOCKING TASK to write E2E tests for all implemented features (VPC, subnets, NAT, routing).
+**Definition**: CRITICAL BLOCKING TASK to write E2E tests for all implemented features.
 
-**Why it's blocking**: E2E tests are now MANDATORY. We discovered composition tests only validate KCL logic, not real AWS behavior.
+**Why it's blocking**: E2E tests are now MANDATORY to validate real AWS behavior.
 
-**What it requires**: Write 4-5 E2E tests, each taking 1-2 hours
-
-**Priority**: HIGHEST - must complete before other work
+**See [TASKS.md](TASKS.md) for complete task details and status**
 
 ---
 
@@ -526,20 +517,9 @@ spec.defaultConditions: ["Ready", "Synced"]
 ### Modular Architecture
 **Definition**: Our design principle to organize code by concern, not by resource type.
 
-**Structure**:
-```
-functions/vpc/
-├── main.k       # Orchestration
-├── vpc.k        # VPC logic
-├── subnet.k     # Subnet logic
-├── gateway.k    # IGW + NAT logic
-├── route.k      # Routing logic
-└── utils/       # Helpers
-```
-
 **Benefits**: Testable, maintainable, scalable
 
-**Read more**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)
+**See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for complete architectural principles and structure**
 
 ---
 

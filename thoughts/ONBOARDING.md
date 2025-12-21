@@ -99,52 +99,6 @@ up project build
 
 ---
 
-## Development Workflow
-
-This project follows strict **Test-Driven Development (TDD)**:
-
-```
-🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
-```
-
-**CRITICAL**: E2E tests are MANDATORY for all features. A feature is NOT complete without E2E validation.
-
-> 📖 **Complete workflow details**: See [TDD_STRATEGY.md](TDD_STRATEGY.md)
-
----
-
-## Essential Commands
-
-**Build & Test**:
-```bash
-up project build                                    # Build project
-up test run tests/test-*                            # Run composition tests
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing  # Run E2E tests
-```
-
-**Upbound**:
-```bash
-up login           # Authenticate
-up whoami          # Verify auth
-up group list      # List control plane groups
-```
-
-> 📖 **Complete command reference**: See [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
-
----
-
-## Git Workflow
-
-**Commit checklist** (before every commit):
-- ✅ All composition tests pass: `up test run tests/test-*`
-- ✅ E2E tests pass: `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing`
-- ✅ Project builds: `up project build`
-- ✅ Follow conventional commits: `<type>(<scope>): <subject>`
-
-> 📖 **Complete git workflow**: See [GIT_WORKFLOW.md](GIT_WORKFLOW.md) and [GIT_REFERENCE.md](GIT_REFERENCE.md)
-
----
-
 ## Common Mistakes to Avoid
 
 **DON'T**:

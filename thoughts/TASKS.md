@@ -76,15 +76,10 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
   - Verify all route tables and associations
 
 - [ ] **Configure All E2E Tests Properly**
-  - Add ProviderConfig with IAM role: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
-  - Use assumeRoleChain (NEVER static credentials)
-  - Set realistic timeouts (1800-3000 seconds / 30-50 minutes)
-  - Add defaultConditions: ["Ready", "Synced"]
-  - Set skipDelete: false (ensure cleanup)
-  - Set validate: true
+  - Follow E2E test configuration in [TESTING_REFERENCE.md](TESTING_REFERENCE.md#e2e-tests)
+  - IAM role: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
+  - Timeout: 1800-3000 seconds (30-50 minutes)
 
-- [ ] **Run All E2E Tests Locally**
-  - Login: `up login`
   - Run: `up test run tests/e2etest-* --e2e`
   - Verify each test creates real AWS resources
   - Verify resources reach Ready/Synced states

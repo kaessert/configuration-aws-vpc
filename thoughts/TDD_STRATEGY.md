@@ -1,5 +1,14 @@
 # Test-Driven Development (TDD) Strategy
 
+## Related Documentation
+
+For related topics, see:
+- **Test Schemas & Patterns**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
+- **up CLI Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
+- **Git Workflows**: [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
+
+---
+
 ## Overview
 
 This project follows **strict Test-Driven Development (TDD)** practices. Tests are written **BEFORE** implementation code, and **all tests must pass before committing**.

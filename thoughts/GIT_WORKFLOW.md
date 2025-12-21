@@ -475,56 +475,24 @@ git branch -d fix/subnet-cidr
 
 ### Workflow 3: Adding Tests (TDD Workflow)
 
-This workflow follows the mandatory TDD approach: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+**For TDD methodology, see [TDD_STRATEGY.md](TDD_STRATEGY.md)**
+
+This workflow shows the git commands for the TDD cycle: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
 ```bash
 # 1. Create test branch
 git checkout -b test/add-e2e-vpc-basic
 
-# 2. 🔴 RED - Write composition test FIRST
-up test generate test-xvpc-basic --language=kcl
-# Edit tests/test-xvpc-basic/main.k
-# Write assertions for expected behavior
+# 2-5. Follow TDD workflow (see TDD_STRATEGY.md)
+#      - Write failing test
+#      - Implement feature
+#      - Refactor
+#      - Write and pass E2E test
 
-# Run test - MUST FAIL
-up test run tests/test-xvpc-basic
-# ❌ Expected: Test fails (feature not implemented)
-
-# 3. 🟢 GREEN - Implement minimum code to pass test
-# Edit functions/vpc/main.k
-# Implement feature
-
-# Run test until it passes
-up test run tests/test-xvpc-basic
-# ✅ Expected: Test passes
-
-# Run ALL tests to check for regressions
-up test run tests/test-*
-# ✅ Expected: All tests pass
-
-# 4. 🔵 REFACTOR - Improve code quality
-# Refactor for clarity/modularity
-# Keep tests passing during refactoring
-
-# 5. 🧪 E2E - Write and run E2E test (MANDATORY)
-up test generate e2etest-xvpc-basic --e2e --language=kcl
-# Edit tests/e2etest-xvpc-basic/main.k
-# Configure ProviderConfig with IAM role
-# Set timeout: 1800 seconds (30 minutes)
-# Set skipDelete: false (ensure cleanup)
-
-# Run E2E test
-up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing
-# ✅ Expected: Test passes, resources created and cleaned up
-
-# 6. ✅ COMMIT - Only when ALL tests pass
-# Final checks
-up project build              # ✅ MUST pass
-up test run tests/test-*      # ✅ ALL composition tests MUST pass
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing  # ✅ E2E test MUST pass
-
-# Commit with descriptive message
+# 6. Stage changes (ONLY when all tests pass)
 git add tests/test-xvpc-basic/ tests/e2etest-xvpc-basic/ functions/vpc/
+
+# 7. Commit with descriptive message
 git commit -m "$(cat <<'EOF'
 test: add composition and E2E tests for basic VPC
 
@@ -532,17 +500,20 @@ test: add composition and E2E tests for basic VPC
 - Implement basic VPC feature in functions/vpc/main.k
 - Add E2E test validating real AWS VPC behavior
 - All tests passing (composition + E2E)
-- E2E test verified resource creation and cleanup
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 EOF
 )"
 
-# 7. Push and create PR
+# 8. Push and create PR
 git push -u origin test/add-e2e-vpc-basic
 gh pr create --title "test: add E2E test for basic VPC" \
   --body "Adds composition and E2E tests for Task 0.1" \
   --label "run-e2e-tests"
 
-# 8. After merge, clean up
+# 9. After merge, clean up
 git checkout main
 git pull
 git branch -d test/add-e2e-vpc-basic

@@ -1,5 +1,15 @@
 # Implementation Guide: Modular & Scalable VPC Configuration
 
+## Related Documentation
+
+For related topics, see:
+- **TDD Workflow**: [TDD_STRATEGY.md](TDD_STRATEGY.md)
+- **Testing Patterns**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
+- **KCL Language**: [KCL_REFERENCE.md](KCL_REFERENCE.md)
+- **Feature Specification**: [SPECIFICATION.md](SPECIFICATION.md)
+
+---
+
 ## Overview
 
 This guide defines how to implement the AWS VPC configuration specification using Upbound and KCL. It provides architectural principles, development workflows, testing strategies, and code quality standards.
@@ -45,32 +55,9 @@ Each module has a **single responsibility**:
 
 ### 3. Testability
 
-Every module MUST be testable independently:
+Every module MUST be testable independently.
 
-```
-tests/
-├── test-vpc-basic/              # VPC creation
-├── test-subnets-public/         # Public subnets
-├── test-subnets-private/        # Private subnets
-├── test-subnets-database/       # Database subnets
-├── test-subnets-elasticache/    # Elasticache subnets
-├── test-subnets-redshift/       # Redshift subnets
-├── test-subnets-intra/          # Intra subnets
-├── test-igw/                    # Internet Gateway
-├── test-nat-single/             # Single NAT Gateway
-├── test-nat-per-az/             # NAT per AZ
-├── test-nat-disabled/           # No NAT
-├── test-routes-public/          # Public routing
-├── test-routes-private/         # Private routing
-├── test-routes-isolated/        # Isolated routing
-├── test-endpoints-gateway/      # Gateway endpoints
-├── test-endpoints-interface/    # Interface endpoints
-├── test-nacl/                   # Network ACLs
-├── test-dhcp/                   # DHCP options
-├── test-flowlogs-cloudwatch/    # Flow logs to CloudWatch
-├── test-flowlogs-s3/            # Flow logs to S3
-└── e2etest-complete/            # Full E2E test
-```
+**For test organization and naming conventions, see [TDD_STRATEGY.md → Test Organization](TDD_STRATEGY.md#test-organization)**
 
 ### 4. Scalability
 
@@ -81,6 +68,41 @@ Design for growth:
 - **Performant**: Resources created in parallel where possible
 - **Maintainable**: Clear boundaries, minimal coupling
 
+## Composition Pipeline Requirements
+
+**CRITICAL**: All Crossplane compositions using `mode: Pipeline` MUST include `function-auto-ready` as the **LAST** pipeline step.
+
+### Why function-auto-ready is Mandatory
+
+Without function-auto-ready, composite resources (XRs) will NEVER reach "Ready" status:
+- E2E tests will timeout waiting for Ready condition
+- Users can't determine when resources are fully provisioned
+- Status reporting is incomplete
+
+### Correct Pipeline Structure
+
+```yaml
+# apis/vpc/composition.yaml
+spec:
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: <your-function>              # Resource generation function(s)
+    step: <resource-generation>
+  - functionRef:
+      name: crossplane-contrib-function-auto-ready  # MANDATORY LAST STEP
+    step: crossplane-contrib-function-auto-ready
+```
+
+**Key Points**:
+- ✅ function-auto-ready MUST be the last step
+- ✅ Detects when all composed resources are Ready
+- ✅ Propagates Ready status to the XR
+- ✅ Standard pattern in ALL Upbound configurations
+- ❌ NOT project-specific - required for ANY composition
+
+**Reference**: [crossplane-contrib/function-auto-ready](https://github.com/crossplane-contrib/function-auto-ready)
+
 ## Project Structure
 
 ### File Organization
@@ -89,7 +111,8 @@ project-root/
 ├── upbound.yaml              # Project manifest
 ├── apis/                     # XRD (Composite Resource Definition) files
 │   └── xvpc/
-│       └── definition.yaml
+│       ├── definition.yaml
+│       └── composition.yaml  # MUST include function-auto-ready
 ├── examples/                 # Example XR/Claim files for testing
 │   ├── simple-vpc.yaml
 │   ├── multi-az-vpc.yaml
@@ -107,6 +130,28 @@ project-root/
     ├── test-vpc-basic/
     └── e2etest-complete/
 ```
+
+### AWS Resources
+
+Resources created by this configuration:
+
+- `aws_vpc` - VPC
+- `aws_subnet` - Subnets (public, private, database, elasticache, redshift, intra)
+- `aws_internet_gateway` - Internet Gateway
+- `aws_nat_gateway` - NAT Gateway
+- `aws_eip` - Elastic IPs for NAT gateways
+- `aws_route_table` - Route tables
+- `aws_route` - Individual routes
+- `aws_route_table_association` - Route table associations
+- `aws_vpc_endpoint` - VPC endpoints (gateway and interface)
+- `aws_network_acl` - Network ACLs
+- `aws_network_acl_rule` - ACL rules
+- `aws_dhcp_options` - DHCP options sets
+- `aws_dhcp_options_association` - DHCP associations
+- `aws_flow_log` - VPC flow logs
+- `aws_cloudwatch_log_group` - CloudWatch log groups for flow logs
+- `aws_s3_bucket` - S3 buckets for flow logs
+- `aws_security_group` - Security groups for endpoints
 
 ### Module Responsibilities
 
@@ -281,17 +326,9 @@ assert len(oxrSpec.azs) >= len(oxrSpec.publicSubnets), \
 # Validate CIDR blocks
 assert all cidr in oxrSpec.publicSubnets satisfies \
     "/" in cidr, "Invalid CIDR block format"
-```
-
 ### Testing Coverage
 
-Every module has test:
-
-```
-functions/vpc/subnet.k → tests/test-xvpc-subnets-*/main.k
-functions/vpc/gateway.k → tests/test-xvpc-gateways/main.k
-functions/vpc/route.k → tests/test-xvpc-routes-*/main.k
-```
+Every module has corresponding tests. See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete testing workflow.
 
 ### Success Metrics
 
@@ -301,45 +338,9 @@ functions/vpc/route.k → tests/test-xvpc-routes-*/main.k
 - ✅ No code duplication
 - ✅ Clear separation of concerns
 
-#### Test Coverage
-- ✅ 100% feature coverage (composition tests)
-- ✅ All critical paths (E2E tests - MANDATORY)
-- ✅ All tests pass before commit
-- ✅ No flaky tests
+**For test coverage goals and feature parity metrics, see [TDD_STRATEGY.md → Success Metrics](TDD_STRATEGY.md#success-metrics)**
 
-#### Feature Parity
-- ✅ All Terraform inputs supported
-- ✅ All Terraform outputs provided
-- ✅ Behavior matches Terraform module
-- ✅ Side-by-side validation passes
-
-## Maintenance
-
-### Adding New Features
-
-1. Check Terraform module for feature
-2. Write composition test FIRST
-3. Update XRD if needed
-4. Implement in appropriate module
-5. Write E2E test (MANDATORY for major features)
-6. Update examples
-7. Update documentation
-8. Commit when ALL tests pass
-
-### Refactoring
-
-1. Ensure tests exist and pass
-2. Refactor code
-3. Ensure tests still pass
-4. Commit
-
-### Bug Fixes
-
-1. Write failing test that reproduces bug
-2. Fix bug
-3. Ensure test passes
-4. Ensure ALL tests still pass
-5. Commit
+> 📖 **Development Workflow**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) for adding features, refactoring, and bug fixes
 
 ## References
 

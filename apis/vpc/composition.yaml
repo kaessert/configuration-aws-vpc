@@ -11,3 +11,6 @@ spec:
   - functionRef:
       name: solutions-configuration-aws-vpcvpc
     step: vpc-resources
+  - functionRef:
+      name: crossplane-contrib-function-auto-ready
+    step: crossplane-contrib-function-auto-ready

@@ -152,64 +152,16 @@ When corrected by a human:
 
 ## First-Time Setup
 
-If this is your first time working on this project:
+**For complete documentation navigation, see [thoughts/README.md](thoughts/README.md)**
 
-1. **Read the project context**:
-   - Review `thoughts/INITIAL_PROMPT.md` for the original requirements
-   - Read `thoughts/TASKS.md` for the complete task breakdown
-   - Read `thoughts/SPECIFICATION.md` - Complete specification of what we're building
-
-2. **Understand the implementation approach**:
-   - `thoughts/IMPLEMENTATION_GUIDE.md` - Architecture, workflow, testing strategy
-
-3. **Learn KCL patterns**:
-   - `thoughts/KCL_REFERENCE.md` - KCL language reference
-
-4. **Familiarize yourself with the tools**:
-   - `thoughts/UPBOUND_REFERENCE.md` - Upbound CLI reference
-   - `thoughts/TESTING_REFERENCE.md` - Testing guide
-
-5. **Learn git workflows**:
-   - `thoughts/GIT_WORKFLOW.md` - Git workflows and commit conventions
-   - `thoughts/GIT_REFERENCE.md` - Git command reference
-
-## The "thoughts" Directory Structure
-
-All operational knowledge lives in the `thoughts/` directory (flat structure):
-
-```
-thoughts/
-├── SPECIFICATION.md            # Complete feature specification (WHAT to build)
-├── IMPLEMENTATION_GUIDE.md     # Architecture and workflow (HOW to build)
-├── TDD_STRATEGY.md             # TDD workflow and testing strategy
-├── INITIAL_PROMPT.md           # Original project requirements
-├── TASKS.md                    # Prioritized task list (START HERE)
-├── KCL_REFERENCE.md            # KCL language reference
-├── UPBOUND_REFERENCE.md        # Upbound CLI reference
-├── TESTING_REFERENCE.md        # Testing guide
-├── GIT_WORKFLOW.md             # Git workflows and commit conventions
-└── GIT_REFERENCE.md            # Git command reference
-```
+**Quick start:**
+1. Read [thoughts/ONBOARDING.md](thoughts/ONBOARDING.md) - Setup and prerequisites
+2. Check [thoughts/TASKS.md](thoughts/TASKS.md) - What to work on next
+3. Review [thoughts/TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) - How to develop features
 
 ## Current Project Status
 
-**Phase**: Foundation / Planning Complete
-**Next Step**: Phase 1 - Project Foundation (see tasks.md)
-
-### What's Done
-- ✅ Complete analysis of Terraform AWS VPC module
-- ✅ Research of Upbound platform-ref-upbound patterns
-- ✅ Documentation of KCL language
-- ✅ Documentation of up-cli
-- ✅ Comprehensive task breakdown
-- ✅ Git workflow documentation
-
-### What's Next
-Start with tasks from `thoughts/TASKS.md`:
-1. Initialize Upbound project (1.1)
-2. Define XRD (1.2)
-3. Create composition function scaffold (1.3)
-4. Implement core VPC features (Phase 2)
+**See [thoughts/TASKS.md](thoughts/TASKS.md) for current status and task list**
 
 ## Documentation Principles
 
@@ -260,96 +212,34 @@ When you discover an important lesson:
 
 ## How to Work on This Project
 
-> 📖 **Complete Guides**: See [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) for the full TDD workflow and [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md) for git conventions
+**Essential workflow:** 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-### Starting a New Task
+**For complete TDD workflow**, see [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md)
+**For git conventions**, see [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md)
 
-1. **Check** `thoughts/TASKS.md` for the next priority task
-2. **Read** relevant documentation in thoughts/ directory
-3. **Follow TDD workflow**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
-4. **Update** TASKS.md when complete
+### Before Every Commit
 
-### Essential Workflow
-
-**MANDATORY TDD Workflow** (see [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) for details):
-
-1. 🔴 **RED**: Write composition test FIRST (must fail)
-2. 🟢 **GREEN**: Implement minimum code to pass test
-3. 🔵 **REFACTOR**: Improve code quality
-4. 🧪 **E2E**: Write and pass E2E test (MANDATORY)
-5. ✅ **COMMIT**: Only when ALL tests pass
-
-**Before Every Commit**:
-- ✅ All composition tests pass: `up test run tests/test-*`
-- ✅ All E2E tests pass: `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing`
-- ✅ Project builds: `up project build`
-- ✅ Follow conventional commits (see [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md))
+- ✅ All composition tests pass
+- ✅ All E2E tests pass (MANDATORY)
+- ✅ Project builds
+- ✅ Follow conventional commits
 
 **CRITICAL**: E2E tests are MANDATORY. Features are NOT complete without E2E validation.
 
-## Key Files and References
+## Essential References
 
-> 📖 **Architecture & Patterns**: See [IMPLEMENTATION_GUIDE.md](thoughts/IMPLEMENTATION_GUIDE.md) for file structure, naming conventions, and code organization standards
+**For complete navigation, see [thoughts/README.md](thoughts/README.md)**
 
-### Essential References
-
-- **Testing**: [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) - Complete TDD workflow
-- **Git**: [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md) - Branching, commits, PRs
-- **Commands**: [UPBOUND_REFERENCE.md](thoughts/UPBOUND_REFERENCE.md) - All `up` CLI commands
-- **KCL**: [KCL_REFERENCE.md](thoughts/KCL_REFERENCE.md) - KCL patterns and syntax
-- **Specification**: [SPECIFICATION.md](thoughts/SPECIFICATION.md) - Feature requirements
-- **Tasks**: [TASKS.md](thoughts/TASKS.md) - Current task list
-
-## Getting Help
-
-If you need more context:
-1. **Terraform Module**: https://github.com/terraform-aws-modules/terraform-aws-vpc
-2. **Upbound Docs**: https://docs.upbound.io/
-3. **Crossplane Docs**: https://docs.crossplane.io/
-4. **KCL Docs**: https://kcl-lang.io/docs
-5. **Platform Ref**: https://github.com/upbound/platform-ref-upbound
-
-## Emergency Contacts
-
-If something is fundamentally broken:
-1. Check `up project stop` to clean up local runs
-2. Review recent commits for issues
-3. Consult thoughts/GIT_WORKFLOW.md for recovery
-
-## Success Criteria
-
-The project is successful when:
-- ✅ All P0 and P1 tasks complete (see tasks.md)
-- ✅ Feature parity with Terraform module achieved
-- ✅ Comprehensive tests pass
-- ✅ Documentation complete
-- ✅ Package published to Upbound Marketplace
-
-## Quick Start Commands
-
-> 📖 **Complete Command Reference**: See [UPBOUND_REFERENCE.md](thoughts/UPBOUND_REFERENCE.md) and [GIT_REFERENCE.md](thoughts/GIT_REFERENCE.md)
-
-```bash
-# Essential Commands
-up test run tests/test-*                      # Run composition tests
-up test run tests/e2etest-* --e2e             # Run E2E tests
-up project build                              # Build project
-git commit -m "feat(scope): description"      # Commit with conventional format
-```
+Quick links:
+- **Tasks**: [TASKS.md](thoughts/TASKS.md) - What to work on
+- **Testing**: [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) - How to test
+- **Git**: [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md) - How to commit
+- **Commands**: [UPBOUND_REFERENCE.md](thoughts/UPBOUND_REFERENCE.md) - up CLI reference
+- **KCL**: [KCL_REFERENCE.md](thoughts/KCL_REFERENCE.md) - KCL syntax
 
 ## Remember
 
-- **TASKS.md is your source of truth** for what to work on next
-- **thoughts/ directory has all the knowledge** you need
-- **Test frequently** with `up project run`
-- **Follow the patterns** in KCL_REFERENCE.md
-- **Keep documentation updated** as you work
-- **Commit often** with clear messages
-
----
-
-**Ready to start?** Open `thoughts/TASKS.md` and begin with task 1.1!
-
-**Questions?** Everything you need is in the thoughts/ directory.
-
-**Good luck!** You have all the resources needed to build a great Upbound configuration.
+- **START HERE**: [thoughts/TASKS.md](thoughts/TASKS.md)
+- **Test BEFORE committing**: ALL tests must pass (composition + E2E)
+- **Follow TDD**: Write tests first, always
+- **Keep it simple**: Don't over-engineer

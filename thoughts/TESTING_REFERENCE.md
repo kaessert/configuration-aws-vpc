@@ -16,6 +16,17 @@
 
 ---
 
+## Related Documentation
+
+This document focuses on test schemas, patterns, and debugging strategies.
+
+For related topics, see:
+- **up CLI Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
+- **KCL Language**: [KCL_REFERENCE.md](KCL_REFERENCE.md)
+- **Control Plane Architecture**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md#platform-architecture)
+
+---
+
 ## Overview
 
 This comprehensive guide covers all aspects of testing Upbound projects, including composition tests, E2E tests, control plane configuration, and testing patterns from production Upbound projects.
@@ -35,6 +46,38 @@ This comprehensive guide covers all aspects of testing Upbound projects, includi
 - **CI on all PRs**: Composition tests
 - **CI on labeled PRs**: E2E tests
 - **Pre-release**: Full E2E test suite
+
+### Test Scenarios
+
+The test suite covers these primary scenarios:
+
+1. **COMPLETE VPC** - Full VPC with all subnet types, NAT, endpoints, ACLs, DHCP, flow logs
+2. **MINIMAL VPC** - Single public subnet, basic IGW, minimal routing
+3. **MULTIPLE AZs** - Subnets across AZs, NAT per AZ, proper routing
+4. **PRIVATE ONLY** - Database/app subnets, no IGW, optional NAT
+5. **CUSTOM ROUTES** - Routes to Transit Gateway, VPN connections
+6. **VPC ENDPOINTS** - S3/DynamoDB gateway endpoints, interface endpoints
+7. **NETWORK ACLs** - Custom inbound/outbound rules
+8. **DHCP OPTIONS** - Custom DNS, domain name, NTP servers
+9. **DNS CONFIG** - DNS hostnames/resolution enabled
+10. **FLOW LOGS** - CloudWatch and S3 destinations
+11. **NAT STRATEGIES** - One per AZ, single shared, or none
+12. **SECONDARY CIDRs** - Multiple CIDR blocks on single VPC
+
+### Feature Coverage
+
+The test suite validates:
+
+1. **Resource Count** - Correct number of resources created
+2. **Outputs** - All outputs populated correctly
+3. **CIDR Assignment** - Subnets get correct CIDR allocations
+4. **Routing** - Routes properly configured
+5. **Gateway Association** - Gateways properly associated
+6. **Tags** - Tags applied correctly
+7. **IPv6** - IPv6 configuration when enabled
+8. **Conditional Creation** - Resources only created when needed
+9. **High Availability** - Multi-AZ resilience
+10. **Network Segmentation** - Proper isolation of subnets
 
 ---
 
@@ -457,235 +500,91 @@ up test run tests/e2etest-xvpc-simple \
 
 ### CRITICAL: Always Use Dedicated Control Plane Group
 
+**For control plane architecture (org/space/group hierarchy), see [UPBOUND_REFERENCE.md → Platform Architecture](UPBOUND_REFERENCE.md#platform-architecture)**
+
 **IMPORTANT**: E2E tests should ALWAYS run on a dedicated control plane group for testing, NOT on production control plane groups.
 
-### Local Testing (Manual Runs)
+### Local E2E Testing
 
-For local testing, use the **`claude-testing`** control plane group (in the `upbound-gcp-us-central-1` space):
+**ALWAYS specify control plane group explicitly:**
 
 ```bash
-# ✅ CORRECT - Run E2E tests locally on claude-testing control plane group
+# ✅ CORRECT - Run E2E tests locally
 up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 
 # ❌ WRONG - Uses current context (might be production!)
 up test run tests/e2etest-* --e2e
 ```
 
-### Available Flags
+**Available group**: `claude-testing` (in organization "solutions", space "upbound-gcp-us-central-1")
 
-```bash
---control-plane-group=STRING
-    The control plane group that the control plane to use is contained in.
-    This defaults to the group specified in the current context.
-
---control-plane-name-prefix=STRING
-    Prefix of the control plane name to use.
-    It will be created if not found.
-
---skip-control-plane-check
-    Allow running on a non-development control plane.
-
---skip-control-plane-cleanup
-    Skip cleanup of the control plane after the test run.
-    (Useful for debugging failed tests)
-
---organization=STRING
-    Override organization (default: solutions)
-```
-
-### How E2E Tests Work with Control Planes
+### E2E Test Lifecycle
 
 When you run an E2E test with `--e2e`:
 
-1. **Creates temporary dev control plane** in the specified control plane group
-2. **Installs providers and functions** from your project
-3. **Applies test manifests** (Claims, XRs, etc.)
-4. **Waits for conditions** (Ready, Synced)
-5. **Automatically cleans up** control plane when done
+1. Creates temporary dev control plane in specified group
+2. Installs providers and configuration
+3. Applies test manifests (Claims/XRs)
+4. Waits for Ready/Synced conditions
+5. Automatically cleans up (unless `--skip-control-plane-cleanup`)
 
-### Control Plane Lifecycle
+**Duration**: 10-30 minutes for AWS resources
 
-```
-Test Start
-  ↓
-Create dev control plane in <control-plane-group>
-  ↓
-Install Crossplane (version from test spec)
-  ↓
-Push and install configuration package
-  ↓
-Install providers (from dependencies)
-  ↓
-Apply initResources (if any)
-  ↓
-Apply extraResources (ProviderConfig, etc.)
-  ↓
-Apply manifests (Claims/XRs being tested)
-  ↓
-Wait for defaultConditions (Ready, Synced)
-  ↓
-Validate resources
-  ↓
-Cleanup: Delete resources and control plane
-  ↓
-Test Complete (Pass/Fail)
-```
-
-### Current Context vs Explicit Group
-
-#### Default Behavior (Uses Current Context)
+### Useful E2E Flags
 
 ```bash
-# Check current context
-up ctx .
-# Output: Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
-
-# ❌ DON'T RUN without specifying group - uses current context group!
-up test run tests/e2etest-* --e2e
+--control-plane-group=STRING         # Which group to use (REQUIRED for local testing)
+--skip-control-plane-cleanup         # Keep control plane for debugging
+--use-current-context                # Use existing control plane instead of creating new
+--organization=STRING                # Override organization (default: solutions)
 ```
 
-#### Explicit Group (Required for Local Testing)
-
-```bash
-# ✅ CORRECT - Run test on claude-testing control plane group for local testing
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
-
-# This overrides the context and creates control plane in "claude-testing" group
-# (which lives in the upbound-gcp-us-central-1 space)
-```
-
-### Control Plane Groups in Upbound
-
-**What is a Control Plane Group?**
-
-A control plane group is a logical grouping of control planes within an Upbound organization. It provides:
-- **Isolation**: Separate test control planes from production
-- **Resource organization**: Group related control planes
-- **Access control**: Different permissions per group
-- **Cost tracking**: Separate billing/usage by group
-
-**Typical Organization Structure:**
-
-```
-Organization: solutions
-  ├── Control Plane Group: production
-  │   ├── control plane: prod-us-east (in some space)
-  │   └── control plane: prod-eu-west (in some space)
-  ├── Control Plane Group: staging
-  │   └── control plane: staging-us-east (in some space)
-  └── Control Plane Group: claude-testing (for local E2E tests)
-      ├── space: upbound-gcp-us-central-1
-      │   ├── control plane: e2e-test-1 (auto-created by tests)
-      │   ├── control plane: e2e-test-2 (auto-created by tests)
-      │   └── ... (cleaned up automatically after tests)
-```
-
-### Checking Current Configuration
-
-```bash
-# View current profile and organization
-up profile list
-
-# View current context (shows org/group/control-plane/space)
-up ctx .
-
-# Example output format:
-# Kubeconfig context "upbound": Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
-#                                       ↓         ↓                        ↓     ↓
-#                                       org       group                    cp    space
-#
-# Components:
-# - Organization: solutions
-# - Control Plane Group: upbound-aws-us-east-1
-# - Control Plane: upbox
-# - Space: upbox-danske
-```
+**For complete control plane management commands, see [UPBOUND_REFERENCE.md → Control Plane Management](UPBOUND_REFERENCE.md#control-plane-management)**
 
 ### Debugging Failed E2E Tests
 
-#### Keep Control Plane for Investigation
+**Keep control plane for investigation:**
 
 ```bash
-# Skip cleanup to investigate issues
 up test run tests/e2etest-xvpc-simple \
   --e2e \
   --control-plane-group=claude-testing \
   --skip-control-plane-cleanup
 ```
 
-Then manually inspect:
-```bash
-# Switch to test control plane
-up ctx <control-plane-name>
+**Then inspect:**
 
-# Check resources
+```bash
+up ctx <control-plane-name>
 kubectl get composite
 kubectl get managed
-kubectl describe xvpc <name>
-kubectl get events --sort-by='.lastTimestamp'
+kubectl describe vpc <name>
 ```
 
-#### Run on Existing Control Plane
+### Complete E2E Workflow
 
 ```bash
-# Use current kubeconfig context instead of creating new
-up test run tests/e2etest-xvpc-simple \
-  --e2e \
-  --use-current-context
-```
+# 1. Run E2E tests
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
 
-### Complete E2E Test Workflow (Local Testing)
-
-```bash
-# 1. Ensure logged into Upbound
-up login
-
-# 2. Check current context
-up ctx .
-# Output: Upbound solutions/upbound-aws-us-east-1/upbox/upbox-danske
-
-# 3. Run E2E tests on claude-testing control plane group (for local testing)
-up test run tests/e2etest-* \
-  --e2e \
-  --control-plane-group=claude-testing \
-  --organization=solutions
-
-# 4. Tests will:
-#    - Create temporary control plane in "claude-testing" group
-#    - Control plane will run in upbound-gcp-us-central-1 space
-#    - Run tests
-#    - Clean up control plane
-#    - Report results
-
-# 5. If test fails and you need to debug:
+# 2. If test fails and you need to debug, keep control plane:
 up test run tests/e2etest-xvpc-simple \
   --e2e \
   --control-plane-group=claude-testing \
   --skip-control-plane-cleanup
 
-# 6. Then inspect the control plane:
-kubectl get controlplanes -n upbound-system
-up ctx <failed-test-control-plane-name>
+# 3. Inspect the control plane
+up ctx <control-plane-name>
 kubectl get all
 ```
 
-### Control Plane Best Practices
+### Best Practices
 
-**Local Testing:**
 - ✅ **ALWAYS** use `--control-plane-group=claude-testing` for local E2E tests
-- ✅ Control plane will run in `upbound-gcp-us-central-1` space
 - ✅ **NEVER** run E2E tests without specifying control plane group
 - ✅ **NEVER** run E2E tests on production control plane groups
 - ✅ E2E tests create temporary control planes automatically
 - ✅ Control planes are cleaned up automatically (unless `--skip-control-plane-cleanup`)
-
-**Terminology:**
-- **Control Plane Group**: Logical grouping (use with `--control-plane-group` flag)
-- **Space**: Physical location where control plane runs (specified at group level)
-
-**CI/CD Testing:**
-- ⏸️ GitHub workflows will be configured separately later
-- ⏸️ Do not modify `.github/workflows/` files yet
 
 ### IAM Role for E2E Tests
 

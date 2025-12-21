@@ -63,7 +63,20 @@
       "Bash(wc:*)",
       "Bash(kubectl api-resources:*)",
       "Bash(kubectl describe:*)",
-      "Bash(kubectl apply:*)"
+      "Bash(kubectl apply:*)",
+      "Bash(up controlplane get:*)",
+      "WebFetch(domain:docs.crossplane.io)",
+      "Bash(xargs kill)",
+      "Bash(rm:*)",
+      "Bash(chmod:*)",
+      "Bash(./scripts/lint-docs.sh:*)",
+      "Skill(commit)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(curl:*)",
+      "Bash(ping:*)",
+      "Bash(rmdir:*)",
+      "Read(file_path:/tmp/claude/*)"
     ]
   }
 }

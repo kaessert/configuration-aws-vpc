@@ -129,130 +129,11 @@ The terraform-aws-vpc module is a comprehensive, production-ready Terraform modu
 - `vpc_flow_log_id`: Flow Log ID
 - `vpc_flow_log_arn`: Flow Log ARN
 
-## Test Case Scenarios
+**For test scenarios, see [TESTING_REFERENCE.md → Test Scenarios](TESTING_REFERENCE.md#test-scenarios)**
 
-The module's test suite covers these primary scenarios:
+**For AWS resources list, see [IMPLEMENTATION_GUIDE.md → AWS Resources](IMPLEMENTATION_GUIDE.md#aws-resources)**
 
-### 1. COMPLETE VPC with All Features
-- Full VPC with all subnet types
-- Public, private, database, elasticache, and redshift subnets
-- NAT gateways for high availability
-- Internet gateway with proper routing
-- Network ACLs with custom rules
-- VPC endpoints (S3, DynamoDB, and interface endpoints)
-- DHCP options custom set
-- DNS settings enabled
-- Flow logs configuration
-
-### 2. MINIMAL VPC (Quick Setup)
-- Single public subnet only
-- Basic internet gateway
-- Minimal routing
-- No NAT gateways
-- No specialized subnet types
-
-### 3. MULTIPLE AVAILABILITY ZONES
-- Subnets across multiple AZs
-- NAT gateway per AZ for resilience
-- Proper routing across zones
-- Route table isolation per AZ
-
-### 4. PRIVATE SUBNETS ONLY (No IGW)
-- Database subnets
-- Application subnets
-- No internet gateway
-- NAT gateway for outbound traffic (optional)
-
-### 5. CUSTOM ROUTE TABLES
-- Custom routes to Transit Gateway
-- Custom routes to VPN connections
-- Per-subnet custom routing rules
-
-### 6. VPC ENDPOINTS
-- S3 gateway endpoint
-- DynamoDB gateway endpoint
-- Interface endpoints (EC2, SSM, RDS, etc.)
-- Endpoint policy configuration
-
-### 7. NETWORK ACLs
-- Custom inbound/outbound rules
-- Ephemeral port ranges
-- Protocol-specific configurations
-
-### 8. DHCP OPTIONS
-- Custom domain name servers
-- Custom domain name
-- NTP servers
-
-### 9. DNS CONFIGURATION
-- DNS hostnames enabled
-- DNS resolution enabled
-- Private hosted zone associations
-
-### 10. VPC FLOW LOGS
-- CloudWatch Logs destinations
-- S3 destinations
-- Traffic monitoring and logging
-
-### 11. NAT GATEWAY STRATEGIES
-- One NAT gateway per AZ
-- Single NAT gateway (all subnets use same NAT)
-- No NAT gateway (private subnets with no internet access)
-
-### 12. SECONDARY CIDR BLOCKS
-- Multiple CIDR blocks on single VPC
-- Secondary CIDR association
-
-## Resource Types
-
-AWS resources created by the module:
-
-- `aws_vpc`
-- `aws_subnet` (multiple types via separate logical groups)
-- `aws_internet_gateway`
-- `aws_nat_gateway`
-- `aws_eip` (for NAT gateways)
-- `aws_route_table`
-- `aws_route`
-- `aws_route_table_association`
-- `aws_vpc_endpoint`
-- `aws_vpc_endpoint_service_configuration`
-- `aws_network_acl`
-- `aws_network_acl_rule`
-- `aws_dhcp_options`
-- `aws_dhcp_options_association`
-- `aws_vpc_dhcp_options_association`
-- `aws_flow_log`
-- `aws_cloudwatch_log_group`
-- `aws_s3_bucket` (for flow logs)
-- `aws_security_group` (basic for endpoints)
-
-## Implementation Phases
-
-### Phase 1: Core VPC Features (P0)
-1. Basic VPC creation with CIDR
-2. Public and private subnets across AZs
-3. Internet Gateway
-4. NAT Gateway (single and per-AZ strategies)
-5. Basic routing
-
-### Phase 2: Advanced Networking (P0)
-1. Database, Elasticache, and Redshift subnets
-2. Intra subnets (no internet access)
-3. Custom route tables
-4. Secondary CIDR blocks
-
-### Phase 3: Enhanced Features (P1)
-1. VPC Endpoints (S3, DynamoDB, interface)
-2. Network ACLs
-3. DHCP options
-4. DNS configuration
-
-### Phase 4: Monitoring and Advanced (P2)
-1. VPC Flow Logs (CloudWatch and S3)
-2. VPN Gateway integration
-3. IPv6 support
-4. Advanced tagging strategies
+**For implementation phases and task breakdown, see [TASKS.md](TASKS.md)**
 
 ## Field Mapping
 
@@ -316,20 +197,7 @@ private_subnet_tags      →  privateSubnetTags
 - Type-specific tags for resource categorization
 - Name tags automatically generated
 
-## Feature Coverage for Tests
-
-The test suite validates:
-
-1. **Resource Count Validation**: Correct number of resources created
-2. **Output Value Verification**: All outputs populated correctly
-3. **CIDR Block Assignment**: Subnets get correct CIDR allocations
-4. **Routing Verification**: Routes properly configured
-5. **Gateway Association**: Gateways properly associated
-6. **Tag Application**: Tags applied correctly
-7. **IPv6 Support**: IPv6 configuration when enabled
-8. **Conditional Creation**: Resources only created when needed
-9. **Cross-AZ High Availability**: Multi-AZ resilience
-10. **Network Segmentation**: Proper isolation of subnets
+**For feature coverage validation, see [TESTING_REFERENCE.md → Feature Coverage](TESTING_REFERENCE.md#feature-coverage)**
 
 ## Special Considerations
 
@@ -342,17 +210,7 @@ The test suite validates:
 7. **Compliance**: DHCP customization for corporate requirements
 8. **Scalability**: Support for secondary CIDR blocks
 
-## Success Criteria
-
-The implementation is successful when:
-
-1. All Terraform inputs supported (minor capitalization differences acceptable)
-2. All Terraform outputs provided
-3. Behavior matches Terraform module exactly
-4. Side-by-side validation tests pass
-5. All 12 test case scenarios covered
-6. Documentation complete
-7. Package published to Upbound Marketplace
+**For success criteria and task completion status, see [TASKS.md](TASKS.md)**
 
 ## References
 

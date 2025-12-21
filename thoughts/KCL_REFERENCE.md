@@ -14,6 +14,17 @@ A comprehensive reference guide for using KCL (KusionStack Configuration Languag
 
 ---
 
+## Related Documentation
+
+This document focuses on KCL language syntax, patterns, and Crossplane-specific usage.
+
+For related topics, see:
+- **up CLI Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
+- **Testing Workflows**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
+- **Git Commands**: [GIT_REFERENCE.md](GIT_REFERENCE.md)
+
+---
+
 ## Part 1: Language Fundamentals
 
 ### Overview
@@ -628,26 +639,36 @@ You should NEVER manually create model files - they are generated from provider 
 
 ## Part 4: Function Development
 
-### Using `up function generate`
+### Generating Functions
 
-**DO NOT** manually create function directories and files. Instead, use:
+**DO NOT** manually create function directories and files. Use `up function generate` instead.
 
-```bash
-up function generate <function-name> <composition-path> --language kcl
-```
+**For command details, see [UPBOUND_REFERENCE.md → Function Management](UPBOUND_REFERENCE.md#function-management)**
 
-Example:
-```bash
-up function generate vpc apis/vpc/composition.yaml --language kcl
-```
-
-This command automatically:
+The `up function generate` command automatically:
 - Creates the `functions/<function-name>/` directory
 - Generates `main.k` with proper imports and structure
 - Creates `kcl.mod` with local model dependencies
 - Sets up model symlink to `../../.up/kcl/models`
 - Updates the composition.yaml to reference the function
 - Configures the function in the pipeline
+
+**CRITICAL**: After running `up function generate`, you MUST verify that `function-auto-ready` is included as the LAST pipeline step in your composition.yaml:
+
+```yaml
+# apis/vpc/composition.yaml
+spec:
+  mode: Pipeline
+  pipeline:
+  - functionRef:
+      name: <your-function>
+    step: <resource-generation>
+  - functionRef:
+      name: crossplane-contrib-function-auto-ready  # MANDATORY LAST STEP
+    step: crossplane-contrib-function-auto-ready
+```
+
+**Why**: Without function-auto-ready, XRs never reach "Ready" status and E2E tests will fail. See [IMPLEMENTATION_GUIDE.md → Composition Pipeline Requirements](IMPLEMENTATION_GUIDE.md#composition-pipeline-requirements) for details.
 
 ### KCL Module Dependencies
 
@@ -759,13 +780,9 @@ spec:
 
 ### Project Build Process
 
-To build the project:
+**For build commands, see [UPBOUND_REFERENCE.md → Project Management](UPBOUND_REFERENCE.md#project-management)**
 
-```bash
-up project build
-```
-
-This:
+The build process:
 1. Collects resources from `apis/` and `functions/`
 2. Generates language schemas for KCL from XRDs and provider APIs
 3. Checks dependencies
@@ -773,19 +790,6 @@ This:
 5. Packages everything into `.uppkg` files in `_output/`
 
 **Requires Docker to be running** for building function images.
-
-### Authentication
-
-Before building, you may need to authenticate:
-
-```bash
-up login
-```
-
-This is required for:
-- Pulling base images
-- Accessing provider schemas
-- Publishing packages
 
 ---
 
@@ -1101,25 +1105,12 @@ _metadata = lambda name: str -> any {
 
 ### Common Commands
 
-```bash
-# Generate function
-up function generate vpc apis/vpc/composition.yaml --language kcl
+**For complete command reference, see [UPBOUND_REFERENCE.md → Quick Reference](UPBOUND_REFERENCE.md#quick-reference)**
 
-# Add dependency
-up dependency add xpkg.upbound.io/upbound/provider-aws-ec2:v2.3.0
-
-# Update cache
-up dep update-cache
-
-# Build project
-up project build
-
-# Run locally
-up project run
-
-# Stop local run
-up project stop
-```
+Essential commands:
+- Function generation: `up function generate`
+- Dependency management: `up dependency add`, `up dep update-cache`
+- Project lifecycle: `up project build`, `up project run`, `up project stop`
 
 ### Finding Provider Information
 

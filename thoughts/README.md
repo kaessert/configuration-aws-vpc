@@ -71,45 +71,17 @@ Welcome to the `thoughts/` directory! This is your central hub for all project d
 
 ## Getting Started
 
-**New to this project?** Follow the [ONBOARDING.md](ONBOARDING.md) guide for:
-- Complete setup instructions (prerequisites, installation, authentication)
-- Essential reading plan with time estimates
-- Your first task
-- TDD workflow overview
-- Common commands and troubleshooting
-
-**Time to productivity**: ~2 hours
+**New to this project?** → [ONBOARDING.md](ONBOARDING.md)
 
 ---
 
-## Common Questions
+## Quick Answers
 
-### Q: Where do I start?
-**A**: Read [ONBOARDING.md](ONBOARDING.md) for complete setup and first task guide.
-
-### Q: How do I write tests (composition or E2E)?
-**A**: Reference [TESTING_REFERENCE.md](TESTING_REFERENCE.md) - comprehensive guide covering all testing.
-
-### Q: What task should I work on?
-**A**: Check [TASKS.md](TASKS.md) for the prioritized task list.
-
-### Q: How do I understand what features to implement?
-**A**: Read [SPECIFICATION.md](SPECIFICATION.md) for complete feature list.
-
-### Q: How do I write KCL code?
-**A**: Reference [KCL_REFERENCE.md](KCL_REFERENCE.md) for complete language reference and patterns.
-
-### Q: What's the TDD workflow?
-**A**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
-
-### Q: How do I use Upbound CLI or console?
-**A**: Reference [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) for complete Upbound reference.
-
-### Q: How do I make commits and PRs?
-**A**: Follow [GIT_WORKFLOW.md](GIT_WORKFLOW.md) for workflows and [GIT_REFERENCE.md](GIT_REFERENCE.md) for commands.
-
-### Q: What if I'm stuck?
-**A**: See "Getting Help" section in [ONBOARDING.md](ONBOARDING.md) for troubleshooting guide.
+- **Where to start?** → [ONBOARDING.md](ONBOARDING.md)
+- **What to work on?** → [TASKS.md](TASKS.md)
+- **How to test?** → [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
+- **How to write KCL?** → [KCL_REFERENCE.md](KCL_REFERENCE.md)
+- **How to commit?** → [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
 
 ---
 
