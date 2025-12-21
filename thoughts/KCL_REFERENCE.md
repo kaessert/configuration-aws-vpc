@@ -780,16 +780,9 @@ spec:
 
 ### Project Build Process
 
-**For build commands, see [UPBOUND_REFERENCE.md → Project Management](UPBOUND_REFERENCE.md#project-management)**
+**See [UPBOUND_REFERENCE.md → Project Management](UPBOUND_REFERENCE.md#project-management) for build commands.**
 
-The build process:
-1. Collects resources from `apis/` and `functions/`
-2. Generates language schemas for KCL from XRDs and provider APIs
-3. Checks dependencies
-4. Builds KCL functions
-5. Packages everything into `.uppkg` files in `_output/`
-
-**Requires Docker to be running** for building function images.
+After schema changes, run `up project build` to update language schemas (requires Docker).
 
 ---
 
@@ -1013,14 +1006,7 @@ schema VPC:
 
 ### Testing Resources
 
-After implementing resources:
-
-1. Build: `up project build`
-2. Run locally: `up project run`
-3. Apply example: `kubectl apply -f examples/simple-vpc.yaml`
-4. Check resources: `kubectl get composite,managed`
-5. Inspect: `kubectl describe xvpc test-vpc`
-6. Stop: `up project stop`
+**See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for complete testing workflow and [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) for command reference.**
 
 ---
 
@@ -1103,14 +1089,9 @@ _metadata = lambda name: str -> any {
 }
 ```
 
-### Common Commands
+### Platform Commands
 
-**For complete command reference, see [UPBOUND_REFERENCE.md → Quick Reference](UPBOUND_REFERENCE.md#quick-reference)**
-
-Essential commands:
-- Function generation: `up function generate`
-- Dependency management: `up dependency add`, `up dep update-cache`
-- Project lifecycle: `up project build`, `up project run`, `up project stop`
+**See [UPBOUND_REFERENCE.md → Quick Reference](UPBOUND_REFERENCE.md#quick-reference) for all `up` CLI commands.**
 
 ### Finding Provider Information
 

@@ -83,10 +83,10 @@ up project build
 
 **Read in this order** (~75 minutes):
 
-1. **[TASKS.md](TASKS.md)** (15 min) - Current task list, see what's done and what's next
-2. **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** (20 min) - Architecture, modular design, code organization
+1. **[TASKS.md → Current Status](TASKS.md#current-status)** (15 min) - Current task list, see what's done and what's next
+2. **[IMPLEMENTATION_GUIDE.md → Architecture](IMPLEMENTATION_GUIDE.md#architecture-overview)** (20 min) - Architecture, modular design, code organization
 3. **[SPECIFICATION.md](SPECIFICATION.md)** (10 min) - Feature requirements from Terraform module (skim for now)
-4. **[TDD_STRATEGY.md](TDD_STRATEGY.md)** (30 min) - Complete TDD workflow (CRITICAL for development)
+4. **[TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)** (30 min) - Complete TDD workflow (CRITICAL for development)
 
 **Reference docs** (lookup as needed):
 
@@ -128,9 +128,9 @@ Before you start coding, verify:
 - [ ] Build works: `up project build` succeeds
 - [ ] Can run tests: `up test run tests/test-vpc-simple` passes
 - [ ] Can navigate docs: Find answers in thoughts/ directory
-- [ ] Understand TDD: Read [TDD_STRATEGY.md](TDD_STRATEGY.md)
-- [ ] Know current tasks: Read [TASKS.md](TASKS.md)
-- [ ] Know git conventions: Read [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
+- [ ] Understand TDD: Read [TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)
+- [ ] Know current tasks: Read [TASKS.md → Current Status](TASKS.md#current-status)
+- [ ] Know git conventions: Read [GIT_WORKFLOW.md → Commit Conventions](GIT_WORKFLOW.md#1-commit-message-conventions)
 - [ ] Know E2E requirements: Understand `--control-plane-group=claude-testing`
 
 **All checked?** You're ready to contribute!
@@ -142,9 +142,9 @@ Before you start coding, verify:
 ### Quick Links
 
 - **Documentation Index**: [README.md](README.md)
-- **Testing Guide**: [TDD_STRATEGY.md](TDD_STRATEGY.md)
-- **Git Guide**: [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
-- **Tasks**: [TASKS.md](TASKS.md)
+- **Testing Guide**: [TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)
+- **Git Guide**: [GIT_WORKFLOW.md → Commit Conventions](GIT_WORKFLOW.md#1-commit-message-conventions)
+- **Tasks**: [TASKS.md → Current Status](TASKS.md#current-status)
 - **Glossary**: [GLOSSARY.md](GLOSSARY.md)
 
 ### External Resources
@@ -170,9 +170,9 @@ up project build
 **Today** (2 hours):
 1. ✅ Complete setup (above)
 2. ✅ Read 4 essential docs (75 minutes)
-3. ✅ Pick a task from [TASKS.md](TASKS.md)
-4. ✅ Complete your first task following [TDD_STRATEGY.md](TDD_STRATEGY.md)
-5. ✅ Make your first commit following [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
+3. ✅ Pick a task from [TASKS.md → Current Status](TASKS.md#current-status)
+4. ✅ Complete your first task following [TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)
+5. ✅ Make your first commit following [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits)
 
 **This Week**:
 - Master TDD workflow

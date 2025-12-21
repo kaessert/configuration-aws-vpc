@@ -661,130 +661,27 @@ When reviewing:
 
 ## 7. Git Hooks
 
-Git hooks automate checks before commits and pushes.
+Git hooks automate quality checks. Consider these optional but useful:
 
-### Pre-commit Hook
+### Recommended Hooks
 
-Create `.git/hooks/pre-commit`:
+**Pre-commit**: Run composition tests before commit
+- Prevents committing broken code
+- Command: `up test run tests/test-*`
 
-```bash
-#!/bin/bash
-# Run composition tests before commit
+**Commit-msg**: Validate commit message format
+- Ensures conventional commits format
+- Blocks AI attribution in messages
 
-echo "Running composition tests..."
-up test run tests/test-*
+**Pre-push**: Run all tests and warn about E2E
+- Final safety check before push
+- Warns if E2E tests exist
 
-if [ $? -ne 0 ]; then
-  echo "❌ Composition tests failed! Commit aborted."
-  echo "Fix tests before committing."
-  exit 1
-fi
+### Setup
 
-echo "✅ All tests passed!"
-```
+Create hook files in `.git/hooks/` (e.g., `pre-commit`, `commit-msg`, `pre-push`), make them executable with `chmod +x`, and add your validation logic.
 
-Make executable:
-```bash
-chmod +x .git/hooks/pre-commit
-```
-
-### Commit-msg Hook
-
-Create `.git/hooks/commit-msg`:
-
-```bash
-#!/bin/bash
-# Validate commit message format
-
-commit_msg=$(cat "$1")
-
-# Check conventional commits format
-if ! echo "$commit_msg" | grep -qE '^(feat|fix|docs|test|refactor|perf|style|chore|ci)(\(.+\))?: .+'; then
-  echo "❌ Error: Commit message doesn't follow conventional commits format"
-  echo ""
-  echo "Format: <type>(<scope>): <subject>"
-  echo ""
-  echo "Types: feat, fix, docs, test, refactor, perf, style, chore, ci"
-  echo "Example: feat(vpc): add DNS support"
-  exit 1
-fi
-
-# Check for AI attribution (FORBIDDEN)
-if echo "$commit_msg" | grep -qiE '(claude|anthropic|generated with|co-authored-by.*claude)'; then
-  echo "❌ Error: Commit message contains AI attribution"
-  echo ""
-  echo "NEVER include references to:"
-  echo "  - Claude or Claude Code"
-  echo "  - Anthropic"
-  echo "  - AI generation or assistance"
-  echo ""
-  echo "Commits should appear as human-authored."
-  exit 1
-fi
-
-echo "✅ Commit message format valid"
-```
-
-Make executable:
-```bash
-chmod +x .git/hooks/commit-msg
-```
-
-### Pre-push Hook
-
-Create `.git/hooks/pre-push`:
-
-```bash
-#!/bin/bash
-# Run all tests before push
-
-echo "Running all tests before push..."
-
-# Run composition tests
-echo "Running composition tests..."
-up test run tests/test-*
-if [ $? -ne 0 ]; then
-  echo "❌ Composition tests failed! Push aborted."
-  exit 1
-fi
-
-# Check if branch has E2E tests
-if ls tests/e2etest-* 1> /dev/null 2>&1; then
-  echo "⚠️  E2E tests found. Make sure they pass before merging!"
-  echo "Run: up test run tests/e2etest-* --e2e --control-plane-group=claude-testing"
-fi
-
-# Check if pushing to protected branch
-protected_branch='main'
-current_branch=$(git symbolic-ref HEAD | sed -e 's,.*/\(.*\),\1,')
-
-if [ $protected_branch = $current_branch ]; then
-  read -p "You're about to push to main. Are you sure? [y|n] " -n 1 -r < /dev/tty
-  echo
-  if echo $REPLY | grep -E '^[Yy]$' > /dev/null
-  then
-    exit 0 # push will execute
-  fi
-  exit 1 # push will not execute
-fi
-
-echo "✅ All checks passed!"
-```
-
-Make executable:
-```bash
-chmod +x .git/hooks/pre-push
-```
-
-### Installing Hooks
-
-```bash
-# Copy hooks to .git/hooks/ directory
-cp scripts/git-hooks/* .git/hooks/
-chmod +x .git/hooks/*
-```
-
-**Note**: Git hooks are local and not committed to the repository. Each developer must set them up individually.
+**Note**: Git hooks are local and not committed to the repository. Each developer sets them up individually.
 
 ---
 
@@ -1029,28 +926,9 @@ git checkout backup-before-rebase
 9. **Follow TDD Workflow** - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 10. **Clean Up After Merge** - Delete merged branches
 
-### Essential Commands
+### Quick Command Reference
 
-```bash
-# Daily workflow
-git status                           # Check status
-git add .                            # Stage changes
-git commit -m "type(scope): subject" # Commit
-git push                             # Push to remote
-
-# Branch management
-git checkout -b feature/name         # Create branch
-git checkout main                    # Switch to main
-git pull                             # Update from remote
-git branch -d feature/name           # Delete merged branch
-
-# Testing
-up test run tests/test-*             # Run composition tests
-up test run tests/e2etest-* --e2e    # Run E2E tests
-
-# PR creation
-gh pr create --title "..." --body "..." # Create PR
-```
+**For complete git command syntax, see [GIT_REFERENCE.md → Quick Reference](GIT_REFERENCE.md#quick-reference)**
 
 ### Commit Message Template
 

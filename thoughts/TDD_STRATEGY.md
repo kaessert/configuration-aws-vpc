@@ -3,9 +3,9 @@
 ## Related Documentation
 
 For related topics, see:
-- **Test Schemas & Patterns**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
-- **up CLI Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
-- **Git Workflows**: [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
+- **Test Schemas & Patterns**: [TESTING_REFERENCE.md → Test Examples](TESTING_REFERENCE.md#complete-composition-test-example)
+- **up CLI Commands**: [UPBOUND_REFERENCE.md → Testing Commands](UPBOUND_REFERENCE.md#testing)
+- **Git Workflows**: [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits)
 
 ---
 
@@ -75,35 +75,9 @@ With comprehensive tests:
 - 🎯 Focused (one feature per test)
 - 📦 Comprehensive (100% feature coverage)
 
-**When to Write**: **BEFORE implementing ANY feature**
+**When to Write**: **BEFORE implementing ANY feature** (🔴 RED → 🟢 GREEN → 🔵 REFACTOR)
 
-**Example**:
-```bash
-# Write test FIRST
-up test generate test-xvpc-public-subnets --language=kcl
-
-# Edit: tests/test-xvpc-public-subnets/main.k
-# Assert:
-# - 2 public subnets created
-# - Correct CIDR blocks
-# - mapPublicIpOnLaunch: true
-# - Correct tags
-
-# Run (should FAIL)
-up test run tests/test-xvpc-public-subnets
-# ❌ FAIL: No subnets generated
-
-# Implement feature
-# Edit: functions/vpc/main.k
-
-# Run again (should PASS)
-up test run tests/test-xvpc-public-subnets
-# ✅ PASS
-
-# Run ALL tests
-up test run tests/test-*
-# ✅ ALL PASS
-```
+**Example**: Test for public subnets → Assert 2 subnets with correct CIDRs → Test fails → Implement feature → Test passes
 
 ### Level 2: Integration Tests - SOME TESTS
 
@@ -168,60 +142,16 @@ up test generate test-xvpc-<feature> --language=kcl
 # Edit test: tests/test-xvpc-<feature>/main.k
 ```
 
-**Test Template**:
+**Test Structure** (see [TESTING_REFERENCE.md → Complete Composition Test Example](TESTING_REFERENCE.md#complete-composition-test-example) for full template):
 ```kcl
-"""
-<Feature> Composition Test
-
-Validates the terraform-aws-modules/vpc "<scenario>" example:
-- <Expected behavior 1>
-- <Expected behavior 2>
-- <Expected behavior 3>
-
-Spec: References terraform-vpc-analysis.md section <X>
-"""
-
-import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
-
-_items = [
-    metav1alpha1.CompositionTest{
-        metadata.name: "test-xvpc-<feature>"
-        spec= {
-            compositionPath: "../../apis/vpc/composition.yaml"
-            xrdPath: "../../apis/vpc/definition.yaml"
-            timeoutSeconds: 60
-            validate: True
-
-            # Define test input (XR)
-            xr: {
-                apiVersion: "aws.platform.upbound.io/v1alpha1"
-                kind: "XVPC"
-                metadata.name: "test-vpc"
-                spec: {
-                    region: "us-west-2"
-                    # ... test inputs
-                }
-            }
-
-            # Assert expected resources
-            assertResources: [
-                {
-                    apiVersion: "ec2.aws.upbound.io/v1beta1"
-                    kind: "<ResourceKind>"
-                    metadata.name: "<expected-name>"
-                    spec.forProvider: {
-                        # Assert all critical fields
-                        field1: "expectedValue"
-                        field2: true
-                        # ...
-                    }
-                },
-                # More resources...
-            ]
-        }
+metav1alpha1.CompositionTest{
+    metadata.name: "test-xvpc-<feature>"
+    spec= {
+        compositionPath: "../../apis/vpc/composition.yaml"
+        xr: { /* test input */ }
+        assertResources: [ /* expected managed resources */ ]
     }
-]
-items= _items
+}
 ```
 
 #### Step 3: Run Test (Should FAIL)
@@ -660,6 +590,152 @@ test "public subnets created with correct specs"
 - ✅ Side-by-side validation passes
 - ✅ Behavior matches Terraform module
 
+---
+
+## CI/CD Integration
+
+### GitHub Workflows
+
+#### Composition Tests
+
+Run on every push and PR automatically:
+
+```yaml
+name: Composition Tests
+on:
+  push:
+    branches: [main]
+  pull_request: {}
+
+jobs:
+  composition-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: upbound/action-up@v1
+        with:
+          skip-login: true  # No credentials needed
+      - run: up project build
+      - run: up test run tests/test-*  # Only composition tests
+```
+
+**Characteristics**:
+- Fast feedback (seconds to minutes)
+- No credentials required
+- No cost (runs locally on GitHub runners)
+- Catches KCL syntax errors and basic logic issues
+
+#### E2E Tests
+
+Run only when explicitly requested via PR label:
+
+```yaml
+name: End to End Testing
+on:
+  pull_request_target:
+    types: [synchronize, labeled]
+
+env:
+  UP_API_TOKEN: ${{ secrets.UP_API_TOKEN }}
+  UP_ORG: ${{ secrets.UP_ORG }}
+  UP_GROUP: ${{ secrets.UP_GROUP || 'default' }}
+
+jobs:
+  e2e:
+    if: contains(github.event.pull_request.labels.*.name, 'run-e2e-tests')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install and login with up
+        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
+        uses: upbound/action-up@v1
+        with:
+          api-token: ${{ secrets.UP_API_TOKEN }}
+          organization: ${{ secrets.UP_ORG }}
+
+      - name: Login to xpkg.upbound.io
+        uses: docker/login-action@v3
+        with:
+          registry: xpkg.upbound.io
+          username: ${{ secrets.UP_ROBOT_ID }}
+          password: ${{ secrets.UP_API_TOKEN }}
+
+      - run: up project build
+
+      - name: Switch up context
+        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
+        run: up ctx ${{ env.UP_ORG }}/upbound-gcp-us-central-1/${{ env.UP_GROUP }}
+
+      - name: Run e2e tests
+        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
+        run: up test run tests/e2etest-* --e2e
+```
+
+**Characteristics**:
+- Requires "run-e2e-tests" label on PR
+- Uses real Upbound Cloud control plane
+- Creates actual AWS resources
+- Slower (5-30 minutes depending on resources)
+- Has AWS costs (minimal but non-zero)
+
+### Running Tests Locally
+
+**During development**:
+```bash
+# Preview rendered resources (instant feedback)
+up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml
+```
+
+**Before committing** (CRITICAL):
+```bash
+# Build and run all composition tests
+up project build && up test run tests/test-*
+```
+
+**Before creating PR**:
+```bash
+# Verbose output for debugging
+up test run tests/test-* --verbose
+```
+
+**Local E2E testing** (creates real resources):
+```bash
+# Login to Upbound Cloud
+up login
+
+# Run E2E tests (specify control plane group)
+up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
+
+# Debug specific E2E test
+up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing --verbose
+```
+
+### Cost Considerations
+
+E2E tests create real AWS resources. Understanding costs helps make informed testing decisions:
+
+**AWS Resource Costs**:
+- VPC: Free
+- Subnets: Free
+- Internet Gateway: Free
+- NAT Gateway: ~$0.045/hour (~$1/day)
+- VPC Endpoints: ~$0.01/hour per endpoint
+- Elastic IP: $0.005/hour when not attached
+- Control Plane: Free (dev control planes free for 24h)
+
+**Best Practices**:
+1. **Rely on composition tests** for most validation (free, fast)
+2. **Use E2E tests for critical paths** (VPC creation, NAT Gateway, complex scenarios)
+3. **Ensure cleanup** with `skipDelete=false` (default in E2E framework)
+4. **Set reasonable timeouts** to avoid stuck resources
+5. **Run E2E locally** before PR if making significant changes
+6. **Monitor control plane** in Upbound Console during E2E tests
+
+**Typical Test Run Cost**: $0.10 - $0.50 per E2E test (mostly NAT Gateway charges)
+
+---
+
 ## Quick Reference
 
 > 📖 **Command Syntax**: See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) and [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) for complete command reference
@@ -673,9 +749,9 @@ up test run tests/e2etest-* --e2e                       # Run all E2E tests
 
 ## Related Documentation
 
-- **Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) - Complete `up` CLI reference
-- **Git Workflow**: [GIT_WORKFLOW.md](GIT_WORKFLOW.md) - TDD commit workflow
-- **Implementation**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) - Architecture and patterns
+- **Commands**: [UPBOUND_REFERENCE.md → Quick Reference](UPBOUND_REFERENCE.md#quick-reference) - Complete `up` CLI reference
+- **Git Workflow**: [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits) - TDD commit workflow
+- **Implementation**: [IMPLEMENTATION_GUIDE.md → Architecture](IMPLEMENTATION_GUIDE.md#architecture-overview) - Architecture and patterns
 - **Specification**: [SPECIFICATION.md](SPECIFICATION.md) - Feature requirements
 
 ---

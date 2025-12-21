@@ -65,23 +65,8 @@ Welcome to the `thoughts/` directory! This is your central hub for all project d
 
 | Document | Purpose | When to Read |
 |----------|---------|--------------|
+| [CONSOLE_MONITORING.md](CONSOLE_MONITORING.md) | **Upbound Console guide** - Web UI monitoring, troubleshooting | Monitoring E2E tests in console |
 | [GLOSSARY.md](GLOSSARY.md) | **Terminology** - Definitions of project terms | Understanding unfamiliar terms |
-
----
-
-## Getting Started
-
-**New to this project?** → [ONBOARDING.md](ONBOARDING.md)
-
----
-
-## Quick Answers
-
-- **Where to start?** → [ONBOARDING.md](ONBOARDING.md)
-- **What to work on?** → [TASKS.md](TASKS.md)
-- **How to test?** → [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
-- **How to write KCL?** → [KCL_REFERENCE.md](KCL_REFERENCE.md)
-- **How to commit?** → [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
 
 ---
 

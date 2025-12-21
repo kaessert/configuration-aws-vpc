@@ -312,16 +312,9 @@ up test run tests/* --verbose
 up project build && up test run tests/test-*
 ```
 
-### Test Scenarios to Cover
+### Test Scenarios
 
-For each major feature, create tests for:
-
-1. **Basic scenario**: Minimal required inputs
-2. **Complex scenario**: All options enabled
-3. **Conditional logic**: Features enabled/disabled
-4. **Edge cases**: Boundary conditions, unusual inputs
-5. **Multiple resources**: Multiple subnets, AZs, etc.
-6. **Dependencies**: Resources that depend on others
+**See [TDD_STRATEGY.md → Test Content Standards](TDD_STRATEGY.md#test-content-standards) for complete test scenario guidance.**
 
 ---
 
@@ -860,261 +853,31 @@ You don't need to specify ALL fields - only the ones you want to assert:
 
 ---
 
-## Platform Ref Testing Patterns
+## Test Organization
 
-### Test Organization Pattern
-
-Tests are organized by **resource type** with a naming convention:
-
-```
-tests/
-├── test-xenvironment/                    # Basic tests
-├── test-xenvironment-deletion-policy-delete/  # Variant tests
-├── test-xenvironment-no-cloudprovider-resource/  # Edge case tests
-├── test-xsharedawssecret/
-├── test-xsharedawssecret-with-data/
-└── e2etest-xvpc-basic/  # E2E tests use "e2etest-" prefix
-```
-
-**Naming Pattern**: `test-<resource-type>[-variant]`
-
-**For VPC project**:
-```
-tests/
-├── test-xvpc-basic/                      # Minimal VPC
-├── test-xvpc-public-subnets/             # VPC with public subnets
-├── test-xvpc-private-subnets/            # VPC with private subnets
-├── test-xvpc-nat-single/                 # Single NAT Gateway
-├── test-xvpc-nat-per-az/                 # NAT per AZ
-├── test-xvpc-routes/                     # Route tables
-├── test-xvpc-endpoints/                  # VPC endpoints
-├── test-xvpc-flow-logs/                  # Flow logs
-├── test-xvpc-complete/                   # All features
-└── e2etest-xvpc-basic/                   # E2E test
-```
-
-### Test File Structure
-
-Each test directory contains:
-
-```
-test-xvpc-simple/
-├── kcl.mod           # KCL module configuration
-├── kcl.mod.lock      # Dependency lock file
-├── main.k            # Test definition
-└── model/            # (optional) Symbolic link to shared models
-```
-
-### Key Testing Principles
-
-1. **Resource-Based Organization**
-   - One test directory per resource type
-   - Variants for different scenarios (basic, with-data, deletion-policy, etc.)
-   - Clear naming: `test-<resource>-<variant>`
-
-2. **Composition Tests for Everything**
-   - Every composition should have at least one test
-   - Test basic scenario first
-   - Add variant tests for edge cases
-   - Fast feedback loop
-
-3. **E2E Tests for Critical Paths**
-   - Not every composition needs E2E test
-   - Focus on critical integrations
-   - Require real cloud resources
-   - Run only when needed (labeled PRs)
-
-4. **Use KCL for Tests**
-   - Consistent with composition language
-   - Type-safe test definitions
-   - Reusable patterns
-
-5. **CI/CD Integration**
-   - Composition tests on every PR (fast, no cost)
-   - E2E tests on labeled PRs (slow, has cost)
-   - Automatic cleanup
+**See [TDD_STRATEGY.md → Test Organization](TDD_STRATEGY.md#test-organization) for complete test organization patterns and naming conventions.**
 
 ---
 
 ## CI/CD Integration
 
-### GitHub Workflows
-
-#### Composition Tests (`.github/workflows/composition-test.yaml`)
-
-```yaml
-name: Composition Tests
-on:
-  push:
-    branches: [main]
-  pull_request: {}
-
-jobs:
-  composition-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: upbound/action-up@v1
-        with:
-          skip-login: true  # No credentials needed
-      - run: up project build
-      - run: up test run tests/test-*  # Only composition tests
-```
-
-**Key features**:
-- Runs on every push and PR
-- No credentials required
-- Fast feedback (seconds to minutes)
-- Only runs composition tests (not E2E)
-
-#### E2E Tests (`.github/workflows/e2e.yaml`)
-
-```yaml
-name: End to End Testing
-on:
-  pull_request_target:
-    types: [synchronize, labeled]
-
-env:
-  UP_API_TOKEN: ${{ secrets.UP_API_TOKEN }}
-  UP_ORG: ${{ secrets.UP_ORG }}
-  UP_GROUP: ${{ secrets.UP_GROUP || 'default' }}
-
-jobs:
-  e2e:
-    if: contains(github.event.pull_request.labels.*.name, 'run-e2e-tests')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install and login with up
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        uses: upbound/action-up@v1
-        with:
-          api-token: ${{ secrets.UP_API_TOKEN }}
-          organization: ${{ secrets.UP_ORG }}
-
-      - name: Login to xpkg.upbound.io
-        uses: docker/login-action@v3
-        with:
-          registry: xpkg.upbound.io
-          username: ${{ secrets.UP_ROBOT_ID }}
-          password: ${{ secrets.UP_API_TOKEN }}
-
-      - run: up project build
-
-      - name: Switch up context
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        run: up ctx ${{ env.UP_ORG }}/upbound-gcp-us-central-1/${{ env.UP_GROUP }}
-
-      - name: Run e2e tests
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        run: up test run tests/e2etest-* --e2e
-```
-
-**Key features**:
-- Only runs when PR has "run-e2e-tests" label
-- Uses pull_request_target for secret access
-- Requires UP_API_TOKEN, UP_ORG
-- Switches to Upbound Cloud context before running
-- Tests run on real control plane
-- Uses robot credentials for registry access
-
-### Running Tests Locally
-
-```bash
-# During active development
-up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml
-
-# Before committing (CRITICAL)
-up project build && up test run tests/test-*
-
-# Before creating PR
-up test run tests/test-* --verbose
-
-# Local E2E test (careful - creates real resources!)
-up login
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
-
-# Debug specific test
-up test run tests/test-xvpc-basic/main.k --verbose
-```
-
-### Cost Considerations
-
-E2E tests create real AWS resources. While costs should not prevent running necessary tests, understand what resources are created:
-
-- **VPC**: Free
-- **Subnets**: Free
-- **Internet Gateway**: Free
-- **NAT Gateway**: ~$0.045/hour
-- **VPC Endpoints**: ~$0.01/hour per endpoint
-- **Elastic IP**: $0.005/hour when not attached
-- **Control Plane**: Free (dev control planes are free for 24h)
-
-**Best practices**:
-1. Run E2E tests when needed for validation
-2. Use skipDelete=false to ensure cleanup
-3. Set reasonable timeouts to avoid stuck resources
-4. Use composition tests for most validation (faster feedback)
+**See [TDD_STRATEGY.md → CI/CD Integration](TDD_STRATEGY.md#cicd-integration) for GitHub workflows, local testing commands, and cost considerations.**
 
 ---
 
 ## Debugging
 
-### Composition Test Failures
+### Quick Debugging Tips
 
-1. **Check rendered output**:
-   ```bash
-   up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml
-   ```
+**Composition Tests**:
+- Render to see output: `up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml`
+- Check error message for missing fields or type mismatches
+- Verify `metadata.name` is set in assertResources
 
-2. **Review error message**: Usually indicates missing fields or wrong types
-
-3. **Validate test inputs**: Ensure XR matches XRD schema
-
-4. **Check assertions**: Verify expected resources and fields
-
-5. **Verify resource names**:
-   ```bash
-   # Render to see exact names generated
-   up composition render apis/vpc/composition.yaml examples/xr.yaml --xrd apis/vpc/definition.yaml
-   ```
-
-### E2E Test Failures
-
-1. **Check exported resources**: Failed E2E tests export resources to debug
-   ```bash
-   kubectl get managed -o yaml > /tmp/managed-resources.yaml
-   ```
-
-2. **Check events**:
-   ```bash
-   kubectl get events --sort-by='.lastTimestamp'
-   ```
-
-3. **Check resource status**:
-   ```bash
-   kubectl describe xvpc my-vpc
-   ```
-
-4. **Check provider logs**: Look for authentication or API errors
-
-5. **Verify credentials**: Ensure ProviderConfig is correct
-
-6. **Check timeouts**: E2E tests may need longer timeouts for AWS
-
-7. **Keep control plane for investigation**:
-   ```bash
-   up test run tests/e2etest-xvpc-simple \
-     --e2e \
-     --control-plane-group=claude-testing \
-     --skip-control-plane-cleanup
-
-   # Then inspect
-   up ctx <control-plane-name>
-   kubectl get all
-   ```
+**E2E Tests**:
+- Check resource status: `kubectl describe xvpc my-vpc`
+- View events: `kubectl get events --sort-by='.lastTimestamp'`
+- Monitor in Upbound Console while test runs (see UPBOUND_REFERENCE → Console Monitoring)
 
 ### Common Issues
 
@@ -1187,51 +950,9 @@ E2E tests create real AWS resources. While costs should not prevent running nece
 
 ---
 
-## Testing Strategy for This Project
+## Testing Strategy
 
-### Phase-by-Phase Testing
-
-**Phase 1 (Foundation)**:
-- Basic composition test for empty project
-- Validate XRD schema
-
-**Phase 2 (Core VPC)**:
-- Composition tests for each feature:
-  - VPC creation
-  - Subnet creation (all types)
-  - Internet Gateway
-  - NAT Gateway (all strategies)
-  - Route tables and routes
-- E2E test for basic VPC with public subnets
-- E2E test for VPC with NAT Gateway
-
-**Phase 3 (Enhanced Networking)**:
-- Composition tests for:
-  - VPC Endpoints
-  - Network ACLs
-  - DHCP Options
-  - Flow Logs
-  - Secondary CIDRs
-- E2E test for complete VPC with all features
-
-**Phase 4 (Advanced Features)**:
-- Composition tests for VPN Gateway, IPv6
-- E2E test for advanced scenarios
-
-### Test Coverage Goals
-
-**Composition Tests**:
-- ✅ Every feature should have at least one composition test
-- ✅ Test with feature enabled and disabled
-- ✅ Test edge cases (single AZ, many AZs, etc.)
-- ✅ Fast execution (< 10 seconds per test)
-- ✅ Run on every commit in CI
-
-**E2E Tests**:
-- ✅ Core scenarios covered (basic VPC, full VPC)
-- ✅ Critical paths validated (create, delete, update)
-- ✅ Run on labeled PRs or before release
-- ✅ Budget for cloud costs (estimate $5-20 per test run)
+**See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete testing strategy, test coverage goals, and phase-by-phase testing approach.**
 
 ---
 
