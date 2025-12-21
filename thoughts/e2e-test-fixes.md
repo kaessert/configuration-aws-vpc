@@ -174,3 +174,84 @@ Also changed repository from `solutions` to `upbound`:
 3. e2etest-e2etest-xvpc-nat-single
 4. e2etest-e2etest-xvpc-nat-per-az
 5. e2etest-e2etest-xvpc-complete
+
+---
+
+## Date: 2025-12-20 - E2E TEST RESULTS
+
+### Test Run: e2etest-e2etest-xvpc-simple
+
+**Status**: ❌ FAILED
+
+**Duration**: 30 minutes (timed out)
+
+**Critical Issues Found**:
+
+#### Issue 7: Composition Function Creates Cluster-Scoped Managed Resources
+**Problem**: When using a namespaced VPC claim, the composition function creates **cluster-scoped** managed resources (no namespace), but they should be **namespaced** to match the claim.
+
+**Evidence**:
+- VPC claim created in `namespace: default`
+- All 8 child managed resources created WITHOUT namespace (cluster-scoped)
+- Cleanup failed with error: "an empty namespace may not be set when a resource name is..."
+- Only the namespaced claim could be deleted (1/9), all cluster-scoped resources failed (8/9)
+
+**Root Cause**: The composition function in `functions/vpc/main.k` is not propagating the namespace from the claim to the managed resources.
+
+**Required Fix**: Update composition function to add namespace metadata to all managed resources when the XR has a namespace.
+
+#### Issue 8: Composite Readiness Status Bug
+**Problem**: VPC composite claim never reached `Ready=True` even though ALL 8 child resources were Ready.
+
+**Evidence**:
+```
+VPC Claim Status:
+- SYNCED: True
+- READY: False ❌
+- MESSAGE: "Creating: Unready resources: igw, public-route-igw, public-route-table, and 5 more"
+
+Child Resources Status:
+- VPC: SYNCED=True, READY=True ✅
+- InternetGateway: SYNCED=True, READY=True ✅
+- RouteTable: SYNCED=True, READY=True ✅
+- Route: SYNCED=True, READY=True ✅
+- Subnet (2x): SYNCED=True, READY=True ✅
+- RouteTableAssociation (2x): SYNCED=True, READY=True ✅
+```
+
+All 8 resources were Ready, but the composite reported them as "Unready".
+
+**Root Cause**: The readiness calculation logic in the composition function or Crossplane is incorrectly reporting child status. This could be:
+1. Status check looking at wrong field
+2. Readiness conditions not properly defined
+3. Status aggregation bug in composition function
+
+**Impact**:
+- E2E tests will always timeout waiting for Ready=True
+- Users will see resources as "Creating" even when fully operational
+- Makes it impossible to determine actual resource health
+
+#### Issue 9: Orphaned AWS Resources
+**Result**: Because cleanup failed, 8 AWS resources are orphaned in account 609897127049, us-west-2:
+- 1x VPC
+- 1x Internet Gateway
+- 1x Route Table
+- 1x Route
+- 2x Subnet
+- 2x Route Table Association
+
+**Action Required**: Manual cleanup in AWS Console or via AWS CLI.
+
+### Next Steps
+
+**Priority 1**: Fix namespace propagation in composition function
+- Managed resources must inherit namespace from XR
+- All resources in the same namespace for proper lifecycle management
+
+**Priority 2**: Debug readiness status calculation
+- Investigate why composite reports children as Unready when they're Ready
+- May need to check status field references in composition function
+
+**Priority 3**: Manual cleanup
+- Delete orphaned AWS resources
+- Verify no other resources left behind from previous test runs
