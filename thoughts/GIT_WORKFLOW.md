@@ -441,25 +441,24 @@ git branch -d fix/subnet-cidr
 # 1. Create feature branch
 git checkout -b feat/add-vpc-endpoints
 
-# 2-5. Follow TDD workflow (see TDD_STRATEGY.md for methodology):
+# 2-5. Follow TDD workflow LOCALLY (do NOT commit yet):
 #   - Write failing test (RED)
 #   - Make test pass (GREEN)
 #   - Refactor code (REFACTOR)
-#   - Run E2E test (E2E)
+#   - Run composition tests: up test run tests/test-*
 
-# 6. Stage changes (ONLY when all tests pass)
-git add tests/ functions/
+# 6. Run E2E test (MANDATORY - 30-40 minutes)
+up test run tests/e2etest-xvpc-endpoints --e2e
 
-# 7. Commit with descriptive message
-git commit -m "$(cat <<'EOF'
-feat: add VPC Endpoints support
+# 7. Commit ONLY after E2E passes
+git add .
+git commit -m "feat: add VPC Endpoints support
 
 - Add composition test for S3 and DynamoDB gateway endpoints
-- Implement endpoint creation in functions/endpoint.k
+- Implement endpoint creation in functions/vpc/endpoints.k
 - Add E2E test validating endpoint connectivity
 - All tests passing (composition + E2E)
-EOF
-)"
+"
 
 # 8. Push and create PR
 git push -u origin feat/add-vpc-endpoints
@@ -472,7 +471,13 @@ git pull
 git branch -d feat/add-vpc-endpoints
 ```
 
-**CRITICAL**: Never commit if ANY test fails (composition OR E2E). Fix tests first.
+**CRITICAL**:
+- ✅ **DO**: Work locally through RED → GREEN → REFACTOR without committing
+- ✅ **DO**: Run E2E test before ANY commit (30-40 minutes)
+- ✅ **DO**: Commit ONLY after E2E passes
+- ❌ **DON'T**: Make "work in progress" commits without E2E validation
+- ❌ **DON'T**: Skip E2E tests to "commit faster"
+- ❌ **DON'T**: Commit anything until E2E test passes
 
 ---
 
@@ -565,29 +570,37 @@ git push --force-with-lease
 ### Commit Frequency
 
 **When to commit**:
-- ✅ After completing a logical unit of work
-- ✅ After tests pass
-- ✅ Before switching tasks
-- ✅ At end of work session
-- ✅ After fixing a bug
-- ✅ After adding a feature
+- ✅ ONLY after E2E test passes
+- ✅ When ALL tests pass (composition + E2E)
+- ✅ When feature is production-ready and validated in AWS
 
 **Commit size**:
-- **Too small**: Every line change separately
-- **Too large**: Multiple features in one commit
-- **Just right**: One logical change per commit
+- **Too small**: ❌ Incremental commits without E2E validation
+- **Too large**: Multiple unrelated features in one commit
+- **Just right**: One complete, E2E-validated feature per commit
 
 **Good examples**:
-- One feature implementation
-- One bug fix with test
-- One refactoring
-- Related tests for a feature
+- Complete feature with composition test + implementation + E2E test (all passing)
+- Bug fix with test + fix + E2E validation
+- Refactoring with all tests still passing (including E2E)
 
 **Bad examples**:
-- Half of a feature
-- Multiple unrelated fixes
-- Mixing features and refactoring
-- WIP commits in main branch
+- ❌ "WIP" commits without E2E validation
+- ❌ Commits with only composition tests (no E2E)
+- ❌ Multiple unrelated features
+- ❌ Half of a feature
+- ❌ Any commit where E2E test hasn't been run
+
+**E2E Testing and Commits - STRICT POLICY**:
+- ✅ **DO**: Work locally through entire TDD cycle
+- ✅ **DO**: Run E2E test before ANY commit
+- ✅ **DO**: Commit ONLY when E2E passes
+- ❌ **DON'T**: Make incremental commits during development
+- ❌ **DON'T**: Commit without E2E validation
+- ❌ **DON'T**: Skip E2E tests for any reason
+- ❌ **DON'T**: Merge PR without passing E2E test
+
+**Rationale**: Every commit in git history must be production-ready and E2E validated. This ensures we can safely revert to any commit.
 
 ---
 
@@ -890,15 +903,17 @@ git reset --hard HEAD@{N}
 ### Workflow Summary
 
 1. Create feature branch
-2. 🔴 Write composition test FIRST (must fail)
-3. 🟢 Implement feature (make test pass)
-4. 🔵 Refactor code (keep tests passing)
-5. 🧪 Add E2E test (MANDATORY)
-6. ✅ Commit when all tests pass
-7. Push to remote
+2. 🔴 Write composition test FIRST (must fail) - work locally, don't commit
+3. 🟢 Implement feature (make test pass) - work locally, don't commit
+4. 🔵 Refactor code (keep tests passing) - work locally, don't commit
+5. 🧪 Add E2E test and run (MANDATORY - 30-40 min) - work locally, don't commit
+6. ✅ E2E passes → NOW commit everything
+7. Push to remote (one commit with all changes)
 8. Create PR with clear description
 9. Get review and address feedback
 10. Merge and delete branch
+
+**STRICT POLICY**: Do NOT commit until E2E test passes. Work locally through entire TDD cycle, then commit once when E2E validates.
 
 ---
 

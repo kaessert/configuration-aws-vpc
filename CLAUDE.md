@@ -6,11 +6,22 @@ Welcome! This document provides instructions for Claude Code (or any coding agen
 
 ## Development Requirements
 
-**MANDATORY**: E2E (End-to-End) tests are REQUIRED for ALL features.
+**MANDATORY**: E2E (End-to-End) tests are REQUIRED BEFORE ANY COMMIT.
 
-**Rationale**: Composition tests validate KCL logic; E2E tests validate actual AWS behavior. Both required before feature completion.
+**Rationale**: Every commit in git history must be production-ready and E2E validated. This ensures we can safely revert to any commit.
 
-**Workflow**: See [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) for complete TDD workflow (🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT)
+**Workflow**: See [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) for complete TDD workflow:
+```
+🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+```
+
+**STRICT POLICY**:
+- ✅ **DO**: Work locally through RED → GREEN → REFACTOR without committing
+- ✅ **DO**: Run E2E test before ANY commit (30-40 minutes)
+- ✅ **DO**: Commit ONLY when E2E passes
+- ❌ **DON'T**: Make "work in progress" commits
+- ❌ **DON'T**: Commit without E2E validation
+- ❌ **DON'T**: Skip E2E tests for any reason
 
 **E2E Authentication**: E2E tests use Upbound's web identity federation with IAM roles. NO AWS credentials required. Tests may take 30-40 minutes - this is expected and acceptable.
 
@@ -61,12 +72,20 @@ Welcome! This document provides instructions for Claude Code (or any coding agen
 
 ### Before Every Commit
 
+**MANDATORY CHECKS** (before ANY commit):
 - ✅ All composition tests pass
-- ✅ All E2E tests pass (MANDATORY)
+- ✅ All E2E tests pass (MANDATORY - 30-40 min each)
 - ✅ Project builds
+- ✅ Documentation updated
 - ✅ Follow conventional commits
 
-**CRITICAL**: E2E tests are MANDATORY. Features are NOT complete without E2E validation.
+**CRITICAL**: Do NOT commit until E2E test passes. Work locally through entire TDD cycle, then commit once when all tests pass.
+
+**Commit Frequency**:
+- ❌ Do NOT make incremental commits during development
+- ❌ Do NOT commit "work in progress"
+- ✅ Commit ONLY after E2E test passes
+- ✅ Every commit must be production-ready and E2E validated
 
 ## Essential References
 

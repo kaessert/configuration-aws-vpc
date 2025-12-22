@@ -21,13 +21,23 @@ This project follows **strict Test-Driven Development (TDD)** practices. Tests a
 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 ```
 
-1. **🔴 RED**: Write a failing composition test
-2. **🟢 GREEN**: Write minimum code to pass
-3. **🔵 REFACTOR**: Improve code while keeping tests green
-4. **🧪 E2E TEST**: Write and pass E2E test (MANDATORY)
+1. **🔴 RED**: Write a failing composition test (work locally, don't commit)
+2. **🟢 GREEN**: Write minimum code to pass (work locally, don't commit)
+3. **🔵 REFACTOR**: Improve code while keeping tests green (work locally, don't commit)
+4. **🧪 E2E TEST**: Write and pass E2E test (MANDATORY - 30-40 min)
 5. **✅ COMMIT**: Only commit when ALL tests pass (composition + E2E)
 
-**CRITICAL CHANGE**: E2E tests are now MANDATORY before marking ANY feature as complete. A feature is NOT done until it's validated in real AWS.
+**CRITICAL**: E2E tests are MANDATORY before ANY commit. A feature is NOT done until it's validated in real AWS.
+
+**Commit Strategy**:
+- ✅ **DO**: Work locally through steps 1-4 without committing
+- ✅ **DO**: Run E2E test before ANY commit (30-40 minutes)
+- ✅ **DO**: Commit ONLY after E2E passes
+- ❌ **DON'T**: Commit "work in progress" without E2E validation
+- ❌ **DON'T**: Make incremental commits during development
+- ❌ **DON'T**: Skip E2E tests to "commit small increments"
+
+**Rationale**: Every commit in git history must be E2E validated. This ensures production quality at every point in history.
 
 ## Why TDD for This Project?
 
@@ -241,13 +251,21 @@ up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-test
 
 #### Step 9: Commit (Only When ALL Tests Pass)
 
+**Work Locally (Steps 1-8)**: Do NOT commit until E2E passes:
 ```bash
-# Final check - ALL tests must pass
-up project build                          # ✅ Must pass
-up test run tests/test-*                  # ✅ All composition tests must pass
-up test run tests/e2etest-xvpc-<feature> --e2e  # ✅ E2E test must pass
+# Work through RED → GREEN → REFACTOR locally
+# Run composition tests as you go: up test run tests/test-*
+# But do NOT commit yet
 
-# Only commit when EVERYTHING is green
+# Step 8: Run E2E test (MANDATORY - 30-40 minutes)
+up test run tests/e2etest-xvpc-<feature> --e2e
+
+# ✅ E2E test MUST pass before ANY commit
+```
+
+**Commit ONLY After E2E Passes**:
+```bash
+# All tests passed (composition + E2E) - NOW commit
 git add .
 git commit -m "feat: implement <feature>
 
@@ -260,12 +278,14 @@ git commit -m "feat: implement <feature>
 git push
 ```
 
-**MANDATORY CHECKS BEFORE COMMIT**:
+**MANDATORY CHECKS BEFORE ANY COMMIT**:
 - ✅ Project builds: `up project build`
 - ✅ All composition tests pass: `up test run tests/test-*`
-- ✅ E2E test passes: `up test run tests/e2etest-* --e2e`
+- ✅ E2E test passes: `up test run tests/e2etest-* --e2e` (30-40 minutes)
 - ✅ No AWS resources orphaned (verify cleanup)
 - ✅ Documentation updated
+
+**Key Principle**: DO NOT commit until E2E test passes. Every commit in git history must be E2E validated.
 
 ## Test Organization
 
@@ -504,4 +524,10 @@ up test run tests/e2etest-* --e2e                       # Run all E2E tests
 
 **Remember**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
-**Never commit failing tests. Never write code before tests. E2E tests are MANDATORY.**
+**Key Principles**:
+- Work locally through RED → GREEN → REFACTOR without committing
+- Run E2E test before ANY commit (30-40 minutes)
+- Commit ONLY when all tests pass (composition + E2E)
+- Never commit without E2E validation
+- Never write code before tests
+- Every commit in git history must be production-ready and E2E validated

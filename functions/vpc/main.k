@@ -38,6 +38,7 @@ import endpoints
 import dhcp
 import nacl
 import flowlogs
+import subnetgroups
 
 # ============================================================================
 # ACCESS COMPOSITION FUNCTION PARAMETERS
@@ -257,4 +258,5 @@ items = \
     endpoints.generateAllEndpoints(config) + \
     dhcp.generateAllDHCP(config) + \
     nacl.generateAllNACLs(config) + \
-    flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.createFlowLogS3Bucket, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.flowLogFileFormat, config.flowLogHiveCompatiblePartitions, config.flowLogPerHourPartition, config.tags)
+    flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.createFlowLogS3Bucket, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.flowLogFileFormat, config.flowLogHiveCompatiblePartitions, config.flowLogPerHourPartition, config.tags) + \
+    subnetgroups.generateSubnetGroups(oxr, dxr, ocds, dcds, region, tags)

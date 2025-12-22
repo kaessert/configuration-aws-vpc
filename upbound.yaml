@@ -24,6 +24,18 @@ spec:
     kind: Provider
     package: xpkg.upbound.io/upbound/provider-aws-s3
     version: v2.3.0
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Provider
+    package: xpkg.upbound.io/upbound/provider-aws-rds
+    version: v2.3.0
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Provider
+    package: xpkg.upbound.io/upbound/provider-aws-elasticache
+    version: v2.3.0
+  - apiVersion: pkg.crossplane.io/v1
+    kind: Provider
+    package: xpkg.upbound.io/upbound/provider-aws-redshift
+    version: v2.3.0
   description: This is where you can describe your project.
   license: Apache-2.0
   maintainer: Upbound User <user@example.com>

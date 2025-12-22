@@ -268,6 +268,52 @@ spec:
                   description: Create separate route table for Redshift subnets
                   default: false
 
+                # Subnet Group Configuration
+                createDatabaseSubnetGroup:
+                  type: boolean
+                  description: Create DB subnet group for RDS instances (auto-enabled when databaseSubnets exist)
+                  default: false
+
+                databaseSubnetGroupName:
+                  type: string
+                  description: Custom name for the database subnet group (defaults to <vpc-name>-db if not specified)
+
+                databaseSubnetGroupTags:
+                  type: object
+                  description: Additional tags for database subnet group
+                  additionalProperties:
+                    type: string
+
+                createElasticacheSubnetGroup:
+                  type: boolean
+                  description: Create ElastiCache subnet group (auto-enabled when elasticacheSubnets exist)
+                  default: false
+
+                elasticacheSubnetGroupName:
+                  type: string
+                  description: Custom name for the ElastiCache subnet group (defaults to <vpc-name>-elasticache if not specified)
+
+                elasticacheSubnetGroupTags:
+                  type: object
+                  description: Additional tags for ElastiCache subnet group
+                  additionalProperties:
+                    type: string
+
+                createRedshiftSubnetGroup:
+                  type: boolean
+                  description: Create Redshift subnet group (auto-enabled when redshiftSubnets exist)
+                  default: false
+
+                redshiftSubnetGroupName:
+                  type: string
+                  description: Custom name for the Redshift subnet group (defaults to <vpc-name>-redshift if not specified)
+
+                redshiftSubnetGroupTags:
+                  type: object
+                  description: Additional tags for Redshift subnet group
+                  additionalProperties:
+                    type: string
+
                 # Tagging
                 tags:
                   type: object
@@ -715,3 +761,32 @@ spec:
                 vpcFlowLogDestinationArn:
                   type: string
                   description: ARN of the destination for VPC Flow Logs
+
+                # Subnet Group Outputs
+                databaseSubnetGroupId:
+                  type: string
+                  description: ID of the database subnet group
+
+                databaseSubnetGroupName:
+                  type: string
+                  description: Name of the database subnet group
+
+                databaseSubnetGroupArn:
+                  type: string
+                  description: ARN of the database subnet group
+
+                elasticacheSubnetGroupName:
+                  type: string
+                  description: Name of the ElastiCache subnet group
+
+                redshiftSubnetGroupId:
+                  type: string
+                  description: ID of the Redshift subnet group
+
+                redshiftSubnetGroupName:
+                  type: string
+                  description: Name of the Redshift subnet group
+
+                redshiftSubnetGroupArn:
+                  type: string
+                  description: ARN of the Redshift subnet group

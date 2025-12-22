@@ -83,7 +83,8 @@
       "Bash(up ctp delete:*)",
       "Bash(tee:*)",
       "Bash(/tasks)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "WebFetch(domain:registry.terraform.io)"
     ]
   }
 }
