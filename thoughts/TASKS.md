@@ -581,26 +581,35 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ---
 
-### 3.3 Implement DHCP Options
+### 3.3 Implement DHCP Options ✅
 **Priority**: P2
 **Effort**: Small
 **Description**: Support custom DHCP options for the VPC
+**Status**: COMPLETED
 
 **Tasks**:
-- [ ] Create `functions/vpc/dhcp.k` module
-- [ ] Implement DHCP options set
-- [ ] Support custom DNS servers
-- [ ] Support custom domain name
-- [ ] Support NTP servers
-- [ ] Support NetBIOS settings
-- [ ] Associate DHCP options with VPC
+- [x] Implemented inline in main.k (no separate dhcp.k module needed)
+- [x] Implement DHCP options set (VPCDHCPOptions resource)
+- [x] Support custom DNS servers (domainNameServers field)
+- [x] Support custom domain name (domainName field)
+- [x] Support NTP servers (ntpServers field)
+- [x] Support NetBIOS settings (netbiosNameServers, netbiosNodeType fields)
+- [x] Associate DHCP options with VPC (VPCDHCPOptionsAssociation resource)
+- [x] Add enableDhcpOptions toggle to XRD
+- [x] Add composition tests (test-vpc-dhcp-custom, test-vpc-dhcp-disabled)
+- [x] Add E2E test (e2etest-vpc-dhcp)
+- [x] All tests passing (19 composition tests, 6 E2E tests)
 
-**AWS Resources**: `aws_dhcp_options`, `aws_dhcp_options_association`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/VPCDHCPOptions`, `ec2.aws.upbound.io/v1beta1/VPCDHCPOptionsAssociation`
 
 **Acceptance Criteria**:
-- Custom DNS servers configurable
-- Domain name can be set
-- Options associated with VPC correctly
+- ✅ Custom DNS servers configurable
+- ✅ Domain name can be set
+- ✅ NTP servers can be configured
+- ✅ NetBIOS settings supported
+- ✅ Options associated with VPC correctly
+- ✅ Conditional creation based on enableDhcpOptions flag
+- ✅ All tests passing
 
 ---
 
@@ -1123,19 +1132,23 @@ For someone picking up this project, start with these tasks in order:
 
 ## Current Status
 
-**Phase 2: Core VPC Features Implementation** - In Progress
+**Phase 3: Enhanced Networking Features** - In Progress
 
 **Completed**:
 - ✅ Phase 1: Project Foundation (tasks 1.1-1.3)
-- ✅ VPC creation (task 2.1)
-- ✅ All subnet types (task 2.2)
-- ✅ Internet Gateway (task 2.3)
-- ✅ NAT Gateway with strategies (task 2.4)
-- ✅ Route tables and routing (task 2.5)
-- ✅ All composition tests passing (17 tests)
-- ✅ E2E tests for all implemented features (5 tests passing)
+- ✅ Phase 2: Core VPC Features
+  - ✅ VPC creation (task 2.1)
+  - ✅ All subnet types (task 2.2)
+  - ✅ Internet Gateway (task 2.3)
+  - ✅ NAT Gateway with strategies (task 2.4)
+  - ✅ Route tables and routing (task 2.5)
+- ✅ Phase 3: Enhanced Features (Partial)
+  - ✅ DHCP Options (task 3.3)
+- ✅ All composition tests passing (19 tests)
+- ✅ E2E tests for all implemented features (6 tests passing)
 
-**Next Priority**: Phase 3 - Enhanced Features (VPC Peering, Endpoints, etc.)
+**Next Priority**:
+- Task 3.2: Network ACLs (skipping 3.1 VPC Endpoints - not in terraform-aws-vpc module)
 
 ---
 
