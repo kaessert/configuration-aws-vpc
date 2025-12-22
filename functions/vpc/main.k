@@ -37,6 +37,7 @@ import routing
 import endpoints
 import dhcp
 import nacl
+import flowlogs
 
 # ============================================================================
 # ACCESS COMPOSITION FUNCTION PARAMETERS
@@ -132,6 +133,12 @@ privateInboundAclRules = oxrSpec.privateInboundAclRules or []
 privateOutboundAclRules = oxrSpec.privateOutboundAclRules or []
 privateAclTags = oxrSpec.privateAclTags or {}
 
+# Extract Flow Logs configuration
+enableFlowLog = oxrSpec.enableFlowLog if oxrSpec.enableFlowLog != None else False
+createFlowLogCloudwatchLogGroup = oxrSpec.createFlowLogCloudwatchLogGroup if oxrSpec.createFlowLogCloudwatchLogGroup != None else False
+flowLogTrafficType = oxrSpec.flowLogTrafficType if oxrSpec.flowLogTrafficType else "ALL"
+flowLogMaxAggregationInterval = oxrSpec.flowLogMaxAggregationInterval if oxrSpec.flowLogMaxAggregationInterval != None else 600
+
 # Extract subnet configuration
 publicSubnets = oxrSpec.publicSubnets or []
 mapPublicIpOnLaunch = oxrSpec.mapPublicIpOnLaunch if oxrSpec.mapPublicIpOnLaunch != None else True
@@ -221,6 +228,12 @@ config = {
     privateInboundAclRules = privateInboundAclRules
     privateOutboundAclRules = privateOutboundAclRules
     privateAclTags = privateAclTags
+
+    # Flow Logs configuration
+    enableFlowLog = enableFlowLog
+    createFlowLogCloudwatchLogGroup = createFlowLogCloudwatchLogGroup
+    flowLogTrafficType = flowLogTrafficType
+    flowLogMaxAggregationInterval = flowLogMaxAggregationInterval
 }
 
 # ============================================================================
@@ -235,4 +248,5 @@ items = \
     routing.generateAllRouting(config) + \
     endpoints.generateAllEndpoints(config) + \
     dhcp.generateAllDHCP(config) + \
-    nacl.generateAllNACLs(config)
+    nacl.generateAllNACLs(config) + \
+    flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.tags)

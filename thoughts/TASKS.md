@@ -9,8 +9,8 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 **Critical Requirements**:
 - ✅ **Feature Parity**: All Terraform inputs/outputs supported
 - ✅ **Behavior Match**: Exact same behavior as Terraform module
-- ✅ **Test-Driven**: Tests written BEFORE implementation (🔴 RED → 🟢 GREEN → 🔵 REFACTOR)
-- ✅ **Never Commit Failing Tests**: All tests MUST pass before commit
+- ✅ **Test-Driven**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) workflow
+- ✅ **E2E Tests MANDATORY**: All features require E2E validation
 
 ## Task Priority Legend
 
@@ -21,9 +21,9 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ## Development Workflow (MANDATORY)
 
-> 📖 **Complete Workflow**: See [TDD_STRATEGY.md](TDD_STRATEGY.md) for the complete TDD workflow (🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT) and [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for architecture guidance
+**CRITICAL**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete workflow. E2E tests are MANDATORY before marking ANY task as complete.
 
-**CRITICAL**: E2E tests are MANDATORY before marking ANY task as complete. No task is done until E2E tests validate it in real AWS.
+> 📖 **Architecture**: See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for design principles and module structure
 
 ---
 
