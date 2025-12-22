@@ -9,7 +9,6 @@ Comprehensive guide for the Upbound CLI (`up`) and Upbound Cloud platform, cover
 - [Project Management](#project-management)
 - [Group Management](#group-management)
 - [Control Plane Management](#control-plane-management)
-- [Console Monitoring](#console-monitoring)
 - [Context Management](#context-management)
 - [Common Workflows](#common-workflows)
 - [Safety & Best Practices](#safety--best-practices)
@@ -172,31 +171,12 @@ up profile list
 
 ### Quick Context Check
 
-Always verify your current context before running commands:
+**Always verify your current context** before running commands. See [Profile Safety Check](#critical-profile-safety-check) for mandatory verification steps.
 
 ```bash
-# 1. FIRST: Verify profile (MANDATORY)
-up profile current
-# Must show: "organization": "solutions"
-
-# 2. Show current context (organization/space)
+# Quick context summary
 up ctx .
-# Output: Kubeconfig context "upbound": Upbound solutions/upbound-aws-us-east-1
-
-# 3. Show detailed profile information
-up profile current --format json
-# Output shows:
-# - organization: solutions
-# - currentKubeContext: solutions/upbound-aws-us-east-1
-
-# List groups in current space
 up group list
-# Output shows all groups: default, upbox, claude-testing, etc.
-
-# List control planes in current group
-up controlplane list
-
-# List control planes across ALL groups
 up controlplane list -A
 ```
 
@@ -386,9 +366,8 @@ The output shows:
 ### Create a Group
 
 ```bash
-# STEP 1: ALWAYS verify profile first (MANDATORY)
-up profile current
-# Must show: "organization": "solutions"
+# STEP 1: Verify profile (see Profile Safety Check above)
+up profile current  # Must show: "organization": "solutions"
 
 # STEP 2: Create a new group in the current space
 up group create <group-name>
@@ -498,9 +477,8 @@ The output shows:
 ### Create a Control Plane
 
 ```bash
-# STEP 1: ALWAYS verify profile first (MANDATORY)
-up profile current
-# Must show: "organization": "solutions"
+# STEP 1: Verify profile (see Profile Safety Check above)
+up profile current  # Must show: "organization": "solutions"
 
 # STEP 2: Create a control plane in a specific group
 up controlplane create <name> -g <group-name>
@@ -921,11 +899,11 @@ kubectl describe vpc <vpc-name>
 
 ### Profile Safety Rules
 
-1. **ALWAYS check profile first**: Run `up profile current` before ANY operation
-2. **Verify organization**: Must show correct organization name
-3. **Stop if wrong profile**: NEVER proceed on incorrect profile
-4. **Use explicit flags**: Specify `-g <group>` to avoid context mistakes
-5. **Document profile usage**: Keep track of which profile is for what
+See [Profile Safety Check](#critical-profile-safety-check) for mandatory verification steps before ANY operation.
+
+**Additional best practices**:
+- Use explicit flags: Specify `-g <group>` to avoid context mistakes
+- Document profile usage: Keep track of which profile is for what
 
 ### Safety Checklist Before Deletion
 

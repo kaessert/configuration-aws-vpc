@@ -72,13 +72,6 @@ Welcome! This document provides instructions for Claude Code (or any coding agen
 
 **For complete navigation, see [thoughts/README.md](thoughts/README.md)**
 
-Quick links:
-- **Tasks**: [TASKS.md](thoughts/TASKS.md) - What to work on
-- **Testing**: [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) - How to test
-- **Git**: [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md) - How to commit
-- **Commands**: [UPBOUND_REFERENCE.md](thoughts/UPBOUND_REFERENCE.md) - up CLI reference
-- **KCL**: [KCL_REFERENCE.md](thoughts/KCL_REFERENCE.md) - KCL syntax
-
 ## Remember
 
 - **START HERE**: [thoughts/TASKS.md](thoughts/TASKS.md)

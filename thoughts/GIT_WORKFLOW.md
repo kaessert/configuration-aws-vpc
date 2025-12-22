@@ -431,50 +431,45 @@ git branch -d fix/subnet-cidr
 
 ---
 
-### Workflow 3: Adding Tests (TDD Workflow)
+### Workflow 3: Feature Development with TDD
 
-**For TDD methodology, see [TDD_STRATEGY.md](TDD_STRATEGY.md)**
+**For complete TDD workflow, see [TDD_STRATEGY.md](TDD_STRATEGY.md).**
 
-This workflow shows the git commands for the TDD cycle: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+**Summary**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
 ```bash
-# 1. Create test branch
-git checkout -b test/add-e2e-vpc-basic
+# 1. Create feature branch
+git checkout -b feat/add-vpc-endpoints
 
-# 2-5. Follow TDD workflow (see TDD_STRATEGY.md)
-#      - Write failing test
-#      - Implement feature
-#      - Refactor
-#      - Write and pass E2E test
+# 2-5. Follow TDD workflow (see TDD_STRATEGY.md for methodology):
+#   - Write failing test (RED)
+#   - Make test pass (GREEN)
+#   - Refactor code (REFACTOR)
+#   - Run E2E test (E2E)
 
 # 6. Stage changes (ONLY when all tests pass)
-git add tests/test-xvpc-basic/ tests/e2etest-xvpc-basic/ functions/vpc/
+git add tests/ functions/
 
 # 7. Commit with descriptive message
 git commit -m "$(cat <<'EOF'
-test: add composition and E2E tests for basic VPC
+feat: add VPC Endpoints support
 
-- Add composition test for basic VPC creation
-- Implement basic VPC feature in functions/vpc/main.k
-- Add E2E test validating real AWS VPC behavior
+- Add composition test for S3 and DynamoDB gateway endpoints
+- Implement endpoint creation in functions/endpoint.k
+- Add E2E test validating endpoint connectivity
 - All tests passing (composition + E2E)
-
-🤖 Generated with [Claude Code](https://claude.com/claude-code)
-
-Co-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>
 EOF
 )"
 
 # 8. Push and create PR
-git push -u origin test/add-e2e-vpc-basic
-gh pr create --title "test: add E2E test for basic VPC" \
-  --body "Adds composition and E2E tests for Task 0.1" \
-  --label "run-e2e-tests"
+git push -u origin feat/add-vpc-endpoints
+gh pr create --title "feat: add VPC Endpoints support" \
+  --body "Implements VPC Endpoints for S3 and DynamoDB"
 
 # 9. After merge, clean up
 git checkout main
 git pull
-git branch -d test/add-e2e-vpc-basic
+git branch -d feat/add-vpc-endpoints
 ```
 
 **CRITICAL**: Never commit if ANY test fails (composition OR E2E). Fix tests first.

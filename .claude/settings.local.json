@@ -82,7 +82,8 @@
       "Bash(up ctp list:*)",
       "Bash(up ctp delete:*)",
       "Bash(tee:*)",
-      "Bash(/tasks)"
+      "Bash(/tasks)",
+      "Bash(pkill:*)"
     ]
   }
 }
