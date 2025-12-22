@@ -92,15 +92,18 @@ With comprehensive tests:
 **Purpose**: Validate in real AWS environment
 
 **Characteristics**:
-- 🐌 Slow (10-30 minutes)
-- 💰 Expensive (real AWS resources)
+- 🐌 Slow (30-40 minutes) - this is expected and acceptable
+- 💰 Minimal cost (real AWS resources, but test duration is intentional)
 - 🌐 Complete (full lifecycle)
 - ✅ Final validation
 - ⚠️ **MANDATORY** - Required before marking feature complete
+- 🔒 **NO AWS credentials needed** - uses Upbound web identity federation
 
 **When to Write**: **MANDATORY** - After composition tests pass, for ALL major features
 
 **CRITICAL**: E2E tests are NO LONGER optional. Every significant feature (VPC, subnets, NAT, routing, etc.) MUST have E2E test coverage. Composition tests validate KCL logic, but E2E tests validate real AWS behavior.
+
+**Authentication**: E2E tests use Upbound's web identity federation - NO static AWS credentials required. Upbound automatically handles authentication via IAM role assumption.
 
 **Example**:
 ```bash
@@ -233,19 +236,40 @@ up test generate e2etest-xvpc-<feature> --e2e --language=kcl
 
 # Edit: tests/e2etest-xvpc-<feature>/main.k
 # - Use real AWS resources
-# - Set realistic timeout (1800-3000 seconds / 30-50 minutes)
-# - Add ProviderConfig with IAM role: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
-# - Use assumeRoleChain (NEVER static credentials)
+# - Set realistic timeout (2400 seconds / 40 minutes) - this is expected and acceptable
+# - Add ProviderConfig with web identity federation (see example below)
 # - Set skipDelete: false (ensure cleanup)
 # - Set validate: true
 # - Add defaultConditions: ["Ready", "Synced"]
 
+# ProviderConfig Example (ALWAYS use this pattern):
+extraResources: [
+    {
+        apiVersion: "aws.m.upbound.io/v1beta1"
+        kind: "ProviderConfig"
+        metadata: {
+            name: "default"
+            namespace: "default"
+        }
+        spec: {
+            credentials: {
+                source: "Upbound"  # Uses web identity federation - NO AWS credentials needed
+                upbound: {
+                    webIdentity: {
+                        roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                    }
+                }
+            }
+        }
+    }
+]
+
 # Run locally (requires up login)
 up login
-up test run tests/e2etest-xvpc-<feature> --e2e
+up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
 
 # Or in CI with label: "run-e2e-tests"
-# Wait for test to complete (may take 30+ minutes)
+# Wait for test to complete (30-40 minutes is normal)
 # Verify:
 # ✅ Resources created in AWS
 # ✅ Resources reach Ready/Synced state
@@ -253,6 +277,8 @@ up test run tests/e2etest-xvpc-<feature> --e2e
 ```
 
 **CRITICAL**: Do NOT skip this step. E2E tests are MANDATORY.
+
+**Authentication Note**: E2E tests use Upbound's web identity federation. NO AWS static credentials (access keys) are required. Upbound handles authentication automatically via the IAM role specified in the ProviderConfig.
 
 #### Step 9: Commit (Only When ALL Tests Pass)
 
@@ -531,145 +557,12 @@ test "public subnets created with correct specs"
 
 ## CI/CD Integration
 
-### GitHub Workflows
+**For complete CI/CD workflows, GitHub Actions configuration, local testing commands, and cost considerations, see [TESTING_REFERENCE.md → CI/CD Integration](TESTING_REFERENCE.md#cicd-integration)**
 
-#### Composition Tests
-
-Run on every push and PR automatically:
-
-```yaml
-name: Composition Tests
-on:
-  push:
-    branches: [main]
-  pull_request: {}
-
-jobs:
-  composition-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: upbound/action-up@v1
-        with:
-          skip-login: true  # No credentials needed
-      - run: up project build
-      - run: up test run tests/test-*  # Only composition tests
-```
-
-**Characteristics**:
-- Fast feedback (seconds to minutes)
-- No credentials required
-- No cost (runs locally on GitHub runners)
-- Catches KCL syntax errors and basic logic issues
-
-#### E2E Tests
-
-Run only when explicitly requested via PR label:
-
-```yaml
-name: End to End Testing
-on:
-  pull_request_target:
-    types: [synchronize, labeled]
-
-env:
-  UP_API_TOKEN: ${{ secrets.UP_API_TOKEN }}
-  UP_ORG: ${{ secrets.UP_ORG }}
-  UP_GROUP: ${{ secrets.UP_GROUP || 'default' }}
-
-jobs:
-  e2e:
-    if: contains(github.event.pull_request.labels.*.name, 'run-e2e-tests')
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Install and login with up
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        uses: upbound/action-up@v1
-        with:
-          api-token: ${{ secrets.UP_API_TOKEN }}
-          organization: ${{ secrets.UP_ORG }}
-
-      - name: Login to xpkg.upbound.io
-        uses: docker/login-action@v3
-        with:
-          registry: xpkg.upbound.io
-          username: ${{ secrets.UP_ROBOT_ID }}
-          password: ${{ secrets.UP_API_TOKEN }}
-
-      - run: up project build
-
-      - name: Switch up context
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        run: up ctx ${{ env.UP_ORG }}/upbound-gcp-us-central-1/${{ env.UP_GROUP }}
-
-      - name: Run e2e tests
-        if: env.UP_API_TOKEN != '' && env.UP_ORG != ''
-        run: up test run tests/e2etest-* --e2e
-```
-
-**Characteristics**:
-- Requires "run-e2e-tests" label on PR
-- Uses real Upbound Cloud control plane
-- Creates actual AWS resources
-- Slower (5-30 minutes depending on resources)
-- Has AWS costs (minimal but non-zero)
-
-### Running Tests Locally
-
-**During development**:
-```bash
-# Preview rendered resources (instant feedback)
-up composition render apis/vpc/composition.yaml examples/simple-vpc.yaml
-```
-
-**Before committing** (CRITICAL):
-```bash
-# Build and run all composition tests
-up project build && up test run tests/test-*
-```
-
-**Before creating PR**:
-```bash
-# Verbose output for debugging
-up test run tests/test-* --verbose
-```
-
-**Local E2E testing** (creates real resources):
-```bash
-# Login to Upbound Cloud
-up login
-
-# Run E2E tests (specify control plane group)
-up test run tests/e2etest-* --e2e --control-plane-group=claude-testing
-
-# Debug specific E2E test
-up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing --verbose
-```
-
-### Cost Considerations
-
-E2E tests create real AWS resources. Understanding costs helps make informed testing decisions:
-
-**AWS Resource Costs**:
-- VPC: Free
-- Subnets: Free
-- Internet Gateway: Free
-- NAT Gateway: ~$0.045/hour (~$1/day)
-- VPC Endpoints: ~$0.01/hour per endpoint
-- Elastic IP: $0.005/hour when not attached
-- Control Plane: Free (dev control planes free for 24h)
-
-**Best Practices**:
-1. **Rely on composition tests** for most validation (free, fast)
-2. **Use E2E tests for critical paths** (VPC creation, NAT Gateway, complex scenarios)
-3. **Ensure cleanup** with `skipDelete=false` (default in E2E framework)
-4. **Set reasonable timeouts** to avoid stuck resources
-5. **Run E2E locally** before PR if making significant changes
-6. **Monitor control plane** with kubectl during E2E tests
-
-**Typical Test Run Cost**: $0.10 - $0.50 per E2E test (mostly NAT Gateway charges)
+**Quick reference**:
+- **Composition tests**: Run on every PR (fast, free)
+- **E2E tests**: Run with "run-e2e-tests" label (slow, creates real AWS resources)
+- **Local testing**: `up test run tests/test-*` before every commit
 
 ---
 

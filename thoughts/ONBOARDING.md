@@ -43,9 +43,11 @@ Welcome! This guide will get you productive in under 2 hours.
 
 ### Optional Tools
 
-- AWS CLI (for E2E verification)
+- AWS CLI (for manual E2E verification only - NOT required for E2E tests)
 - VS Code with KCL extension
 - GitHub CLI (`gh`)
+
+**Note on AWS CLI**: The AWS CLI is purely optional for manual verification. E2E tests do NOT require AWS credentials to be configured locally - they use Upbound's web identity federation for authentication.
 
 ---
 
@@ -101,23 +103,12 @@ up project build
 
 ## Common Mistakes to Avoid
 
-**DON'T**:
-- ❌ Skip writing tests first (violates TDD)
-- ❌ Skip E2E tests (now MANDATORY)
-- ❌ Commit failing tests
-- ❌ Forget to verify AWS cleanup after E2E tests
-- ❌ Use `skipDelete: True` in E2E tests
-- ❌ Run E2E tests without `--control-plane-group` flag
-- ❌ Make commits without running ALL tests
+**See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete TDD best practices, common pitfalls, and the mandatory workflow.**
 
-**DO**:
-- ✅ Follow TDD workflow religiously
-- ✅ Write composition tests first (fast feedback)
-- ✅ Write E2E tests for all features (mandatory)
-- ✅ Verify AWS cleanup after E2E tests
-- ✅ Always specify `--control-plane-group=claude-testing` for E2E tests
+**Quick reminders**:
+- ✅ Follow TDD workflow: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+- ✅ E2E tests are MANDATORY for all features
 - ✅ Update [TASKS.md](TASKS.md) as you work
-- ✅ Ask questions and document learnings
 
 ---
 

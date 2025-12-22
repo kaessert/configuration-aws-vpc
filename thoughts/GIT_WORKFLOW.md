@@ -242,62 +242,20 @@ main (protected)
 
 ### Commit Commands
 
-**Simple commit**:
-```bash
-git commit -m "feat(vpc): add DNS support"
-```
+**For complete command syntax, see [GIT_REFERENCE.md → Staging and Committing](GIT_REFERENCE.md#staging-and-committing)**
 
-**Commit with body** (recommended):
-```bash
-git commit -m "feat(vpc): add DNS support" -m "Added enableDnsHostnames and enableDnsSupport parameters to VPC spec. These control DNS resolution and hostname assignment in the VPC."
-```
-
-**Multi-line commit with heredoc** (best for complex commits):
-```bash
-git commit -m "$(cat <<'EOF'
-feat(subnets): implement subnet distribution across AZs
-
-Added logic to distribute subnets evenly across specified
-availability zones. Each subnet type (public, private, database,
-etc.) now creates one subnet per AZ with proper CIDR allocation.
-
-Changes:
-- Add AZ distribution logic to subnet.k
-- Implement CIDR block calculation
-- Update subnet naming to include AZ suffix
-- Add validation for CIDR conflicts
-EOF
-)"
-```
+**Common patterns**:
+- Simple: `git commit -m "feat(vpc): add DNS support"`
+- With body: Use `-m` twice or heredoc for complex messages
+- Multi-line: Use heredoc for best formatting
 
 ### After Committing
 
-```bash
-# Review commit
-git show HEAD
+**Common actions**: Review (`git show HEAD`), amend (if not pushed), push to remote
 
-# View commit in log
-git log --oneline -1
+**For complete command syntax, see [GIT_REFERENCE.md → Staging and Committing](GIT_REFERENCE.md#staging-and-committing) and [GIT_REFERENCE.md → Undoing Changes](GIT_REFERENCE.md#undoing-changes)**
 
-# Amend if needed (only if not pushed!)
-git commit --amend
-
-# Push to remote
-git push origin <branch-name>
-```
-
-### Amending Commits
-
-**Only amend commits that haven't been pushed!**
-
-```bash
-# Add forgotten files
-git add forgotten-file.k
-git commit --amend --no-edit
-
-# Or change commit message
-git commit --amend -m "new message"
-```
+**Important**: Only amend commits that haven't been pushed to remote!
 
 ---
 

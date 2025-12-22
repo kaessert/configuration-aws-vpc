@@ -39,6 +39,8 @@ This comprehensive guide covers all aspects of testing Upbound projects, includi
 | Composition Test | `up test run tests/test-*` | Fast (< 10s) | No |
 | E2E Test | `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing` | Slow (30+ min) | Yes (auto-created) |
 
+**IMPORTANT**: E2E tests use Upbound's web identity federation for AWS authentication. NO static AWS credentials are required - authentication is handled automatically via IAM role assumption through Upbound's identity provider.
+
 ### When to Use What
 
 - **Development**: Composition render + composition tests
@@ -335,6 +337,43 @@ up project build && up test run tests/test-*
 
 ## E2E Tests
 
+### Authentication: No AWS Credentials Required
+
+**CRITICAL UNDERSTANDING**: E2E tests in this project do NOT require AWS static credentials (access keys/secret keys).
+
+**How it works**:
+1. E2E tests use Upbound's web identity federation
+2. ProviderConfig specifies `source: "Upbound"` with `webIdentity.roleARN`
+3. Upbound's identity provider authenticates to AWS using the specified IAM role
+4. NO secrets need to be stored or managed locally
+5. This is more secure than static credentials and follows AWS best practices
+
+**Example ProviderConfig** (always use this pattern):
+```kcl
+extraResources: [
+    {
+        apiVersion: "aws.m.upbound.io/v1beta1"
+        kind: "ProviderConfig"
+        metadata: {
+            name: "default"
+            namespace: "default"
+        }
+        spec: {
+            credentials: {
+                source: "Upbound"  # Uses Upbound's web identity federation
+                upbound: {
+                    webIdentity: {
+                        roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                    }
+                }
+            }
+        }
+    }
+]
+```
+
+**Test Duration**: E2E tests typically take 30-40 minutes due to AWS resource provisioning times. This is expected and acceptable - do not skip E2E tests due to time concerns.
+
 ### E2ETest Schema (KCL)
 
 ```kcl
@@ -494,13 +533,14 @@ up test run tests/e2etest-xvpc-simple \
 
 ### E2E Test Best Practices
 
-1. **Use realistic timeouts**: AWS resources can take 5-30 minutes
+1. **Use realistic timeouts**: AWS resources can take 30-40 minutes (this is normal and expected)
 2. **Run on Upbound Cloud**: Always use dedicated control plane group
 3. **Clean up resources**: Ensure skipDelete=false in CI
-4. **Use IAM role for credentials**: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws` (NEVER static credentials)
-5. **Test critical paths**: E2E validates real cloud integration
-6. **Run in CI with labels**: Use "run-e2e-tests" label to trigger
-7. **ALWAYS specify control plane group**: Never rely on default context
+4. **Use web identity for authentication**: ProviderConfig with `source: "Upbound"` and `webIdentity.roleARN` (NO static credentials needed)
+5. **Accept test duration**: 30-40 minutes is expected - do NOT skip E2E tests due to time concerns
+6. **Test critical paths**: E2E validates real cloud integration that composition tests cannot
+7. **Run in CI with labels**: Use "run-e2e-tests" label to trigger
+8. **ALWAYS specify control plane group**: Never rely on default context
 
 ---
 
@@ -596,30 +636,49 @@ kubectl get all
 
 ### IAM Role for E2E Tests
 
-**CRITICAL**: Use this role for running e2e tests on Upbound Cloud:
+**CRITICAL**: Use this IAM role for E2E tests on Upbound Cloud:
 
 ```
 arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
 ```
 
-**IMPORTANT**: E2E tests MUST use IAM role assumption, NEVER static credentials.
+**Authentication Method**: Web Identity Federation (NO static credentials)
 
-This role should be configured in the ProviderConfig:
+**How it works**:
+1. Upbound acts as an OIDC identity provider
+2. The IAM role trusts Upbound's identity provider
+3. ProviderConfig uses `source: "Upbound"` with `webIdentity.roleARN`
+4. Upbound automatically obtains temporary credentials via web identity federation
+5. NO AWS access keys or secret keys are needed locally
+
+**Correct ProviderConfig pattern**:
 
 ```kcl
 {
-    apiVersion: "aws.upbound.io/v1beta1"
+    apiVersion: "aws.m.upbound.io/v1beta1"  # Note: .m. suffix for namespaced provider
     kind: "ProviderConfig"
-    metadata.name: "default"
+    metadata: {
+        name: "default"
+        namespace: "default"
+    }
     spec: {
-        assumeRoleChain: [
-            {
-                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+        credentials: {
+            source: "Upbound"  # REQUIRED: Uses Upbound's web identity federation
+            upbound: {
+                webIdentity: {
+                    roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                }
             }
-        ]
+        }
     }
 }
 ```
+
+**Security Benefits**:
+- No static credentials to manage or rotate
+- Temporary credentials with automatic expiration
+- No risk of credential leakage
+- Follows AWS security best practices
 
 ---
 

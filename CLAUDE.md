@@ -10,7 +10,9 @@ Welcome! This document provides instructions for Claude Code (or any coding agen
 
 **Rationale**: Composition tests validate KCL logic; E2E tests validate actual AWS behavior. Both required before feature completion.
 
-**Workflow**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+**Workflow**: See [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) for complete TDD workflow (🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT)
+
+**E2E Authentication**: E2E tests use Upbound's web identity federation with IAM roles. NO AWS credentials required. Tests may take 30-40 minutes - this is expected and acceptable.
 
 **See**: `thoughts/TASKS.md` for current critical tasks
 
@@ -24,22 +26,11 @@ Welcome! This document provides instructions for Claude Code (or any coding agen
 
 **Status**: Phase 2 implementation - Core VPC features complete (VPC, subnets, gateways, routing). E2E tests required before continuing.
 
-## Architecture Decision: Namespaced VPC Claims
+## Architecture
 
-**CRITICAL**: This project uses Crossplane v2 with **namespaced claims**.
+**CRITICAL**: This project uses Crossplane v2 with namespaced claims (`kind: VPC`, not `XVPC`).
 
-**What This Means**:
-- XRD kind: `VPC` (NO X prefix)
-- All resources require: `namespace: default`
-- ProviderConfigs must be namespaced
-
-**Common Mistake**:
-- DO NOT use `kind: XVPC` (cluster-scoped composite)
-- ALWAYS use `kind: VPC` (namespaced claim)
-
-If you see `kind: XVPC` anywhere in examples or user-facing documentation, it's a documentation error. Report it immediately.
-
-See `thoughts/ARCHITECTURE_DECISIONS.md` for full details.
+**See [thoughts/IMPLEMENTATION_GUIDE.md → Architecture Decisions](thoughts/IMPLEMENTATION_GUIDE.md#5-architecture-decisions) for complete architectural principles and decisions.**
 
 ---
 
@@ -65,9 +56,7 @@ See `thoughts/ARCHITECTURE_DECISIONS.md` for full details.
 
 ## How to Work on This Project
 
-**Essential workflow:** 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
-
-**For complete TDD workflow**, see [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md)
+**For complete TDD workflow**, see [TDD_STRATEGY.md](thoughts/TDD_STRATEGY.md) - 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 **For git conventions**, see [GIT_WORKFLOW.md](thoughts/GIT_WORKFLOW.md)
 
 ### Before Every Commit

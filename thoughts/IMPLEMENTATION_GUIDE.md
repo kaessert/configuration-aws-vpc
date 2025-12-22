@@ -66,6 +66,25 @@ Design for growth:
 - **Performant**: Resources created in parallel where possible
 - **Maintainable**: Clear boundaries, minimal coupling
 
+### 5. Architecture Decisions
+
+#### Namespaced VPC Claims (Crossplane v2)
+
+**CRITICAL**: This project uses Crossplane v2 with **namespaced claims**.
+
+**What This Means**:
+- XRD kind: `VPC` (NO X prefix)
+- All resources require: `namespace: default`
+- ProviderConfigs must be namespaced
+
+**Common Mistake**:
+- DO NOT use `kind: XVPC` (cluster-scoped composite)
+- ALWAYS use `kind: VPC` (namespaced claim)
+
+If you see `kind: XVPC` anywhere in examples or user-facing documentation, it's a documentation error. Report it immediately.
+
+**For complete details, see thoughts/ARCHITECTURE_DECISIONS.md** (if it exists)
+
 ## Composition Pipeline Requirements
 
 **CRITICAL**: All compositions MUST include `function-auto-ready` as the last pipeline step.

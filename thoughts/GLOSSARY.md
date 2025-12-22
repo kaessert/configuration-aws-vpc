@@ -85,22 +85,43 @@ This glossary defines project-specific terms and concepts. Use this when you enc
 ### ProviderConfig
 **Definition**: Configuration for how a provider authenticates with the cloud provider (AWS, Azure, GCP, etc.)
 
-**Example**:
+**Authentication Methods**:
+1. **Web Identity Federation** (RECOMMENDED for E2E tests)
+   - Uses Upbound as OIDC identity provider
+   - NO static AWS credentials required
+   - Temporary credentials via IAM role assumption
+   - Most secure approach
+
+2. **Static Credentials** (NOT recommended)
+   - AWS access keys stored as secrets
+   - Requires credential rotation
+   - Higher security risk
+
+**Example - Web Identity (E2E Tests)**:
 ```yaml
-apiVersion: aws.upbound.io/v1beta1
+apiVersion: aws.m.upbound.io/v1beta1  # Note: .m. for namespaced provider
 kind: ProviderConfig
 metadata:
   name: default
+  namespace: default
 spec:
   credentials:
-    source: Upbound
-  assumeRoleChain:
-    - roleARN: arn:aws:iam::123456789012:role/my-role
+    source: Upbound  # Uses web identity federation
+    upbound:
+      webIdentity:
+        roleARN: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
 ```
+
+**How Web Identity Works**:
+1. Upbound acts as an OIDC identity provider
+2. IAM role trusts Upbound's identity provider
+3. Upbound obtains temporary AWS credentials automatically
+4. NO AWS access keys needed locally
+5. More secure than static credentials
 
 **Critical for**: E2E tests (authentication to real AWS)
 
-**Security note**: Always use IAM roles, NEVER static credentials!
+**Security note**: Always use web identity federation for E2E tests, NEVER static credentials!
 
 ---
 
@@ -294,17 +315,21 @@ vpc = awsv1beta1.VPC{ ... }
 ### E2E Test (End-to-End Test)
 **Definition**: Slow integration test that validates composition with REAL cloud resources. Creates actual AWS resources.
 
-**Speed**: 20-40 minutes per test
+**Speed**: 30-40 minutes per test (expected and acceptable)
 
 **What it tests**: Complete lifecycle (create → ready → delete), AWS behavior, provider integration
 
-**When to use**: Before merging to main, on labeled PRs
+**Authentication**: Uses Upbound's web identity federation - NO AWS credentials required locally
 
-**Tool**: `up test run tests/e2etest-* --e2e`
+**When to use**: Before merging to main, on labeled PRs, MANDATORY for all features
+
+**Tool**: `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing`
 
 **Critical**: MUST verify cleanup (orphaned resources cost money!)
 
 **Also called**: Integration test, system test
+
+**Common misconception**: E2E tests do NOT require AWS credentials to be configured locally. Upbound handles authentication via web identity federation automatically.
 
 ---
 
