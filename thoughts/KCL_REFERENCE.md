@@ -538,7 +538,7 @@ After updating dependencies: `up dep update-cache && up project build`
 4. **Check models**: `.up/kcl/models/` should contain typed schemas for all CRDs
 5. **Import and use** typed models in composition functions:
    ```kcl
-   import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+   import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
    vpc = ec2v1beta1.VPC{
        metadata = {...}
@@ -552,7 +552,7 @@ After updating dependencies: `up dep update-cache && up project build`
 
 **Correct Import Path**:
 ```kcl
-import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 ```
 
 **NOT**:
@@ -570,32 +570,13 @@ The import path maps directly to:
 
 **ALWAYS prefer typed objects over untyped dictionaries!**
 
-Typed objects:
-```kcl
-ec2v1beta1.VPC{
-    metadata = {...}
-    spec = {...}
-}
-```
+For detailed examples and best practices, see [Part 5: Best Practice #6 - Use Typed Objects Everywhere](#6-use-typed-objects-everywhere).
 
-Over untyped dictionaries:
-```kcl
-{
-    apiVersion = "ec2.aws.upbound.io/v1beta1"
-    kind = "VPC"
-    metadata = {...}
-    spec = {...}
-}
-```
-
-**Benefits**:
-- **Type safety**: Catch errors at build time, not runtime
-- **IDE support**: Autocomplete for fields and schemas
-- **Validation**: Ensure correct field names and types
-- **Documentation**: Self-documenting schemas with field descriptions
-- **Refactoring**: Safe renaming and restructuring
-- **Compile-time validation**: Prevents typos in apiVersion/kind fields
-- **Enforces correct schema structure**: Required fields are checked
+**Key benefits**:
+- Type safety and compile-time validation
+- IDE autocomplete and documentation
+- Prevents typos in apiVersion/kind fields
+- Enforces correct schema structure
 
 ### Required Fields in Assertions
 
@@ -684,7 +665,7 @@ After running `up function generate`, the models are available as imports in you
 
 ```kcl
 # AWS Provider models
-import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 # Your XRD models (automatically generated from apis/ definitions)
 import models.io.upbound.platform.aws.v1alpha1 as awsv1alpha1
@@ -855,7 +836,7 @@ schema VPC:
 
 ```kcl
 # Good - Typed objects
-import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 vpc = ec2v1beta1.VPC{
     metadata = {...}
@@ -935,7 +916,7 @@ vpc = VPC {name: "my-vpc"}
 
 **Models Not Generated**
 ```kcl
-# Error: Cannot import models.io.upbound.aws.ec2.v1beta1
+# Error: Cannot import models.io.upbound.awsm.ec2.v1beta1
 
 # Causes:
 # 1. Using old provider version (v1.x instead of v2.x)
@@ -1057,7 +1038,7 @@ from module import Item
 }
 
 # Typed (PREFERRED)
-import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 ec2v1beta1.VPC{
     metadata = _metadata("vpc") | {
@@ -1094,6 +1075,133 @@ Example for AWS EC2 resources:
 - Provider: `xpkg.upbound.io/upbound/provider-aws-ec2`
 - API Group: `ec2.aws.upbound.io`
 - Version: `v1beta1`
+
+---
+
+## Part 8: Testing Patterns
+
+### Always Define XR Inline for Composition Tests
+
+**✅ GOOD** - XR defined inline:
+```kcl
+spec: {
+    xr: {
+        apiVersion: "..."
+        kind: "XVPC"
+        metadata: { name: "test" }
+        spec: { ... }
+    }
+}
+```
+
+**❌ BAD** - Separate XR file (adds complexity):
+```kcl
+spec: {
+    xrPath: "xr.yaml"  # Avoid unless necessary
+}
+```
+
+### Use Descriptive Test Names
+
+```kcl
+# Pattern: test-<resource-type>-<scenario>
+metadata.name: "test-xvpc-simple"
+metadata.name: "test-xvpc-public-subnets"
+metadata.name: "test-xvpc-nat-per-az"
+
+# E2E tests: e2etest-<resource-type>-<scenario>
+metadata.name: "e2etest-xvpc-basic"
+```
+
+### Set Appropriate Timeouts
+
+```kcl
+# Composition tests: 60-120 seconds (no real resources)
+timeoutSeconds: 60
+
+# E2E tests: 1800+ seconds (creates real AWS resources)
+timeoutSeconds: 1800  # 30 minutes
+cleanupTimeoutSeconds: 600  # 10 minutes
+```
+
+### Testing Conditional Resources
+
+```kcl
+# Test that IGW is created when createIgw: true
+xr: {
+    spec: {
+        createIgw: True
+        publicSubnets: ["10.0.1.0/24"]
+    }
+}
+assertResources: [
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "InternetGateway"
+        metadata: { name: "igw-test-vpc" }  # Must match generated name
+    }
+]
+
+# Test that IGW is NOT created when createIgw: false
+# (assertResources should NOT include InternetGateway)
+```
+
+### Testing Resource Counts
+
+```kcl
+# Test correct number of subnets across AZs
+xr: {
+    spec: {
+        azs: ["us-west-2a", "us-west-2b", "us-west-2c"]
+        publicSubnets: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    }
+}
+assertResources: [
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "Subnet"
+        metadata: { name: "subnet-public-test-vpc-us-west-2a" }
+    },
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "Subnet"
+        metadata: { name: "subnet-public-test-vpc-us-west-2b" }
+    },
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "Subnet"
+        metadata: { name: "subnet-public-test-vpc-us-west-2c" }
+    }
+]
+```
+
+### Testing Tag Propagation
+
+```kcl
+xr: {
+    spec: {
+        tags: {
+            Environment: "production"
+            Team: "platform"
+        }
+    }
+}
+assertResources: [
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "VPC"
+        metadata: { name: "vpc-test-vpc" }
+        spec: {
+            forProvider: {
+                tags: {
+                    Environment: "production"
+                    Team: "platform"
+                }
+            }
+        }
+    }
+]
+```
 
 ---
 

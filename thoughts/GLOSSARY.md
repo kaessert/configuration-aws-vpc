@@ -178,10 +178,10 @@ up project push    # Push to registry
 
 **Example**:
 ```kcl
-import models.io.upbound.aws.v1beta1 as awsv1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 items = [
-    awsv1beta1.VPC{
+    ec2v1beta1.VPC{
         metadata.name = "my-vpc"
         spec.forProvider.cidrBlock = "10.0.0.0/16"
     }
@@ -243,10 +243,10 @@ ocds = option("params").ocds  # Get observed composite resources
 **Example**:
 ```kcl
 # Import AWS provider models
-import models.io.upbound.aws.v1beta1 as awsv1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 # Use imported model
-vpc = awsv1beta1.VPC{ ... }
+vpc = ec2v1beta1.VPC{ ... }
 ```
 
 **Types of imports**:
@@ -265,7 +265,7 @@ vpc = awsv1beta1.VPC{ ... }
 
 **Example**:
 ```kcl
-import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 subnet = ec2v1beta1.Subnet{
     metadata.name = "my-subnet"
