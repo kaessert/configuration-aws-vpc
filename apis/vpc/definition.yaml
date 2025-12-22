@@ -307,6 +307,189 @@ spec:
                   additionalProperties:
                     type: string
 
+                # Network ACL Configuration
+                publicDedicatedNetworkAcl:
+                  type: boolean
+                  description: Create dedicated Network ACL for public subnets
+                  default: false
+
+                publicInboundAclRules:
+                  type: array
+                  description: Inbound ACL rules for public subnets
+                  items:
+                    type: object
+                    required:
+                      - ruleNumber
+                      - protocol
+                      - ruleAction
+                      - cidrBlock
+                    properties:
+                      ruleNumber:
+                        type: integer
+                        description: Rule number (100-32766)
+                        minimum: 100
+                        maximum: 32766
+                      protocol:
+                        type: string
+                        description: Protocol (-1 for all, or protocol number like tcp=6, udp=17, icmp=1)
+                      ruleAction:
+                        type: string
+                        description: Allow or deny
+                        enum: ["allow", "deny"]
+                      cidrBlock:
+                        type: string
+                        description: CIDR block to allow/deny
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      fromPort:
+                        type: integer
+                        description: Starting port (0-65535)
+                        minimum: 0
+                        maximum: 65535
+                      toPort:
+                        type: integer
+                        description: Ending port (0-65535)
+                        minimum: 0
+                        maximum: 65535
+                      icmpType:
+                        type: integer
+                        description: ICMP type
+                      icmpCode:
+                        type: integer
+                        description: ICMP code
+
+                publicOutboundAclRules:
+                  type: array
+                  description: Outbound ACL rules for public subnets
+                  items:
+                    type: object
+                    required:
+                      - ruleNumber
+                      - protocol
+                      - ruleAction
+                      - cidrBlock
+                    properties:
+                      ruleNumber:
+                        type: integer
+                        description: Rule number (100-32766)
+                        minimum: 100
+                        maximum: 32766
+                      protocol:
+                        type: string
+                        description: Protocol (-1 for all, or protocol number like tcp=6, udp=17, icmp=1)
+                      ruleAction:
+                        type: string
+                        description: Allow or deny
+                        enum: ["allow", "deny"]
+                      cidrBlock:
+                        type: string
+                        description: CIDR block to allow/deny
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      fromPort:
+                        type: integer
+                        description: Starting port (0-65535)
+                        minimum: 0
+                        maximum: 65535
+                      toPort:
+                        type: integer
+                        description: Ending port (0-65535)
+                        minimum: 0
+                        maximum: 65535
+                      icmpType:
+                        type: integer
+                        description: ICMP type
+                      icmpCode:
+                        type: integer
+                        description: ICMP code
+
+                publicAclTags:
+                  type: object
+                  description: Additional tags for public subnet Network ACLs
+                  additionalProperties:
+                    type: string
+
+                privateDedicatedNetworkAcl:
+                  type: boolean
+                  description: Create dedicated Network ACL for private subnets
+                  default: false
+
+                privateInboundAclRules:
+                  type: array
+                  description: Inbound ACL rules for private subnets
+                  items:
+                    type: object
+                    required:
+                      - ruleNumber
+                      - protocol
+                      - ruleAction
+                      - cidrBlock
+                    properties:
+                      ruleNumber:
+                        type: integer
+                        minimum: 100
+                        maximum: 32766
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                        enum: ["allow", "deny"]
+                      cidrBlock:
+                        type: string
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      fromPort:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                      toPort:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                privateOutboundAclRules:
+                  type: array
+                  description: Outbound ACL rules for private subnets
+                  items:
+                    type: object
+                    required:
+                      - ruleNumber
+                      - protocol
+                      - ruleAction
+                      - cidrBlock
+                    properties:
+                      ruleNumber:
+                        type: integer
+                        minimum: 100
+                        maximum: 32766
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                        enum: ["allow", "deny"]
+                      cidrBlock:
+                        type: string
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      fromPort:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                      toPort:
+                        type: integer
+                        minimum: 0
+                        maximum: 65535
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                privateAclTags:
+                  type: object
+                  description: Additional tags for private subnet Network ACLs
+                  additionalProperties:
+                    type: string
+
             status:
               type: object
               properties:

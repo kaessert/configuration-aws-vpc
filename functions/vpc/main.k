@@ -91,6 +91,31 @@ s3EndpointType = oxrSpec.s3EndpointType if oxrSpec.s3EndpointType else "Gateway"
 enableDynamodbEndpoint = oxrSpec.enableDynamodbEndpoint if oxrSpec.enableDynamodbEndpoint != None else False
 vpcEndpointTags = oxrSpec.vpcEndpointTags or {}
 
+# Extract Network ACL configuration
+publicDedicatedNetworkAcl = oxrSpec.publicDedicatedNetworkAcl if oxrSpec.publicDedicatedNetworkAcl != None else False
+publicInboundAclRules = oxrSpec.publicInboundAclRules or []
+publicOutboundAclRules = oxrSpec.publicOutboundAclRules or []
+publicAclTags = oxrSpec.publicAclTags or {}
+
+privateDedicatedNetworkAcl = oxrSpec.privateDedicatedNetworkAcl if oxrSpec.privateDedicatedNetworkAcl != None else False
+privateInboundAclRules = oxrSpec.privateInboundAclRules or []
+privateOutboundAclRules = oxrSpec.privateOutboundAclRules or []
+privateAclTags = oxrSpec.privateAclTags or {}
+
+# Protocol mapping helper
+_protocolToNumber = lambda protocol: str -> str {
+    """
+    Converts protocol names to protocol numbers as required by AWS.
+
+    Args:
+        protocol: Protocol name (tcp, udp, icmp) or number (-1 for all)
+
+    Returns:
+        Protocol number as string
+    """
+    "6" if protocol == "tcp" else "17" if protocol == "udp" else "1" if protocol == "icmp" else "-1" if protocol == "all" or protocol == "-1" else protocol
+}
+
 # v2 Common Spec Configuration
 # Crossplane v2 requires providerConfigRef.kind and managementPolicies
 _defaultV2Spec = {
@@ -846,6 +871,184 @@ _dhcpOptionsAssociationResource = [
     }
 ] if enableDhcpOptions else []
 
+# Generate Network ACL for public subnets (conditional)
+_publicNetworkAcl = [
+    ec2v1beta1.NetworkACL{
+        metadata = _metadata("public-nacl") | {
+            name = "nacl-public-${vpcName}"
+            labels = tags | publicAclTags | {
+                "subnet-type": "public"
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                subnetIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "public"
+                    }
+                }
+                tags = tags | publicAclTags | {
+                    Name = "nacl-public-${vpcName}"
+                }
+            }
+        }
+    }
+] if publicDedicatedNetworkAcl else []
+
+# Generate public subnet inbound ACL rules
+_publicInboundAclRuleResources = [
+    ec2v1beta1.NetworkACLRule{
+        metadata = _metadata("public-inbound-rule-${rule.ruleNumber}") | {
+            name = "nacl-rule-public-in-${rule.ruleNumber}-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                networkAclIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "public"
+                    }
+                }
+                ruleNumber = rule.ruleNumber
+                protocol = _protocolToNumber(rule.protocol)
+                ruleAction = rule.ruleAction
+                cidrBlock = rule.cidrBlock
+                fromPort = rule.fromPort if rule?.fromPort else None
+                toPort = rule.toPort if rule?.toPort else None
+                icmpType = rule.icmpType if rule?.icmpType else None
+                icmpCode = rule.icmpCode if rule?.icmpCode else None
+                egress = False
+            }
+        }
+    }
+    for rule in publicInboundAclRules
+] if publicDedicatedNetworkAcl else []
+
+# Generate public subnet outbound ACL rules
+_publicOutboundAclRuleResources = [
+    ec2v1beta1.NetworkACLRule{
+        metadata = _metadata("public-outbound-rule-${rule.ruleNumber}") | {
+            name = "nacl-rule-public-out-${rule.ruleNumber}-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                networkAclIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "public"
+                    }
+                }
+                ruleNumber = rule.ruleNumber
+                protocol = _protocolToNumber(rule.protocol)
+                ruleAction = rule.ruleAction
+                cidrBlock = rule.cidrBlock
+                fromPort = rule.fromPort if rule?.fromPort else None
+                toPort = rule.toPort if rule?.toPort else None
+                icmpType = rule.icmpType if rule?.icmpType else None
+                icmpCode = rule.icmpCode if rule?.icmpCode else None
+                egress = True
+            }
+        }
+    }
+    for rule in publicOutboundAclRules
+] if publicDedicatedNetworkAcl else []
+
+# Generate Network ACL for private subnets (conditional)
+_privateNetworkAcl = [
+    ec2v1beta1.NetworkACL{
+        metadata = _metadata("private-nacl") | {
+            name = "nacl-private-${vpcName}"
+            labels = tags | privateAclTags | {
+                "subnet-type": "private"
+            }
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                subnetIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "private"
+                    }
+                }
+                tags = tags | privateAclTags | {
+                    Name = "nacl-private-${vpcName}"
+                }
+            }
+        }
+    }
+] if privateDedicatedNetworkAcl else []
+
+# Generate private subnet inbound ACL rules
+_privateInboundAclRuleResources = [
+    ec2v1beta1.NetworkACLRule{
+        metadata = _metadata("private-inbound-rule-${rule.ruleNumber}") | {
+            name = "nacl-rule-private-in-${rule.ruleNumber}-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                networkAclIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "private"
+                    }
+                }
+                ruleNumber = rule.ruleNumber
+                protocol = _protocolToNumber(rule.protocol)
+                ruleAction = rule.ruleAction
+                cidrBlock = rule.cidrBlock
+                fromPort = rule.fromPort if rule?.fromPort else None
+                toPort = rule.toPort if rule?.toPort else None
+                icmpType = rule.icmpType if rule?.icmpType else None
+                icmpCode = rule.icmpCode if rule?.icmpCode else None
+                egress = False
+            }
+        }
+    }
+    for rule in privateInboundAclRules
+] if privateDedicatedNetworkAcl else []
+
+# Generate private subnet outbound ACL rules
+_privateOutboundAclRuleResources = [
+    ec2v1beta1.NetworkACLRule{
+        metadata = _metadata("private-outbound-rule-${rule.ruleNumber}") | {
+            name = "nacl-rule-private-out-${rule.ruleNumber}-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                networkAclIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "private"
+                    }
+                }
+                ruleNumber = rule.ruleNumber
+                protocol = _protocolToNumber(rule.protocol)
+                ruleAction = rule.ruleAction
+                cidrBlock = rule.cidrBlock
+                fromPort = rule.fromPort if rule?.fromPort else None
+                toPort = rule.toPort if rule?.toPort else None
+                icmpType = rule.icmpType if rule?.icmpType else None
+                icmpCode = rule.icmpCode if rule?.icmpCode else None
+                egress = True
+            }
+        }
+    }
+    for rule in privateOutboundAclRules
+] if privateDedicatedNetworkAcl else []
+
 # Main composition logic - returns list of desired resources
 items = [
     # VPC Resource - Using typed EC2 VPC model
@@ -866,4 +1069,4 @@ items = [
             }
         }
     }
-] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations + _s3EndpointResource + _dynamodbEndpointResource + _dhcpOptionsResource + _dhcpOptionsAssociationResource
+] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations + _s3EndpointResource + _dynamodbEndpointResource + _dhcpOptionsResource + _dhcpOptionsAssociationResource + _publicNetworkAcl + _publicInboundAclRuleResources + _publicOutboundAclRuleResources + _privateNetworkAcl + _privateInboundAclRuleResources + _privateOutboundAclRuleResources

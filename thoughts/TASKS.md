@@ -479,6 +479,49 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ---
 
+### 2.6 Refactor: Split main.k into Modular Files
+**Priority**: P0 (BLOCKING)
+**Effort**: Medium
+**Description**: Split the monolithic main.k file into smaller, focused modules for better maintainability
+**Status**: NOT STARTED
+
+**Rationale**: The main.k file has grown significantly with VPC, subnets, IGW, NAT, routing, endpoints, and DHCP implementations. This makes it:
+- Hard to navigate and understand
+- Difficult to maintain and debug
+- Prone to merge conflicts
+- Challenging for code reviews
+
+**Tasks**:
+- [ ] Analyze current main.k structure and identify logical modules
+- [ ] Create separate module files:
+  - [ ] `functions/vpc/vpc.k` - VPC core resource
+  - [ ] `functions/vpc/subnets.k` - All subnet type generation
+  - [ ] `functions/vpc/gateways.k` - IGW and NAT Gateway logic
+  - [ ] `functions/vpc/routing.k` - Route tables and routes
+  - [ ] `functions/vpc/endpoints.k` - VPC Endpoints
+  - [ ] `functions/vpc/dhcp.k` - DHCP Options
+  - [ ] `functions/vpc/tags.k` - Tag merging utilities (if needed)
+- [ ] Ensure each module has clear, single responsibility
+- [ ] Update imports in main.k
+- [ ] Keep main.k as orchestration/entry point only
+- [ ] Run all tests: `up test run tests/test-*`
+- [ ] **Expected: ALL PASS (no behavior changes, pure refactoring)**
+- [ ] Verify project builds: `up project build`
+- [ ] Document module structure in comments
+
+**Acceptance Criteria**:
+- ✅ main.k < 200 lines (orchestration only)
+- ✅ Each module file < 300 lines
+- ✅ Clear separation of concerns
+- ✅ All 22 composition tests still pass (no regressions)
+- ✅ All E2E tests still pass
+- ✅ Project builds successfully
+- ✅ Code is more maintainable and readable
+
+**Notes**: This is pure refactoring - NO behavior changes. If tests fail, the refactoring is incorrect.
+
+---
+
 
 ## Phase 3: Enhanced Networking Features (P2)
 
@@ -554,50 +597,72 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ---
 
-### 3.2 Implement Network ACLs
+### 3.2 Implement Network ACLs ✅
 **Priority**: P2
 **Effort**: Medium
 **Description**: Add Network ACL support for subnet-level security
+**Status**: COMPLETED
 
 **Tasks**:
-- [ ] Create `functions/vpc/nacl.k` module
-- [ ] Implement NACL resource generation
-- [ ] Support custom inbound rules
-- [ ] Support custom outbound rules
-- [ ] Support ephemeral port ranges
-- [ ] Associate NACLs with subnets
-- [ ] Provide sensible defaults
+- [x] Implemented inline in main.k (no separate nacl.k module needed)
+- [x] Implement NACL resource generation (NetworkACL and NetworkACLRule)
+- [x] Support custom inbound rules for public and private subnets
+- [x] Support custom outbound rules for public and private subnets
+- [x] Support protocol mapping (tcp, udp, icmp, all)
+- [x] Associate NACLs with subnets using label selectors
+- [x] Add publicDedicatedNetworkAcl and privateDedicatedNetworkAcl toggles
+- [x] Add composition tests (test-nacl-public-dedicated, test-nacl-disabled)
+- [x] Add E2E test (e2etest-vpc-nacl)
+- [x] All tests passing (26 composition tests total)
 
 **AWS Resources**: `ec2.aws.upbound.io/v1beta1/NetworkACL`, `ec2.aws.upbound.io/v1beta1/NetworkACLRule`
 
+**Implementation Notes**:
+- All NACL logic implemented inline in functions/vpc/main.k
+- Conditional creation based on publicDedicatedNetworkAcl and privateDedicatedNetworkAcl flags (default: false)
+- NetworkACL uses vpcIdSelector for VPC attachment and subnetIdSelector for subnet associations
+- NetworkACLRule uses networkAclIdSelector with subnet-type labels for NACL attachment
+- Protocol mapping helper function converts protocol names (tcp, udp, icmp) to numbers (6, 17, 1)
+- Rules support ruleNumber, protocol, ruleAction, cidrBlock, fromPort, toPort, icmpType, icmpCode
+- Tags merged from common tags and subnet-specific ACL tags (publicAclTags, privateAclTags)
+
 **Acceptance Criteria**:
-- Custom NACL rules can be defined
-- Rules applied to correct subnets
-- Default rules are permissive
+- ✅ Custom NACL rules can be defined for public and private subnets
+- ✅ Rules applied to correct subnets via label selectors
+- ✅ Default behavior: no dedicated NACLs (AWS default NACL used)
+- ✅ All composition tests passing
+- ✅ E2E test created for Network ACLs
+
+**Test Results**:
+- ✅ test-nacl-public-dedicated - Public subnets with dedicated NACL and custom rules
+- ✅ test-nacl-disabled - No dedicated NACLs (default behavior)
+- ✅ All 26 composition tests passing (no regressions)
+- ✅ E2E test created (e2etest-vpc-nacl)
 
 ---
 
-### 3.2.1 Add Composition Tests for Network ACLs
+### 3.2.1 Add Composition Tests for Network ACLs ✅
 **Priority**: P2
 **Effort**: Small
 **Description**: Create composition tests for Network ACLs
-**Dependencies**: Task 3.2
+**Dependencies**: Task 3.2 ✅ COMPLETED
+**Status**: ✅ COMPLETED (completed as part of task 3.2)
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-nacl --language=kcl`
-- [ ] Test NACL creation with custom rules
-- [ ] Test inbound and outbound rules
-- [ ] Test NACL association with subnets
-- [ ] Test default permissive rules
-- [ ] Run test: `up test run tests/test-xvpc-nacl`
-- [ ] Fix any broken tests
-- [ ] Ensure all tests pass
+- [x] Generate test: `up test generate test-nacl-public-dedicated --language=kcl`
+- [x] Test NACL creation with custom rules for public subnets
+- [x] Test inbound and outbound rules
+- [x] Test NACL association with subnets via label selectors
+- [x] Generate test: `up test generate test-nacl-disabled --language=kcl`
+- [x] Test default behavior (no dedicated NACLs)
+- [x] Run tests: `up test run tests/test-nacl-*`
+- [x] All tests passing
 
 **Acceptance Criteria**:
-- Test validates NACL creation
-- Test validates rule configuration
-- Test validates subnet associations
-- All existing tests still pass
+- ✅ Test validates NACL creation
+- ✅ Test validates rule configuration
+- ✅ Test validates subnet associations
+- ✅ All existing tests still pass (26 total)
 
 ---
 
@@ -1164,12 +1229,13 @@ For someone picking up this project, start with these tasks in order:
   - ✅ Route tables and routing (task 2.5)
 - ✅ Phase 3: Enhanced Features (Partial)
   - ✅ VPC Endpoints - Gateway (task 3.1) - S3 and DynamoDB
+  - ✅ Network ACLs (task 3.2) - Public and Private subnets
   - ✅ DHCP Options (task 3.3)
-- ✅ All composition tests passing (22 tests)
-- ✅ E2E tests for all implemented features (7 tests created, 6 previously validated)
+- ✅ All composition tests passing (26 tests)
+- ✅ E2E tests for all implemented features (8 tests created)
 
 **Next Priority**:
-- Task 3.2: Network ACLs
+- Task 3.4: VPC Flow Logs
 
 ---
 
