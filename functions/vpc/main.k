@@ -85,6 +85,12 @@ dhcpOptionsNtpServers = oxrSpec.dhcpOptionsNtpServers or []
 dhcpOptionsNetbiosNameServers = oxrSpec.dhcpOptionsNetbiosNameServers or []
 dhcpOptionsNetbiosNodeType = oxrSpec.dhcpOptionsNetbiosNodeType if oxrSpec.dhcpOptionsNetbiosNodeType != None else None
 
+# Extract VPC Endpoints configuration
+enableS3Endpoint = oxrSpec.enableS3Endpoint if oxrSpec.enableS3Endpoint != None else False
+s3EndpointType = oxrSpec.s3EndpointType if oxrSpec.s3EndpointType else "Gateway"
+enableDynamodbEndpoint = oxrSpec.enableDynamodbEndpoint if oxrSpec.enableDynamodbEndpoint != None else False
+vpcEndpointTags = oxrSpec.vpcEndpointTags or {}
+
 # v2 Common Spec Configuration
 # Crossplane v2 requires providerConfigRef.kind and managementPolicies
 _defaultV2Spec = {
@@ -749,6 +755,54 @@ _intraRouteTableAssociations = [
     for i in range(len(intraSubnets))
 ] if len(intraSubnets) > 0 else []
 
+# Generate VPC Endpoints resources (conditional)
+
+# S3 Gateway Endpoint - Using typed EC2 VPCEndpoint model
+_s3EndpointResource = [
+    ec2v1beta1.VPCEndpoint{
+        metadata = _metadata("vpce-s3") | {
+            name = "vpce-s3-${vpcName}"
+            labels = tags
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                serviceName = "com.amazonaws.${region}.s3"
+                vpcEndpointType = s3EndpointType
+                tags = tags | vpcEndpointTags | {
+                    Name = "vpce-s3-${vpcName}"
+                }
+            }
+        }
+    }
+] if enableS3Endpoint else []
+
+# DynamoDB Gateway Endpoint - Using typed EC2 VPCEndpoint model
+_dynamodbEndpointResource = [
+    ec2v1beta1.VPCEndpoint{
+        metadata = _metadata("vpce-dynamodb") | {
+            name = "vpce-dynamodb-${vpcName}"
+            labels = tags
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                serviceName = "com.amazonaws.${region}.dynamodb"
+                vpcEndpointType = "Gateway"
+                tags = tags | vpcEndpointTags | {
+                    Name = "vpce-dynamodb-${vpcName}"
+                }
+            }
+        }
+    }
+] if enableDynamodbEndpoint else []
+
 # Generate DHCP Options resource (conditional) - Using typed EC2 VPCDHCPOptions model
 _dhcpOptionsResource = [
     ec2v1beta1.VPCDHCPOptions{
@@ -812,4 +866,4 @@ items = [
             }
         }
     }
-] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations + _dhcpOptionsResource + _dhcpOptionsAssociationResource
+] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations + _s3EndpointResource + _dynamodbEndpointResource + _dhcpOptionsResource + _dhcpOptionsAssociationResource
