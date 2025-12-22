@@ -77,6 +77,14 @@ createDatabaseNatGatewayRoute = oxrSpec.createDatabaseNatGatewayRoute if oxrSpec
 enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames != None else True
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
 
+# Extract DHCP Options configuration
+enableDhcpOptions = oxrSpec.enableDhcpOptions if oxrSpec.enableDhcpOptions != None else False
+dhcpOptionsDomainName = oxrSpec.dhcpOptionsDomainName if oxrSpec.dhcpOptionsDomainName else None
+dhcpOptionsDomainNameServers = oxrSpec.dhcpOptionsDomainNameServers or []
+dhcpOptionsNtpServers = oxrSpec.dhcpOptionsNtpServers or []
+dhcpOptionsNetbiosNameServers = oxrSpec.dhcpOptionsNetbiosNameServers or []
+dhcpOptionsNetbiosNodeType = oxrSpec.dhcpOptionsNetbiosNodeType if oxrSpec.dhcpOptionsNetbiosNodeType != None else None
+
 # v2 Common Spec Configuration
 # Crossplane v2 requires providerConfigRef.kind and managementPolicies
 _defaultV2Spec = {
@@ -741,6 +749,49 @@ _intraRouteTableAssociations = [
     for i in range(len(intraSubnets))
 ] if len(intraSubnets) > 0 else []
 
+# Generate DHCP Options resource (conditional) - Using typed EC2 VPCDHCPOptions model
+_dhcpOptionsResource = [
+    ec2v1beta1.VPCDHCPOptions{
+        metadata = _metadata("dhcp-options") | {
+            name = "dhcp-options-${vpcName}"
+            labels = tags
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                domainName = dhcpOptionsDomainName if dhcpOptionsDomainName else None
+                domainNameServers = dhcpOptionsDomainNameServers if len(dhcpOptionsDomainNameServers) > 0 else None
+                ntpServers = dhcpOptionsNtpServers if len(dhcpOptionsNtpServers) > 0 else None
+                netbiosNameServers = dhcpOptionsNetbiosNameServers if len(dhcpOptionsNetbiosNameServers) > 0 else None
+                netbiosNodeType = str(dhcpOptionsNetbiosNodeType) if dhcpOptionsNetbiosNodeType != None else None
+                tags = tags | {
+                    Name = "${vpcName}-dhcp-options"
+                }
+            }
+        }
+    }
+] if enableDhcpOptions else []
+
+# Generate DHCP Options Association resource (conditional) - Using typed EC2 VPCDHCPOptionsAssociation model
+_dhcpOptionsAssociationResource = [
+    ec2v1beta1.VPCDHCPOptionsAssociation{
+        metadata = _metadata("dhcp-association") | {
+            name = "dhcp-association-${vpcName}"
+        }
+        spec = _defaultV2Spec | {
+            forProvider = {
+                region = region
+                dhcpOptionsIdSelector = {
+                    matchControllerRef = True
+                }
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+            }
+        }
+    }
+] if enableDhcpOptions else []
+
 # Main composition logic - returns list of desired resources
 items = [
     # VPC Resource - Using typed EC2 VPC model
@@ -761,4 +812,4 @@ items = [
             }
         }
     }
-] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations
+] + _igwResource + _eipResources + _natGatewayResources + _publicSubnetResources + _privateSubnetResources + _databaseSubnetResources + _elasticacheSubnetResources + _redshiftSubnetResources + _intraSubnetResources + _publicRouteTable + _publicRoute + _publicRouteTableAssociations + _privateRouteTables + _privateRoutes + _privateRouteTableAssociations + _databaseRouteTable + _databaseRoute + _databaseRouteTableAssociations + _intraRouteTable + _intraRouteTableAssociations + _dhcpOptionsResource + _dhcpOptionsAssociationResource

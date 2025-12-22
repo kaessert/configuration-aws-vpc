@@ -129,6 +129,11 @@ spec:
                   default: false
 
                 # DHCP Options
+                enableDhcpOptions:
+                  type: boolean
+                  description: Enable custom DHCP options (if false, AWS default DHCP options are used)
+                  default: false
+
                 dhcpOptionsDomainName:
                   type: string
                   description: Custom domain name for DHCP options
