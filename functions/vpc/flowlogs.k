@@ -2,9 +2,10 @@
 VPC Flow Logs Module
 
 This module generates AWS VPC Flow Logs resources including:
-- CloudWatch Log Group for storing flow logs
-- IAM Role with trust policy for VPC Flow Logs service
-- IAM Role Policy granting CloudWatch Logs permissions
+- CloudWatch Log Group for storing flow logs (CloudWatch destination)
+- S3 Bucket for storing flow logs (S3 destination)
+- IAM Role with trust policy for VPC Flow Logs service (CloudWatch only)
+- IAM Role Policy granting CloudWatch Logs permissions (CloudWatch only)
 - FlowLog resource attached to VPC
 
 Based on terraform-aws-modules/terraform-aws-vpc flow logs implementation.
@@ -13,6 +14,7 @@ Based on terraform-aws-modules/terraform-aws-vpc flow logs implementation.
 import models.io.upbound.awsm.ec2.v1beta1 as ec2
 import models.io.upbound.awsm.cloudwatchlogs.v1beta1 as cloudwatchlogs
 import models.io.upbound.awsm.iam.v1beta1 as iam
+import models.io.upbound.awsm.s3.v1beta1 as s3
 
 
 # Generate CloudWatch Log Group for Flow Logs
@@ -118,7 +120,41 @@ _generateFlowLogRolePolicy = lambda name: str -> [any] {
 }
 
 
-# Generate FlowLog resource
+# Generate S3 Bucket for Flow Logs
+_generateFlowLogS3Bucket = lambda name: str, region: str, tags: {str:str} -> [any] {
+    """
+    Generate S3 Bucket for VPC Flow Logs
+
+    Args:
+        name: VPC name for resource naming
+        region: AWS region
+        tags: Resource tags
+
+    Returns:
+        List containing S3 Bucket resource
+    """
+    [
+        s3.Bucket {
+            metadata.name = "flowlog-bucket-${name}"
+            spec = {
+                providerConfigRef = {
+                    kind = "ProviderConfig"
+                    name = "default"
+                }
+                managementPolicies = ["*"]
+                forProvider = {
+                    region = region
+                    tags = tags | {
+                        Name = "flowlog-bucket-${name}"
+                    }
+                }
+            }
+        }
+    ]
+}
+
+
+# Generate FlowLog resource for CloudWatch destination
 _generateFlowLog = lambda name: str, region: str, trafficType: str, maxAggregationInterval: int, tags: {str:str} -> [any] {
     """
     Generate VPC FlowLog resource
@@ -166,8 +202,61 @@ _generateFlowLog = lambda name: str, region: str, trafficType: str, maxAggregati
 }
 
 
+# Generate FlowLog resource for S3 destination
+_generateFlowLogS3 = lambda name: str, region: str, trafficType: str, maxAggregationInterval: int, fileFormat: str, hiveCompatiblePartitions: bool, perHourPartition: bool, tags: {str:str} -> [any] {
+    """
+    Generate VPC FlowLog resource with S3 destination
+
+    Args:
+        name: VPC name for resource naming
+        region: AWS region
+        trafficType: Traffic type to capture (ACCEPT, REJECT, ALL)
+        maxAggregationInterval: Aggregation interval in seconds (60 or 600)
+        fileFormat: File format (plain-text or parquet)
+        hiveCompatiblePartitions: Use Hive-compatible prefixes
+        perHourPartition: Partition per hour
+        tags: Resource tags
+
+    Returns:
+        List containing FlowLog resource configured for S3
+    """
+    [
+        ec2.FlowLog {
+            metadata.name = "flowlog-${name}"
+            spec = {
+                providerConfigRef = {
+                    kind = "ProviderConfig"
+                    name = "default"
+                }
+                managementPolicies = ["*"]
+                forProvider = {
+                    vpcIdSelector = {
+                        matchControllerRef = True
+                    }
+                    region = region
+                    trafficType = trafficType
+                    maxAggregationInterval = maxAggregationInterval
+                    logDestinationType = "s3"
+                    logDestinationSelector = {
+                        matchControllerRef = True
+                    }
+                    destinationOptions = {
+                        fileFormat = fileFormat
+                        hiveCompatiblePartitions = hiveCompatiblePartitions
+                        perHourPartition = perHourPartition
+                    }
+                    tags = tags | {
+                        Name = "flowlog-${name}"
+                    }
+                }
+            }
+        }
+    ]
+}
+
+
 # Main function to generate all Flow Logs resources
-generateFlowLogs = lambda name: str, region: str, enableFlowLog: bool, createFlowLogCloudwatchLogGroup: bool, flowLogTrafficType: str, flowLogMaxAggregationInterval: int, tags: {str:str} -> [any] {
+generateFlowLogs = lambda name: str, region: str, enableFlowLog: bool, createFlowLogCloudwatchLogGroup: bool, createFlowLogS3Bucket: bool, flowLogTrafficType: str, flowLogMaxAggregationInterval: int, flowLogFileFormat: str, flowLogHiveCompatiblePartitions: bool, flowLogPerHourPartition: bool, tags: {str:str} -> [any] {
     """
     Generate all VPC Flow Logs resources
 
@@ -176,16 +265,24 @@ generateFlowLogs = lambda name: str, region: str, enableFlowLog: bool, createFlo
         region: AWS region
         enableFlowLog: Enable VPC Flow Logs
         createFlowLogCloudwatchLogGroup: Create CloudWatch Log Group
+        createFlowLogS3Bucket: Create S3 bucket
         flowLogTrafficType: Traffic type (ACCEPT, REJECT, ALL)
         flowLogMaxAggregationInterval: Aggregation interval (60 or 600)
+        flowLogFileFormat: S3 file format (plain-text or parquet)
+        flowLogHiveCompatiblePartitions: Use Hive-compatible prefixes
+        flowLogPerHourPartition: Partition per hour
         tags: Resource tags
 
     Returns:
-        List of all Flow Logs resources (Log Group, IAM Role, Role Policy, FlowLog)
+        List of all Flow Logs resources (CloudWatch or S3 destination)
     """
-    _generateFlowLogGroup(name, region, tags) + \
+    # CloudWatch destination: Log Group + IAM Role + Role Policy + FlowLog
+    (_generateFlowLogGroup(name, region, tags) + \
     _generateFlowLogRole(name, tags) + \
     _generateFlowLogRolePolicy(name) + \
     _generateFlowLog(name, region, flowLogTrafficType, flowLogMaxAggregationInterval, tags) \
-    if enableFlowLog and createFlowLogCloudwatchLogGroup else []
+    if enableFlowLog and createFlowLogCloudwatchLogGroup else []) + \
+    (_generateFlowLogS3Bucket(name, region, tags) + \
+    _generateFlowLogS3(name, region, flowLogTrafficType, flowLogMaxAggregationInterval, flowLogFileFormat, flowLogHiveCompatiblePartitions, flowLogPerHourPartition, tags) \
+    if enableFlowLog and createFlowLogS3Bucket else [])
 }

@@ -136,8 +136,12 @@ privateAclTags = oxrSpec.privateAclTags or {}
 # Extract Flow Logs configuration
 enableFlowLog = oxrSpec.enableFlowLog if oxrSpec.enableFlowLog != None else False
 createFlowLogCloudwatchLogGroup = oxrSpec.createFlowLogCloudwatchLogGroup if oxrSpec.createFlowLogCloudwatchLogGroup != None else False
+createFlowLogS3Bucket = oxrSpec.createFlowLogS3Bucket if oxrSpec.createFlowLogS3Bucket != None else False
 flowLogTrafficType = oxrSpec.flowLogTrafficType if oxrSpec.flowLogTrafficType else "ALL"
 flowLogMaxAggregationInterval = oxrSpec.flowLogMaxAggregationInterval if oxrSpec.flowLogMaxAggregationInterval != None else 600
+flowLogFileFormat = oxrSpec.flowLogFileFormat if oxrSpec.flowLogFileFormat else "plain-text"
+flowLogHiveCompatiblePartitions = oxrSpec.flowLogHiveCompatiblePartitions if oxrSpec.flowLogHiveCompatiblePartitions != None else False
+flowLogPerHourPartition = oxrSpec.flowLogPerHourPartition if oxrSpec.flowLogPerHourPartition != None else False
 
 # Extract subnet configuration
 publicSubnets = oxrSpec.publicSubnets or []
@@ -232,8 +236,12 @@ config = {
     # Flow Logs configuration
     enableFlowLog = enableFlowLog
     createFlowLogCloudwatchLogGroup = createFlowLogCloudwatchLogGroup
+    createFlowLogS3Bucket = createFlowLogS3Bucket
     flowLogTrafficType = flowLogTrafficType
     flowLogMaxAggregationInterval = flowLogMaxAggregationInterval
+    flowLogFileFormat = flowLogFileFormat
+    flowLogHiveCompatiblePartitions = flowLogHiveCompatiblePartitions
+    flowLogPerHourPartition = flowLogPerHourPartition
 }
 
 # ============================================================================
@@ -249,4 +257,4 @@ items = \
     endpoints.generateAllEndpoints(config) + \
     dhcp.generateAllDHCP(config) + \
     nacl.generateAllNACLs(config) + \
-    flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.tags)
+    flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.createFlowLogS3Bucket, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.flowLogFileFormat, config.flowLogHiveCompatiblePartitions, config.flowLogPerHourPartition, config.tags)

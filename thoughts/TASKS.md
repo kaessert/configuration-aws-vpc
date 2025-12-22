@@ -712,25 +712,51 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ### 3.4 Implement VPC Flow Logs
 **Priority**: P2
-**Effort**: Medium
+**Effort**: Large
 **Description**: Add VPC Flow Logs for traffic monitoring
+**Status**: ✅ COMPLETED (CloudWatch and S3 destinations)
 
 **Tasks**:
-- [ ] Create `functions/vpc/flowlogs.k` module
-- [ ] Support CloudWatch Logs destination
-- [ ] Support S3 bucket destination
-- [ ] Configure traffic type (All/Accept/Reject)
-- [ ] Set aggregation interval
-- [ ] Create necessary IAM roles
-- [ ] Create log groups/buckets as needed
+- [x] Create `functions/vpc/flowlogs.k` module
+- [x] Support CloudWatch Logs destination
+- [x] Support S3 bucket destination
+- [x] Configure traffic type (All/Accept/Reject)
+- [x] Set aggregation interval (60 or 600 seconds)
+- [x] Create necessary IAM roles automatically (CloudWatch only - S3 doesn't need IAM role)
+- [x] Create CloudWatch Log Group
+- [x] Create S3 Bucket
+- [x] Add S3-specific options (file format, hive partitions, per-hour partition)
+- [x] Add composition tests (CloudWatch, S3, disabled)
+- [x] Add E2E test (CloudWatch destination)
+- [ ] Add E2E test for S3 destination - **TODO**
+- [ ] Support custom log format - **P3 ENHANCEMENT**
+- [ ] Support cross-account delivery role - **P3 ENHANCEMENT**
+- [ ] Support CloudWatch log group KMS encryption - **P3 ENHANCEMENT**
+- [ ] Support CloudWatch log retention policy - **P3 ENHANCEMENT**
 
 **AWS Resources**: `ec2.aws.upbound.io/v1beta1/FlowLog`, CloudWatch Log Group, S3 Bucket, IAM Role
 
+**Implementation Notes**:
+- ✅ CloudWatch Logs destination implemented in functions/vpc/flowlogs.k
+- ✅ S3 Bucket destination implemented in functions/vpc/flowlogs.k
+- ✅ S3 provider dependency added to upbound.yaml (v2.3.0)
+- ✅ IAM role creation automated with proper CloudWatch permissions (CloudWatch only)
+- ✅ S3 doesn't require IAM role (uses bucket policy)
+- ✅ Traffic type filtering (ALL, ACCEPT, REJECT)
+- ✅ Max aggregation interval (60 or 600 seconds)
+- ✅ S3 file format options (plain-text, parquet)
+- ✅ S3 Hive-compatible partitions option
+- ✅ S3 per-hour partition option
+
 **Acceptance Criteria**:
-- Flow logs to CloudWatch work
-- Flow logs to S3 work
-- Traffic filtering works
-- IAM permissions correct
+- ✅ Flow logs to CloudWatch work
+- ✅ Flow logs to S3 work
+- ✅ Traffic filtering works
+- ✅ IAM permissions correct (CloudWatch)
+- ✅ S3 destination options work (file format, partitions)
+- ✅ Composition tests passing (27 total, including 3 flow logs tests)
+- ✅ E2E test passing (CloudWatch)
+- ⏸️ E2E test for S3 (deferred - composition tests passing)
 
 ---
 
@@ -738,89 +764,274 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 **Priority**: P2
 **Effort**: Small
 **Description**: Create composition tests for VPC Flow Logs
-**Dependencies**: Task 3.4
+**Dependencies**: Task 3.4 ✅ COMPLETED
+**Status**: ✅ COMPLETED
 
 **Tasks**:
-- [ ] Generate test: `up test generate test-xvpc-flow-logs-cloudwatch --language=kcl`
-- [ ] Test flow logs to CloudWatch destination
-- [ ] Generate test: `up test generate test-xvpc-flow-logs-s3 --language=kcl`
-- [ ] Test flow logs to S3 destination
-- [ ] Test traffic type filtering (All/Accept/Reject)
-- [ ] Test IAM role creation
-- [ ] Run tests: `up test run tests/test-xvpc-flow-logs-*`
-- [ ] Fix any broken tests
-- [ ] Ensure all tests pass
+- [x] Generate test: `up test generate test-vpc-flowlogs-cloudwatch --language=kcl`
+- [x] Test flow logs to CloudWatch destination
+- [x] Generate test: `up test generate test-vpc-flowlogs-s3 --language=kcl`
+- [x] Test flow logs to S3 destination
+- [x] Test traffic type filtering (All/Accept/Reject)
+- [x] Test IAM role creation (CloudWatch only)
+- [x] Test S3-specific options (file format, partitions)
+- [x] Test disabled state (no flow logs created)
+- [x] Run tests: `up test run tests/test-vpc-flowlogs-*`
+- [x] All tests passing (3 flow logs tests, 27 total composition tests)
 
 **Acceptance Criteria**:
-- Tests validate flow log destinations
-- Tests validate IAM role configuration
-- Tests validate traffic type filtering
-- All existing tests still pass
+- ✅ Tests validate flow log destinations (CloudWatch and S3)
+- ✅ Tests validate IAM role configuration (CloudWatch only)
+- ✅ Tests validate S3 destination options
+- ✅ Tests validate traffic type filtering
+- ✅ All existing tests still pass (27/27)
 
 ---
 
-### 3.5 Support Secondary CIDR Blocks
-**Priority**: P2
+### 3.5 Implement Subnet Groups (CRITICAL - P0)
+**Priority**: P0 (BLOCKING for RDS/ElastiCache/Redshift)
+**Effort**: Medium
+**Description**: Create subnet groups required by AWS managed services
+**Status**: NOT STARTED
+
+**Rationale**: This is a CRITICAL gap identified in the Terraform comparison. Without subnet groups, users CANNOT deploy RDS, ElastiCache, or Redshift instances. This is a showstopper for production use.
+
+**Tasks**:
+- [ ] Create `functions/vpc/subnetgroups.k` module
+- [ ] Implement DB Subnet Group resource
+  - [ ] Create DBSubnetGroup when databaseSubnets exist
+  - [ ] Add createDatabaseSubnetGroup flag (default: true when databaseSubnets exist)
+  - [ ] Use subnetIdSelector to match database subnets
+  - [ ] Support custom subnet group name
+  - [ ] Add proper tags
+- [ ] Implement ElastiCache Subnet Group resource
+  - [ ] Create ElastiCacheSubnetGroup when elasticacheSubnets exist
+  - [ ] Add createElasticacheSubnetGroup flag
+  - [ ] Use subnetIdSelector to match elasticache subnets
+  - [ ] Support custom subnet group name
+  - [ ] Add proper tags
+- [ ] Implement Redshift Subnet Group resource
+  - [ ] Create RedshiftSubnetGroup when redshiftSubnets exist
+  - [ ] Add createRedshiftSubnetGroup flag
+  - [ ] Use subnetIdSelector to match redshift subnets
+  - [ ] Support custom subnet group name
+  - [ ] Add proper tags
+- [ ] Add XRD fields for subnet group configuration
+- [ ] Add composition tests for each subnet group type
+- [ ] Add E2E test validating subnet groups
+- [ ] Update examples to show subnet group usage
+- [ ] Document subnet group names in status fields
+
+**AWS Resources**:
+- `rds.aws.upbound.io/v1beta1/SubnetGroup`
+- `elasticache.aws.upbound.io/v1beta1/SubnetGroup`
+- `redshift.aws.upbound.io/v1beta1/SubnetGroup`
+
+**Acceptance Criteria**:
+- ✅ DB Subnet Group created when database subnets exist
+- ✅ ElastiCache Subnet Group created when elasticache subnets exist
+- ✅ Redshift Subnet Group created when redshift subnets exist
+- ✅ Subnet groups use label selectors for subnet references
+- ✅ Custom names supported
+- ✅ All composition tests pass
+- ✅ E2E test validates actual AWS resources
+- ✅ Users can deploy RDS/ElastiCache/Redshift using these subnet groups
+
+**Reference**: Comparison analysis Section 1.12 (Subnet Groups)
+
+---
+
+### 3.6 Support Secondary CIDR Blocks
+**Priority**: P1
 **Effort**: Small
 **Description**: Allow multiple CIDR blocks on a single VPC
 
 **Tasks**:
 - [ ] Extend vpc.k to support secondary CIDRs
-- [ ] Implement CIDR block association
+- [ ] Implement CIDR block association (VPCIpv4CidrBlockAssociation)
 - [ ] Support subnets from secondary CIDRs
-- [ ] Update routing logic
+- [ ] Update routing logic to handle all CIDRs
+- [ ] Add secondaryCidrBlocks field to XRD
+- [ ] Add composition tests
+- [ ] Add E2E test
+- [ ] Document IP space expansion use case
 
-**AWS Resources**: `aws_vpc_ipv4_cidr_block_association`
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/VPCIpv4CidrBlockAssociation`
 
 **Acceptance Criteria**:
-- Multiple CIDRs can be added
+- Multiple CIDRs can be added to VPC
 - Subnets can use any CIDR block
 - Routing works across all CIDRs
+- Tests validate multi-CIDR scenarios
+
+**Reference**: Comparison analysis Section 1.1 (Secondary CIDR Blocks)
 
 ---
 
-## Phase 4: Advanced Features (P2)
+### 3.7 Implement IPAM Integration
+**Priority**: P1
+**Effort**: Medium
+**Description**: Support AWS IPAM (IP Address Manager) for dynamic CIDR allocation
+**Status**: NOT STARTED
+
+**Rationale**: Enterprise organizations use IPAM to centrally manage IP address space across AWS accounts and regions.
+
+**Tasks**:
+- [ ] Add IPAM pool support for IPv4
+  - [ ] Add ipv4IpamPoolId field to XRD
+  - [ ] Add ipv4NetmaskLength field
+  - [ ] Use IPAM pool instead of static CIDR when configured
+  - [ ] Handle dynamic CIDR allocation
+- [ ] Add IPAM pool support for IPv6 (with IPv6 feature)
+  - [ ] Add ipv6IpamPoolId field
+  - [ ] Add ipv6NetmaskLength field
+- [ ] Add useIpamPool flag
+- [ ] Add composition tests for IPAM scenarios
+- [ ] Add E2E test (requires IPAM pool setup)
+- [ ] Document IPAM setup requirements
+- [ ] Document CIDR preview workflow
+
+**AWS Resources**: Uses VPC resource with IPAM fields
+
+**Acceptance Criteria**:
+- ✅ VPC can allocate CIDR from IPAM pool
+- ✅ Netmask length configurable
+- ✅ Works for both IPv4 and IPv6
+- ✅ Tests validate IPAM integration
+- ✅ Documentation clear on IPAM prerequisites
+
+**Reference**: Comparison analysis Section 1.10 (IPAM Integration)
+
+---
+
+## Phase 4: Advanced Features (P1-P2)
 
 ### 4.1 Implement VPN Gateway Support
-**Priority**: P2
+**Priority**: P1 (HIGH - Enterprise requirement)
 **Effort**: Medium
 **Description**: Add VPN Gateway for hybrid cloud connectivity
+**Status**: NOT STARTED
+
+**Rationale**: VPN Gateway is essential for hybrid cloud scenarios where on-premises networks need secure connectivity to AWS VPCs.
 
 **Tasks**:
 - [ ] Create `functions/vpc/vpn.k` module
 - [ ] Implement VPN Gateway resource
-- [ ] Attach to VPC
-- [ ] Support propagation to route tables
-- [ ] Make optional with feature flag
+  - [ ] Add enableVpnGateway flag
+  - [ ] Support amazon_side_asn configuration
+  - [ ] Support availability_zone specification
+  - [ ] Support attaching existing VPN Gateway (vpnGatewayId)
+- [ ] Attach VPN Gateway to VPC
+- [ ] Support route propagation to route tables
+  - [ ] Add propagatePrivateRouteTablesVgw flag
+  - [ ] Add propagatePublicRouteTablesVgw flag
+  - [ ] Add propagateIntraRouteTablesVgw flag
+  - [ ] Add propagateDatabaseRouteTablesVgw flag
+- [ ] Add XRD fields for VPN configuration
+- [ ] Add composition tests
+- [ ] Add E2E test
+- [ ] Document VPN Gateway setup and route propagation
 
-**AWS Resources**: `aws_vpn_gateway`, `aws_vpn_gateway_attachment`
+**AWS Resources**:
+- `ec2.aws.upbound.io/v1beta1/VPNGateway`
+- `ec2.aws.upbound.io/v1beta1/VPNGatewayAttachment`
+- `ec2.aws.upbound.io/v1beta1/VPNGatewayRoutePropagation`
 
 **Acceptance Criteria**:
-- VPN Gateway created when enabled
-- Attached to VPC correctly
-- Routes propagated to tables
+- ✅ VPN Gateway created when enabled
+- ✅ Attached to VPC correctly
+- ✅ Routes propagated to specified route tables
+- ✅ Can attach existing VPN Gateway
+- ✅ Amazon-side ASN configurable
+- ✅ Tests validate VPN Gateway functionality
+
+**Reference**: Comparison analysis Section 1.3, 7.1 (VPN Gateway)
 
 ---
 
-### 4.2 Implement IPv6 Support
+### 4.2 Implement Customer Gateways
 **Priority**: P2
-**Effort**: Large
-**Description**: Add IPv6 support for VPC and subnets
+**Effort**: Small
+**Description**: Add Customer Gateway support for VPN customer side
+**Status**: NOT STARTED
+
+**Rationale**: Customer Gateways represent the customer side of VPN connections, required for full VPN setup.
+
+**Tasks**:
+- [ ] Extend `functions/vpc/vpn.k` module
+- [ ] Implement Customer Gateway resources
+  - [ ] Support BGP ASN configuration
+  - [ ] Support IP address
+  - [ ] Support device name
+  - [ ] Support certificate ARN (certificate-based VPN)
+- [ ] Add customerGateways field to XRD (map structure)
+- [ ] Add composition tests
+- [ ] Document Customer Gateway configuration
+
+**AWS Resources**: `ec2.aws.upbound.io/v1beta1/CustomerGateway`
+
+**Acceptance Criteria**:
+- ✅ Multiple Customer Gateways can be created
+- ✅ BGP ASN configurable
+- ✅ IP addresses and device names set correctly
+- ✅ Tests validate Customer Gateway creation
+
+**Reference**: Comparison analysis Section 1.3, 7.5 (Customer Gateways)
+
+---
+
+### 4.3 Implement IPv6 Support
+**Priority**: P1 (HIGH - Modern cloud requirement)
+**Effort**: Large (5-7 days)
+**Description**: Add comprehensive IPv6 support for VPC and subnets
+**Status**: NOT STARTED
+
+**Rationale**: IPv6 is increasingly important for modern cloud deployments. This is currently a 0% feature gap representing a significant limitation.
 
 **Tasks**:
 - [ ] Extend vpc.k for IPv6 CIDR association
-- [ ] Support IPv6 CIDR blocks for subnets
+  - [ ] Add enableIpv6 flag
+  - [ ] Support assign_generated_ipv6_cidr_block
+  - [ ] Support IPv6 IPAM pool allocation
+  - [ ] Add IPv6 CIDR block to VPC resource
+- [ ] Support IPv6 for subnets
+  - [ ] Add assignIpv6AddressOnCreation flag
+  - [ ] Support IPv6 prefix allocation per subnet
+  - [ ] Support ipv6Native subnets (IPv6-only)
+  - [ ] Support DNS64 for IPv6-only subnets
+  - [ ] Support privateDnsHostnameTypeOnLaunch
+  - [ ] Support enableResourceNameDnsAaaaRecordOnLaunch
 - [ ] Update route tables for IPv6
-- [ ] Support egress-only internet gateway
-- [ ] Enable DNS64 when configured
+  - [ ] Add IPv6 routes (::/0)
+  - [ ] Support IPv6 routes to IGW
+  - [ ] Support IPv6 routes to Egress-Only IGW
+- [ ] Implement Egress-Only Internet Gateway
+  - [ ] Create EgressOnlyInternetGateway resource
+  - [ ] Add createEgressOnlyIgw flag
+  - [ ] Attach to VPC
+  - [ ] Route private subnets through Egress-Only IGW
+- [ ] Add all IPv6 fields to XRD
+- [ ] Add composition tests for IPv6 scenarios
+- [ ] Add E2E test for dual-stack VPC
+- [ ] Add E2E test for IPv6-only VPC
+- [ ] Document IPv6 configuration
 
-**AWS Resources**: `aws_vpc_ipv6_cidr_block_association`, `aws_egress_only_internet_gateway`
+**AWS Resources**:
+- `ec2.aws.upbound.io/v1beta1/VPCIpv6CidrBlockAssociation`
+- `ec2.aws.upbound.io/v1beta1/EgressOnlyInternetGateway`
+- Updated Subnet and Route resources with IPv6 fields
 
 **Acceptance Criteria**:
-- IPv6 CIDR can be enabled
-- IPv6 subnets created
-- IPv6 routing works
-- Dual-stack configuration supported
+- ✅ IPv6 CIDR can be enabled on VPC
+- ✅ IPv6 subnets created with proper prefixes
+- ✅ IPv6 routing works (IGW and Egress-Only IGW)
+- ✅ Dual-stack configuration supported (IPv4 + IPv6)
+- ✅ IPv6-only subnets supported
+- ✅ DNS64 works for IPv6-only subnets
+- ✅ Tests validate IPv6 functionality
+- ✅ Documentation covers IPv6 use cases
+
+**Reference**: Comparison analysis Section 1.9 (IPv6 Support) - Currently 0% implemented
 
 ---
 

@@ -211,6 +211,22 @@ spec:
                   enum: ["ACCEPT", "REJECT", "ALL"]
                   default: "ALL"
 
+                flowLogFileFormat:
+                  type: string
+                  description: File format for S3 flow logs (plain-text or parquet)
+                  enum: ["plain-text", "parquet"]
+                  default: "plain-text"
+
+                flowLogHiveCompatiblePartitions:
+                  type: boolean
+                  description: Use Hive-compatible prefixes for S3 flow logs
+                  default: false
+
+                flowLogPerHourPartition:
+                  type: boolean
+                  description: Partition S3 flow logs per hour
+                  default: false
+
                 # Network Configuration
                 mapPublicIpOnLaunch:
                   type: boolean
