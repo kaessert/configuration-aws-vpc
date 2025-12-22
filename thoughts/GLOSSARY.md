@@ -80,48 +80,18 @@ This glossary defines project-specific terms and concepts. Use this when you enc
 - Sync cloud state with Kubernetes
 - Handle authentication (via ProviderConfig)
 
+**⚠️ CRITICAL**: KCL typed models for EC2 managed resources require `provider-aws-ec2` **v2.x or later**. Version v1.x does not properly generate KCL models.
+
+**See**: [KCL_REFERENCE.md → Part 3: Typed Models](KCL_REFERENCE.md#part-3-typed-models) for import paths and version requirements.
+
 ---
 
 ### ProviderConfig
-**Definition**: Configuration for how a provider authenticates with the cloud provider (AWS, Azure, GCP, etc.)
+**Definition**: Configures how a Crossplane provider authenticates with cloud APIs (AWS, Azure, GCP, etc.).
 
-**Authentication Methods**:
-1. **Web Identity Federation** (RECOMMENDED for E2E tests)
-   - Uses Upbound as OIDC identity provider
-   - NO static AWS credentials required
-   - Temporary credentials via IAM role assumption
-   - Most secure approach
+**E2E Tests**: Use web identity federation with IAM roles. NO static AWS credentials required.
 
-2. **Static Credentials** (NOT recommended)
-   - AWS access keys stored as secrets
-   - Requires credential rotation
-   - Higher security risk
-
-**Example - Web Identity (E2E Tests)**:
-```yaml
-apiVersion: aws.m.upbound.io/v1beta1  # Note: .m. for namespaced provider
-kind: ProviderConfig
-metadata:
-  name: default
-  namespace: default
-spec:
-  credentials:
-    source: Upbound  # Uses web identity federation
-    upbound:
-      webIdentity:
-        roleARN: arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
-```
-
-**How Web Identity Works**:
-1. Upbound acts as an OIDC identity provider
-2. IAM role trusts Upbound's identity provider
-3. Upbound obtains temporary AWS credentials automatically
-4. NO AWS access keys needed locally
-5. More secure than static credentials
-
-**Critical for**: E2E tests (authentication to real AWS)
-
-**Security note**: Always use web identity federation for E2E tests, NEVER static credentials!
+**See**: [TESTING_REFERENCE.md → Authentication](TESTING_REFERENCE.md#authentication-no-aws-credentials-required) for complete configuration details and examples.
 
 ---
 
@@ -140,31 +110,16 @@ spec:
 ---
 
 ### Control Plane
-**Definition**: A Kubernetes cluster running Crossplane and your configuration. The "brain" that manages infrastructure.
+**Definition**: A Kubernetes cluster running Crossplane and your configuration packages. Manages cloud infrastructure declaratively.
 
-**Types**:
-- **Local**: `up project run` (development)
-- **Spaces**: Upbound Cloud (production or E2E tests)
-- **Self-hosted**: Your own Kubernetes cluster with Crossplane
-
-**Components**:
-- Crossplane core
-- Providers (e.g., AWS provider)
-- Your configuration package
-- Composition functions
+**See**: [UPBOUND_REFERENCE.md → Platform Architecture](UPBOUND_REFERENCE.md#platform-architecture) for complete hierarchy and management details.
 
 ---
 
 ### Spaces
-**Definition**: Upbound's hosted control plane service. Provides production-ready control planes in the cloud.
+**Definition**: Upbound's hosted control plane service. Physical deployment locations for control planes (e.g., AWS US East 1).
 
-**Features**:
-- Ephemeral control planes for E2E tests
-- Production control planes with SLA
-- Multi-tenancy and RBAC
-- Automatic upgrades
-
-**Usage**: All E2E tests run on Spaces (auto-provisioned control planes)
+**See**: [UPBOUND_REFERENCE.md → Platform Architecture](UPBOUND_REFERENCE.md#platform-architecture) for complete details.
 
 
 ---
@@ -190,17 +145,23 @@ up project push    # Push to registry
 ---
 
 ### Function (Composition Function)
-**Definition**: Code that generates managed resources from an XR. The "logic" of your composition.
+**Definition**: Code that generates managed resources from an XR. The "logic" of your composition. Transforms user's desired state (XR) into cloud resources (managed resources).
 
 **Languages supported**: KCL, Python, Go
 
 **This project uses**: KCL
 
-**Location**: `functions/vpc/`
+**Location**: `functions/vpc/main.k` (and modular files in `functions/vpc/`)
 
-**Execution**: Runs in composition pipeline when XR is created/updated
+**Input**: User's XR (desired state)
 
-**Analogy**: Like a "template engine" that takes user input (XR) and outputs managed resources.
+**Output**: List of managed resources to create
+
+**Execution**: Runs in composition pipeline on control plane when XR is created/updated
+
+**Analogy**: Like a "template engine" or "compiler" that takes user input (XR) and outputs managed resources.
+
+**See**: [KCL_REFERENCE.md](KCL_REFERENCE.md) for implementation details and patterns.
 
 ---
 
@@ -293,6 +254,29 @@ vpc = awsv1beta1.VPC{ ... }
 - Local modules (from `utils/`)
 - Standard library
 
+**⚠️ CRITICAL**: Import paths follow directory structure in `.up/kcl/models/`, NOT Kubernetes API group convention. See [KCL_REFERENCE.md → Part 3: Typed Models](KCL_REFERENCE.md#part-3-typed-models) for correct import path patterns.
+
+---
+
+### Typed Models
+**Definition**: KCL type definitions generated from Crossplane provider CRDs. Enable type-safe resource creation with IDE autocomplete.
+
+**Location**: `.up/kcl/models/` (generated during build)
+
+**Example**:
+```kcl
+import models.io.upbound.aws.ec2.v1beta1 as ec2v1beta1
+
+subnet = ec2v1beta1.Subnet{
+    metadata.name = "my-subnet"
+    spec.forProvider.cidrBlock = "10.0.1.0/24"
+}
+```
+
+**⚠️ CRITICAL**: Requires provider v2.x or later (see Provider entry above).
+
+**See**: [KCL_REFERENCE.md → Part 3: Typed Models](KCL_REFERENCE.md#part-3-typed-models) for complete import paths, version requirements, and common mistakes.
+
 ---
 
 ## Testing Terms
@@ -313,23 +297,17 @@ vpc = awsv1beta1.VPC{ ... }
 ---
 
 ### E2E Test (End-to-End Test)
-**Definition**: Slow integration test that validates composition with REAL cloud resources. Creates actual AWS resources.
+**Definition**: Integration test that validates composition with REAL cloud resources. Creates actual AWS resources.
 
 **Speed**: 30-40 minutes per test (expected and acceptable)
 
 **What it tests**: Complete lifecycle (create → ready → delete), AWS behavior, provider integration
 
-**Authentication**: Uses Upbound's web identity federation - NO AWS credentials required locally
-
 **When to use**: Before merging to main, on labeled PRs, MANDATORY for all features
 
 **Tool**: `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing`
 
-**Critical**: MUST verify cleanup (orphaned resources cost money!)
-
-**Also called**: Integration test, system test
-
-**Common misconception**: E2E tests do NOT require AWS credentials to be configured locally. Upbound handles authentication via web identity federation automatically.
+**See**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for authentication setup and complete E2E testing guide.
 
 ---
 
@@ -503,20 +481,6 @@ spec.defaultConditions: ["Ready", "Synced"]
 **Our workflow**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
 
 **See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete workflow and best practices**
-
----
-
-
-### Composition Function
-**Definition**: KCL code that transforms an XR into managed resources. The "brain" of the composition.
-
-**Location**: `functions/vpc/main.k`
-
-**Input**: User's XR (desired state)
-
-**Output**: List of managed resources to create
-
-**Execution**: Runs in composition pipeline on control plane
 
 ---
 

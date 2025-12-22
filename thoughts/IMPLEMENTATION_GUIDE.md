@@ -12,7 +12,9 @@ For related topics, see:
 
 ## Overview
 
-This guide defines how to implement the AWS VPC configuration specification using Upbound and KCL. It provides architectural principles, development workflows, testing strategies, and code quality standards.
+This guide defines **HOW to implement** the AWS VPC configuration using Upbound and KCL. It provides architectural principles, development workflows, testing strategies, and code quality standards.
+
+**For WHAT to build** (features, requirements, AWS resources), see [SPECIFICATION.md](SPECIFICATION.md).
 
 ## Architectural Principles
 
@@ -121,29 +123,9 @@ project-root/
     └── e2etest-complete/
 ```
 
-### AWS Resources
-
-Resources created by this configuration:
-
-- `aws_vpc` - VPC
-- `aws_subnet` - Subnets (public, private, database, elasticache, redshift, intra)
-- `aws_internet_gateway` - Internet Gateway
-- `aws_nat_gateway` - NAT Gateway
-- `aws_eip` - Elastic IPs for NAT gateways
-- `aws_route_table` - Route tables
-- `aws_route` - Individual routes
-- `aws_route_table_association` - Route table associations
-- `aws_vpc_endpoint` - VPC endpoints (gateway and interface)
-- `aws_network_acl` - Network ACLs
-- `aws_network_acl_rule` - ACL rules
-- `aws_dhcp_options` - DHCP options sets
-- `aws_dhcp_options_association` - DHCP associations
-- `aws_flow_log` - VPC flow logs
-- `aws_cloudwatch_log_group` - CloudWatch log groups for flow logs
-- `aws_s3_bucket` - S3 buckets for flow logs
-- `aws_security_group` - Security groups for endpoints
-
 ### Module Responsibilities
+
+**For complete list of AWS resources created**, see [SPECIFICATION.md → AWS Resources Created](SPECIFICATION.md#aws-resources-created).
 
 **main.k** - Entry point and orchestration:
 - Access composition parameters (oxr, ocds, dxr, dcds)
@@ -202,9 +184,7 @@ Resources created by this configuration:
 
 ## Development Workflow
 
-This project follows **strict Test-Driven Development (TDD)**:
-
-🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+This project follows **strict Test-Driven Development (TDD)**. See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete workflow.
 
 ## Dependencies and Performance
 

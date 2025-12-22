@@ -2,7 +2,25 @@
 
 Welcome to the `thoughts/` directory! This is your central hub for all project documentation, planning, and technical knowledge.
 
-**New here? Start with [ONBOARDING.md](ONBOARDING.md)** - Complete setup and first task guide (2 hours)
+**New here?** Follow this path: [ONBOARDING.md](ONBOARDING.md) (setup) → [TASKS.md](TASKS.md) (what to work on) → [TDD_STRATEGY.md](TDD_STRATEGY.md) (how to work)
+
+---
+
+## Quick Topic Index
+
+| Topic | First Place to Look |
+|-------|---------------------|
+| **TDD workflow** | [TDD_STRATEGY.md](TDD_STRATEGY.md) |
+| **Git conventions** | [GIT_WORKFLOW.md](GIT_WORKFLOW.md) |
+| **Git commands** | [GIT_REFERENCE.md](GIT_REFERENCE.md) |
+| **Upbound operations** | [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) |
+| **Testing details** | [TESTING_REFERENCE.md](TESTING_REFERENCE.md) |
+| **KCL language** | [KCL_REFERENCE.md](KCL_REFERENCE.md) |
+| **Architecture** | [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) |
+| **Feature spec** | [SPECIFICATION.md](SPECIFICATION.md) |
+| **Term definitions** | [GLOSSARY.md](GLOSSARY.md) |
+| **What to work on** | [TASKS.md](TASKS.md) |
+| **First-time setup** | [ONBOARDING.md](ONBOARDING.md) |
 
 ---
 
@@ -117,8 +135,4 @@ Welcome to the `thoughts/` directory! This is your central hub for all project d
 
 ---
 
-**Ready to get started?** Head to [ONBOARDING.md](ONBOARDING.md) for your first steps!
-
-**Need testing reference?** Check [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for complete testing guide!
-
-**Looking for a specific topic?** Use the "Quick Navigation by Use Case" section at the top of this README.
+**New here?** Start with [ONBOARDING.md](ONBOARDING.md) to get productive in under 2 hours.

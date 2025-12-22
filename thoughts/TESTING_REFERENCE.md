@@ -20,6 +20,8 @@
 
 This document focuses on test schemas, patterns, and debugging strategies.
 
+**For TDD workflow, test strategy, and test pyramid**: See [TDD_STRATEGY.md](TDD_STRATEGY.md)
+
 For related topics, see:
 - **up CLI Commands**: [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
 - **KCL Language**: [KCL_REFERENCE.md](KCL_REFERENCE.md)
@@ -85,15 +87,9 @@ The test suite validates:
 
 ## Testing Types
 
-**For detailed workflow and test strategy, see [TDD_STRATEGY.md](TDD_STRATEGY.md)**
+**For test pyramid, test strategy, and TDD workflow, see [TDD_STRATEGY.md](TDD_STRATEGY.md)**
 
-### Quick Reference
-
-| Test Type | Speed | Command | Purpose |
-|-----------|-------|---------|---------|
-| **Composition Test** | Seconds | `up test run tests/test-*` | Validate KCL logic, resource generation |
-| **E2E Test** | 10-30 min | `up test run tests/e2etest-* --e2e` | Validate real AWS resources |
-| **Composition Render** | Instant | `up composition render <composition> <example>` | Preview resources before deployment |
+This reference covers the technical details of writing and running tests.
 
 ### Composition Rendering
 
@@ -533,14 +529,13 @@ up test run tests/e2etest-xvpc-simple \
 
 ### E2E Test Best Practices
 
-1. **Use realistic timeouts**: AWS resources can take 30-40 minutes (this is normal and expected)
+1. **Accept test duration**: E2E tests are slow (see Test Duration above) - do NOT skip E2E tests due to time concerns.
 2. **Run on Upbound Cloud**: Always use dedicated control plane group
 3. **Clean up resources**: Ensure skipDelete=false in CI
 4. **Use web identity for authentication**: ProviderConfig with `source: "Upbound"` and `webIdentity.roleARN` (NO static credentials needed)
-5. **Accept test duration**: 30-40 minutes is expected - do NOT skip E2E tests due to time concerns
-6. **Test critical paths**: E2E validates real cloud integration that composition tests cannot
-7. **Run in CI with labels**: Use "run-e2e-tests" label to trigger
-8. **ALWAYS specify control plane group**: Never rely on default context
+5. **Test critical paths**: E2E validates real cloud integration that composition tests cannot
+6. **Run in CI with labels**: Use "run-e2e-tests" label to trigger
+7. **ALWAYS specify control plane group**: Never rely on default context
 
 ---
 
@@ -636,176 +631,24 @@ kubectl get all
 
 ### IAM Role for E2E Tests
 
-**CRITICAL**: Use this IAM role for E2E tests on Upbound Cloud:
-
+**CRITICAL**: Use this IAM role for E2E tests:
 ```
 arn:aws:iam::609897127049:role/solutions-e2e-provider-aws
 ```
 
-**Authentication Method**: Web Identity Federation (NO static credentials)
-
-**How it works**:
-1. Upbound acts as an OIDC identity provider
-2. The IAM role trusts Upbound's identity provider
-3. ProviderConfig uses `source: "Upbound"` with `webIdentity.roleARN`
-4. Upbound automatically obtains temporary credentials via web identity federation
-5. NO AWS access keys or secret keys are needed locally
-
-**Correct ProviderConfig pattern**:
-
-```kcl
-{
-    apiVersion: "aws.m.upbound.io/v1beta1"  # Note: .m. suffix for namespaced provider
-    kind: "ProviderConfig"
-    metadata: {
-        name: "default"
-        namespace: "default"
-    }
-    spec: {
-        credentials: {
-            source: "Upbound"  # REQUIRED: Uses Upbound's web identity federation
-            upbound: {
-                webIdentity: {
-                    roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
-                }
-            }
-        }
-    }
-}
-```
-
-**Security Benefits**:
-- No static credentials to manage or rotate
-- Temporary credentials with automatic expiration
-- No risk of credential leakage
-- Follows AWS security best practices
+**See [Authentication: No AWS Credentials Required](#authentication-no-aws-credentials-required) section above for complete ProviderConfig setup and authentication details.**
 
 ---
 
 ## KCL Testing Patterns
 
-### Always Define XR Inline for Composition Tests
+For KCL-specific assertion patterns, test structure, and examples, see [KCL_REFERENCE.md → Part 8: Testing Patterns](KCL_REFERENCE.md#part-8-testing-patterns).
 
-**✅ GOOD** - XR defined inline:
-```kcl
-spec: {
-    xr: {
-        apiVersion: "..."
-        kind: "XVPC"
-        metadata: { name: "test" }
-        spec: { ... }
-    }
-}
-```
-
-**❌ BAD** - Separate XR file (adds complexity):
-```kcl
-spec: {
-    xrPath: "xr.yaml"  # Avoid unless necessary
-}
-```
-
-### Use Descriptive Test Names
-
-```kcl
-# Pattern: test-<resource-type>-<scenario>
-metadata.name: "test-xvpc-simple"
-metadata.name: "test-xvpc-public-subnets"
-metadata.name: "test-xvpc-nat-per-az"
-
-# E2E tests: e2etest-<resource-type>-<scenario>
-metadata.name: "e2etest-xvpc-basic"
-```
-
-### Set Appropriate Timeouts
-
-```kcl
-# Composition tests: 60-120 seconds (no real resources)
-timeoutSeconds: 60
-
-# E2E tests: 1800+ seconds (creates real AWS resources)
-timeoutSeconds: 1800  # 30 minutes
-cleanupTimeoutSeconds: 600  # 10 minutes
-```
-
-### Testing Conditional Resources
-
-```kcl
-# Test that IGW is created when createIgw: true
-xr: {
-    spec: {
-        createIgw: True
-        publicSubnets: ["10.0.1.0/24"]
-    }
-}
-assertResources: [
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "InternetGateway"
-        metadata: { name: "igw-test-vpc" }  # Must match generated name
-    }
-]
-
-# Test that IGW is NOT created when createIgw: false
-# (assertResources should NOT include InternetGateway)
-```
-
-### Testing Resource Counts
-
-```kcl
-# Test correct number of subnets across AZs
-xr: {
-    spec: {
-        azs: ["us-west-2a", "us-west-2b", "us-west-2c"]
-        publicSubnets: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-    }
-}
-assertResources: [
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "Subnet"
-        metadata: { name: "subnet-public-test-vpc-us-west-2a" }
-    },
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "Subnet"
-        metadata: { name: "subnet-public-test-vpc-us-west-2b" }
-    },
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "Subnet"
-        metadata: { name: "subnet-public-test-vpc-us-west-2c" }
-    }
-]
-```
-
-### Testing Tag Propagation
-
-```kcl
-xr: {
-    spec: {
-        tags: {
-            Environment: "production"
-            Team: "platform"
-        }
-    }
-}
-assertResources: [
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "VPC"
-        metadata: { name: "vpc-test-vpc" }
-        spec: {
-            forProvider: {
-                tags: {
-                    Environment: "production"
-                    Team: "platform"
-                }
-            }
-        }
-    }
-]
-```
+**Quick reference**:
+- Always define XR inline for composition tests
+- Use descriptive test names: `test-<resource>-<scenario>`
+- Set appropriate timeouts: 60-120s for composition, 1800s+ for E2E
+- See KCL_REFERENCE.md for complete patterns and examples
 
 ---
 
@@ -1003,34 +846,7 @@ You don't need to specify ALL fields - only the ones you want to assert:
 
 #### ProviderConfig Configuration for E2E Tests
 
-**CRITICAL**: For Crossplane v2 with namespaced claims, ProviderConfig must have:
-
-1. API version: `aws.m.upbound.io/v1beta1` (note the `.m.` suffix)
-2. Metadata namespace: `namespace: "default"` (MANDATORY)
-3. Credentials source: `source: "Upbound"`
-4. AssumeRoleChain with IAM role (never static credentials)
-
-**Complete working example**:
-```kcl
-{
-    apiVersion: "aws.m.upbound.io/v1beta1"
-    kind: "ProviderConfig"
-    metadata: {
-        name: "default"
-        namespace: "default"  # REQUIRED!
-    }
-    spec: {
-        credentials: {
-            source: "Upbound"  # REQUIRED for Spaces
-        }
-        assumeRoleChain: [
-            {
-                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
-            }
-        ]
-    }
-}
-```
+**See [Authentication: No AWS Credentials Required](#authentication-no-aws-credentials-required) section above for complete ProviderConfig configuration and requirements.**
 
 #### Console Troubleshooting (E2E Tests)
 

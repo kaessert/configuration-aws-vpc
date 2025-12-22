@@ -6,13 +6,9 @@ Welcome! This guide will get you productive in under 2 hours.
 
 ## Overview
 
-**Goal**: Build an Upbound control plane configuration providing feature parity with [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc).
+This project builds an Upbound control plane configuration for AWS VPC with complete feature parity to the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module.
 
-**Tech Stack**: Crossplane, Upbound, KCL, AWS Upbound Providers
-
-**Current Status**: Foundation complete, core features implemented (VPC, subnets, NAT, routing), E2E tests in progress
-
-**Development Approach**: Strict Test-Driven Development (TDD) with mandatory End-to-End (E2E) tests
+**See [../CLAUDE.md](../CLAUDE.md) for complete project overview, architecture, and requirements.**
 
 ---
 
@@ -103,10 +99,8 @@ up project build
 
 ## Common Mistakes to Avoid
 
-**See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete TDD best practices, common pitfalls, and the mandatory workflow.**
-
 **Quick reminders**:
-- ✅ Follow TDD workflow: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+- ✅ Follow TDD workflow (RED → GREEN → REFACTOR → E2E → COMMIT)
 - ✅ E2E tests are MANDATORY for all features
 - ✅ Update [TASKS.md](TASKS.md) as you work
 
@@ -129,14 +123,6 @@ Before you start coding, verify:
 ---
 
 ## Getting Help
-
-### Quick Links
-
-- **Documentation Index**: [README.md](README.md)
-- **Testing Guide**: [TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)
-- **Git Guide**: [GIT_WORKFLOW.md → Commit Conventions](GIT_WORKFLOW.md#1-commit-message-conventions)
-- **Tasks**: [TASKS.md → Current Status](TASKS.md#current-status)
-- **Glossary**: [GLOSSARY.md](GLOSSARY.md)
 
 ### External Resources
 
@@ -162,7 +148,7 @@ up project build
 1. ✅ Complete setup (above)
 2. ✅ Read 4 essential docs (75 minutes)
 3. ✅ Pick a task from [TASKS.md → Current Status](TASKS.md#current-status)
-4. ✅ Complete your first task following [TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)
+4. ✅ Complete your first task using TDD workflow
 5. ✅ Make your first commit following [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits)
 
 **This Week**:
@@ -199,4 +185,4 @@ up project build
 
 ---
 
-**Welcome to the team!** Now read [TDD_STRATEGY.md](TDD_STRATEGY.md) and start your first task from [TASKS.md](TASKS.md).
+**Welcome to the team!** Now that setup is complete, check [TASKS.md](TASKS.md) to see what to work on next.

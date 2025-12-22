@@ -2,7 +2,9 @@
 
 ## Overview
 
-This document defines the complete specification for building a **drop-in replacement** for the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module using Upbound and KCL.
+This document defines **WHAT to build**: the complete specification for building a **drop-in replacement** for the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module using Upbound and KCL.
+
+**For HOW to build it** (architecture, patterns, code organization), see [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md).
 
 ### Project Goal
 
@@ -128,6 +130,34 @@ The terraform-aws-vpc module is a comprehensive, production-ready Terraform modu
 #### Flow Logs
 - `vpc_flow_log_id`: Flow Log ID
 - `vpc_flow_log_arn`: Flow Log ARN
+
+---
+
+## AWS Resources Created
+
+This configuration creates the following AWS resources (managed by Crossplane):
+
+- `aws_vpc` - VPC
+- `aws_subnet` - Subnets (public, private, database, elasticache, redshift, intra)
+- `aws_internet_gateway` - Internet Gateway
+- `aws_nat_gateway` - NAT Gateway
+- `aws_eip` - Elastic IPs for NAT gateways
+- `aws_route_table` - Route tables
+- `aws_route` - Individual routes
+- `aws_route_table_association` - Route table associations
+- `aws_vpc_endpoint` - VPC endpoints (gateway and interface)
+- `aws_network_acl` - Network ACLs
+- `aws_network_acl_rule` - ACL rules
+- `aws_dhcp_options` - DHCP options sets
+- `aws_dhcp_options_association` - DHCP associations
+- `aws_flow_log` - VPC flow logs
+- `aws_cloudwatch_log_group` - CloudWatch log groups for flow logs
+- `aws_s3_bucket` - S3 buckets for flow logs
+- `aws_security_group` - Security groups for endpoints
+
+**See**: [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for module-level implementation details.
+
+---
 
 ## Field Mapping
 

@@ -2,8 +2,10 @@
 
 ## Related Documentation
 
+This document covers TDD workflow and strategy. For technical testing details, see [TESTING_REFERENCE.md](TESTING_REFERENCE.md).
+
 For related topics, see:
-- **Test Schemas & Patterns**: [TESTING_REFERENCE.md → Test Examples](TESTING_REFERENCE.md#complete-composition-test-example)
+- **Test Schemas & Patterns**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
 - **up CLI Commands**: [UPBOUND_REFERENCE.md → Testing Commands](UPBOUND_REFERENCE.md#testing)
 - **Git Workflows**: [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits)
 
@@ -96,14 +98,11 @@ With comprehensive tests:
 - 💰 Minimal cost (real AWS resources, but test duration is intentional)
 - 🌐 Complete (full lifecycle)
 - ✅ Final validation
-- ⚠️ **MANDATORY** - Required before marking feature complete
 - 🔒 **NO AWS credentials needed** - uses Upbound web identity federation
 
-**When to Write**: **MANDATORY** - After composition tests pass, for ALL major features
+**When to Write**: After composition tests pass, for ALL major features
 
-**CRITICAL**: E2E tests are NO LONGER optional. Every significant feature (VPC, subnets, NAT, routing, etc.) MUST have E2E test coverage. Composition tests validate KCL logic, but E2E tests validate real AWS behavior.
-
-**Authentication**: E2E tests use Upbound's web identity federation - NO static AWS credentials required. Upbound automatically handles authentication via IAM role assumption.
+**Authentication**: See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for complete E2E testing guide.
 
 **Example**:
 ```bash
@@ -231,54 +230,14 @@ up test run tests/test-*
 #### Step 8: Write E2E Test (MANDATORY)
 
 ```bash
-# For ALL major features (VPC, subnets, NAT, routing, etc.):
+# Generate E2E test
 up test generate e2etest-xvpc-<feature> --e2e --language=kcl
 
-# Edit: tests/e2etest-xvpc-<feature>/main.k
-# - Use real AWS resources
-# - Set realistic timeout (2400 seconds / 40 minutes) - this is expected and acceptable
-# - Add ProviderConfig with web identity federation (see example below)
-# - Set skipDelete: false (ensure cleanup)
-# - Set validate: true
-# - Add defaultConditions: ["Ready", "Synced"]
-
-# ProviderConfig Example (ALWAYS use this pattern):
-extraResources: [
-    {
-        apiVersion: "aws.m.upbound.io/v1beta1"
-        kind: "ProviderConfig"
-        metadata: {
-            name: "default"
-            namespace: "default"
-        }
-        spec: {
-            credentials: {
-                source: "Upbound"  # Uses web identity federation - NO AWS credentials needed
-                upbound: {
-                    webIdentity: {
-                        roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
-                    }
-                }
-            }
-        }
-    }
-]
-
-# Run locally (requires up login)
-up login
+# Run locally
 up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
-
-# Or in CI with label: "run-e2e-tests"
-# Wait for test to complete (30-40 minutes is normal)
-# Verify:
-# ✅ Resources created in AWS
-# ✅ Resources reach Ready/Synced state
-# ✅ Resources cleaned up after test
 ```
 
-**CRITICAL**: Do NOT skip this step. E2E tests are MANDATORY.
-
-**Authentication Note**: E2E tests use Upbound's web identity federation. NO AWS static credentials (access keys) are required. Upbound handles authentication automatically via the IAM role specified in the ProviderConfig.
+**See [TESTING_REFERENCE.md → E2E Tests](TESTING_REFERENCE.md#e2e-tests) for complete E2E test setup, test duration expectations, ProviderConfig configuration, and authentication details.**
 
 #### Step 9: Commit (Only When ALL Tests Pass)
 
@@ -336,29 +295,9 @@ Reference:
 
 ### 2. Complete Assertions
 
-Test ALL critical fields:
+Test ALL critical fields in assertResources.
 
-```kcl
-assertResources: [
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "Subnet"
-        metadata.name: "subnet-public-test-vpc-us-west-2a"
-        spec.forProvider: {
-            # ✅ Assert all critical fields
-            vpcIdSelector.matchControllerRef: True
-            region: "us-west-2"
-            availabilityZone: "us-west-2a"
-            cidrBlock: "10.0.1.0/24"
-            mapPublicIpOnLaunch: True
-            tags: {
-                Environment: "test"
-                Type: "public"
-            }
-        }
-    }
-]
-```
+**See [TESTING_REFERENCE.md → Key Learnings](TESTING_REFERENCE.md#key-learnings) for complete assertResources syntax, common mistakes, and detailed examples.**
 
 ### 3. Realistic Inputs
 
@@ -436,29 +375,6 @@ kubectl get xvpc test-vpc -o json | jq '.status' > upbound-outputs.json
 # Compare
 diff terraform-outputs.json upbound-outputs.json
 # Should be identical (except resource IDs)
-```
-
-## CI/CD Integration
-
-### Composition Tests (Every PR)
-
-```yaml
-# .github/workflows/composition-test.yaml
-- name: Run Composition Tests
-  run: up test run tests/test-*
-
-# MUST pass for PR to merge
-```
-
-### E2E Tests (Labeled PRs)
-
-```yaml
-# .github/workflows/e2e.yaml
-# Triggered by label: "run-e2e-tests"
-- name: Run E2E Tests
-  run: up test run tests/e2etest-* --e2e
-
-# SHOULD pass for production releases
 ```
 
 ## Common Pitfalls
