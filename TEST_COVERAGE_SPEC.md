@@ -17,8 +17,8 @@ This document defines the required test coverage for the AWS VPC Configuration P
 ## Test Counts
 
 - **Composition Tests**: 32 tests (all passing ✅)
-- **E2E Tests**: 10 tests (structures verified ✅)
-- **Total**: 42 tests
+- **E2E Tests**: 11 tests (structures verified ✅)
+- **Total**: 43 tests
 
 ---
 
@@ -297,7 +297,7 @@ This document defines the required test coverage for the AWS VPC Configuration P
   - Validates tags
 
 **Required E2E Tests**:
-- ✅ `test-e2etest-vpc-secondary-cidr` - Secondary CIDR in real AWS
+- ✅ `e2etest-vpc-secondary-cidr` - Secondary CIDR in real AWS
 
 **Coverage**: 100% ✅
 
@@ -322,7 +322,7 @@ up test run tests/test-*
 up test run tests/e2etest-* --e2e
 ```
 
-**Expected result**: All 10 E2E tests pass (each takes 30-40 minutes)
+**Expected result**: All 11 E2E tests pass (each takes 30-40 minutes)
 
 **IMPORTANT**: E2E tests use web identity (no static credentials):
 - ProviderConfig uses `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
@@ -364,7 +364,7 @@ up test run tests/e2etest-* --e2e
 | **Subnet Groups - DB** | test-test-subnetgroup-db | e2etest-e2etest-vpc-subnetgroups | ✅ 100% |
 | **Subnet Groups - ElastiCache** | test-test-subnetgroup-elasticache | e2etest-e2etest-vpc-subnetgroups | ✅ 100% |
 | **Subnet Groups - Redshift** | test-test-subnetgroup-redshift | e2etest-e2etest-vpc-subnetgroups | ✅ 100% |
-| **Secondary CIDR** | test-test-vpc-secondary-cidr | test-e2etest-vpc-secondary-cidr | ✅ 100% |
+| **Secondary CIDR** | test-test-vpc-secondary-cidr | e2etest-vpc-secondary-cidr | ✅ 100% |
 
 ---
 
@@ -378,7 +378,7 @@ up test run tests/e2etest-* --e2e
 
 ### Test Maintenance
 1. **Run composition tests** before every commit (fast, < 10 min)
-2. **Run E2E tests** before major releases (slow, ~6-8 hours total)
+2. **Run E2E tests** before major releases (slow, ~6-9 hours total)
 3. **Add new tests** when adding features (TDD: test first!)
 
 ### Test Improvements (Nice to Have)
@@ -410,7 +410,7 @@ All tests must:
 
 **Test coverage status**: ✅ EXCELLENT
 - 32 composition tests covering all features
-- 10 E2E tests validating critical paths
+- 11 E2E tests validating critical paths
 - 100% Phase 1-3 feature coverage
 - All tests passing (verified via sampling)
 - TDD policy compliance: ✅

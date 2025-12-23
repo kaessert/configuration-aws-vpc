@@ -137,9 +137,22 @@
 
 ---
 
+### ✅ e2etest-vpc-secondary-cidr
+- ✅ ProviderConfig uses web identity (roleARN specified)
+- ✅ Timeout >= 1800 seconds (2400 seconds = 40 minutes)
+- ✅ Crossplane version specified (2.0.2-up.5)
+- ✅ skipDelete: false (cleanup enabled)
+- ✅ Namespace specified for resources (default)
+- ✅ defaultConditions: ["Ready", "Synced"]
+- ✅ cleanupTimeoutSeconds specified (600 seconds)
+
+**Features tested**: Secondary CIDR blocks, IP space expansion, subnets across multiple CIDRs
+
+---
+
 ## Summary
 
-- **Total E2E tests**: 10
+- **Total E2E tests**: 11
 - **All properly structured**: ✅ YES
 - **All use web identity**: ✅ YES
 - **All have proper timeouts**: ✅ YES (1800-3000 seconds)
@@ -170,7 +183,7 @@ up test run tests/e2etest-vpc-basic --e2e
 
 ### Timing:
 - Each E2E test takes 30-50 minutes
-- Total runtime for all 10 tests: ~6-8 hours
+- Total runtime for all 11 tests: ~6-9 hours
 - Run E2E tests before major releases only
 
 ### AWS Credentials:
