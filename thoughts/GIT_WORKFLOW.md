@@ -1,6 +1,6 @@
 # Git Workflow Guide
 
-A comprehensive guide to git workflows and commit conventions for the AWS VPC Configuration for Upbound project. For command syntax reference, see [git-reference.md](git-reference.md).
+A comprehensive guide to git workflows and commit conventions for the AWS VPC Configuration for Upbound project. For command syntax reference, see [GIT_REFERENCE.md](GIT_REFERENCE.md).
 
 ---
 
@@ -263,36 +263,12 @@ main (protected)
 
 ### Using gh CLI
 
-**Basic PR creation**:
-```bash
-# Create PR interactively
-gh pr create
+**Basic commands**:
+- `gh pr create` - Interactive creation
+- `gh pr create --title "..." --body "..."` - With title and body
+- Use heredoc (`cat <<'EOF' ... EOF`) for formatted PR bodies
 
-# Create PR with title and body
-gh pr create --title "Add NAT Gateway support" --body "Implements single and per-AZ NAT strategies"
-```
-
-**PR with formatted body**:
-```bash
-gh pr create --title "Add NAT Gateway support" --body "$(cat <<'EOF'
-## Summary
-- Implement single NAT Gateway strategy
-- Implement per-AZ NAT Gateway strategy
-- Add composition tests for both strategies
-- Add E2E test for NAT validation
-
-## Test Plan
-- Run composition tests: up test run tests/test-xvpc-nat-*
-- Run E2E test: up test run tests/e2etest-xvpc-nat-single --e2e
-- Verify AWS resources created and cleaned up
-
-## Related Issues
-Closes #42
-EOF
-)"
-```
-
-**Advanced PR options**:
+**Options**:
 ```bash
 # Create PR with reviewers
 gh pr create --title "Fix NAT bug" --body "..." --reviewer user1,user2
@@ -435,49 +411,23 @@ git branch -d fix/subnet-cidr
 
 **For complete TDD workflow, see [TDD_STRATEGY.md](TDD_STRATEGY.md).**
 
-**Summary**: 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
+**Summary**: Follow the 🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT cycle. Work locally through entire TDD cycle, then commit once when all tests pass.
+
+**Key Points**:
+- Work locally through RED → GREEN → REFACTOR without committing
+- Run E2E test before ANY commit (30-40 minutes, mandatory)
+- Commit ONLY after E2E passes
+- Every commit must be production-ready and E2E validated
 
 ```bash
-# 1. Create feature branch
+# Example: Adding VPC Endpoints feature
 git checkout -b feat/add-vpc-endpoints
-
-# 2-5. Follow TDD workflow LOCALLY (do NOT commit yet):
-#   - Write failing test (RED)
-#   - Make test pass (GREEN)
-#   - Refactor code (REFACTOR)
-#   - Run composition tests: up test run tests/test-*
-
-# 6. Run E2E test (MANDATORY - 30-40 minutes)
-up test run tests/e2etest-xvpc-endpoints --e2e
-
-# 7. Commit ONLY after E2E passes
+# ... follow TDD cycle locally (see TDD_STRATEGY.md) ...
+# ... run E2E test (mandatory) ...
 git add .
-git commit -m "feat: add VPC Endpoints support
-
-- Add composition test for S3 and DynamoDB gateway endpoints
-- Implement endpoint creation in functions/vpc/endpoints.k
-- Add E2E test validating endpoint connectivity
-- All tests passing (composition + E2E)
-"
-
-# 8. Push and create PR
+git commit -m "feat: add VPC Endpoints support"
 git push -u origin feat/add-vpc-endpoints
-gh pr create --title "feat: add VPC Endpoints support" \
-  --body "Implements VPC Endpoints for S3 and DynamoDB"
-
-# 9. After merge, clean up
-git checkout main
-git pull
-git branch -d feat/add-vpc-endpoints
 ```
-
-**CRITICAL**:
-- ✅ **DO**: Work locally through RED → GREEN → REFACTOR without committing
-- ✅ **DO**: Run E2E test before ANY commit (30-40 minutes)
-- ✅ **DO**: Commit ONLY after E2E passes
-- ❌ **DON'T**: Make "work in progress" commits without E2E validation
-- ❌ **DON'T**: Skip E2E tests to "commit faster"
-- ❌ **DON'T**: Commit anything until E2E test passes
 
 ---
 
@@ -919,7 +869,7 @@ git reset --hard HEAD@{N}
 
 ## See Also
 
-- [git-reference.md](git-reference.md) - Command syntax reference
+- [GIT_REFERENCE.md](GIT_REFERENCE.md) - Command syntax reference
 - [TDD Strategy](../TDD_STRATEGY.md) - Test-driven development workflow
 - [Testing Overview](../testing/TESTING_OVERVIEW.md) - Testing strategy
 - [GETTING_STARTED](../GETTING_STARTED.md) - First-time setup

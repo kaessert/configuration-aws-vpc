@@ -289,18 +289,24 @@ up dep update-cache
 ### Testing
 
 ```bash
-# Run tests for project
+# Run all tests
 up test run
 
 # Run specific test
 up test run <test-name>
 
-# Run E2E tests (requires control plane group)
+# Run E2E test (creates temporary control plane in group)
 up test run <test-name> --e2e --control-plane-group=<group-name>
+
+# Generate test
+up test generate <test-name> --language=kcl
+up test generate <test-name> --e2e --language=kcl  # E2E test
 
 # List tests
 up test list
 ```
+
+**Testing Workflows**: See [TESTING_REFERENCE.md](../TESTING_REFERENCE.md) for complete test strategies, E2E workflows, and debugging.
 
 ### Function Management
 
@@ -788,29 +794,7 @@ up controlplane get app-ctp -g production
 up controlplane list -g production
 ```
 
-### Workflow 6: Run E2E Tests with Dedicated Group
-
-```bash
-# 1. Create a group for testing (one-time setup)
-up group create claude-testing
-
-# 2. Run E2E test (creates temporary control plane)
-up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing
-
-# 3. If test fails and you need to debug, keep the control plane:
-up test run tests/e2etest-xvpc-basic --e2e \
-  --control-plane-group=claude-testing \
-  --skip-delete
-
-# 4. Debug the control plane
-up controlplane list -g claude-testing
-up controlplane get <test-ctp-name> -g claude-testing
-
-# 5. Clean up when done
-up controlplane delete <test-ctp-name> -g claude-testing
-```
-
-### Workflow 7: Clean Up Old Resources
+### Workflow 6: Clean Up Old Resources
 
 ```bash
 # 1. List all control planes to find old ones
@@ -829,7 +813,7 @@ up controlplane delete old-ctp -g old-group
 up group delete old-group
 ```
 
-### Workflow 8: Multi-Environment Setup
+### Workflow 7: Multi-Environment Setup
 
 ```bash
 # 1. Create groups for each environment
@@ -860,37 +844,6 @@ up controlplane list -A
 
 # 4. Mark production group as protected (if available)
 # Note: Protection might require console or API access
-```
-
-### Workflow 9: Monitor E2E Test
-
-```bash
-# 1. Run E2E test from CLI
-up test run tests/e2etest-xvpc-basic --e2e --control-plane-group=claude-testing
-
-# 2. Monitor with kubectl (in separate terminal)
-kubectl get managed -w
-kubectl get vpc,subnet,internetgateway,routetable -w
-
-# 3. Check package status
-kubectl get pkgrev
-up ctp package list
-
-# 4. View events
-kubectl get events --sort-by='.lastTimestamp'
-
-# 5. Check XR status
-kubectl get vpc -o yaml
-kubectl describe vpc <vpc-name>
-
-# 6. Wait for all resources to reach Ready/Synced
-
-# 7. Verify in AWS Console (optional)
-# Open AWS Console → VPC Dashboard
-# Verify VPC, subnets, IGW, route tables exist
-
-# 8. Test completes and cleans up
-# Control plane is automatically deleted
 ```
 
 ---
@@ -1173,10 +1126,14 @@ up ctx -                          # Previous context
 ### Testing
 
 ```bash
-up test run <test-name>                              # Run test
-up test run <test-name> --e2e --control-plane-group=<group>  # Run E2E test
+up test run                                          # Run all tests
+up test run <test-name>                              # Run specific test
+up test run <test-name> --e2e --control-plane-group=<group>  # E2E test
+up test generate <test-name> --language=kcl         # Generate test
 up test list                                         # List tests
 ```
+
+**See [Testing](#testing) section and [TESTING_REFERENCE.md](../TESTING_REFERENCE.md) for workflows.**
 
 ### Output Formatting
 

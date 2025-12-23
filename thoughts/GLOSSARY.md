@@ -282,104 +282,16 @@ subnet = ec2v1beta1.Subnet{
 ## Testing Terms
 
 ### Composition Test
-**Definition**: Fast unit test that validates composition logic without requiring a real control plane or cloud resources.
-
-**Speed**: Seconds
-
-**What it tests**: KCL logic, resource generation, conditional logic
-
-**When to use**: Development (fast feedback), CI on every PR
-
-**Tool**: `up test run tests/test-*`
-
-**Also called**: Unit test, function test
-
----
+Fast unit test validating composition logic (seconds, no AWS). See [TESTING_REFERENCE.md](TESTING_REFERENCE.md).
 
 ### E2E Test (End-to-End Test)
-**Definition**: Integration test that validates composition with REAL cloud resources. Creates actual AWS resources.
-
-**Speed**: 30-40 minutes per test (expected and acceptable)
-
-**What it tests**: Complete lifecycle (create → ready → delete), AWS behavior, provider integration
-
-**When to use**: Before merging to main, on labeled PRs, MANDATORY for all features
-
-**Tool**: `up test run tests/e2etest-* --e2e --control-plane-group=claude-testing`
-
-**See**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for authentication setup and complete E2E testing guide.
-
----
-
-### Test Pyramid
-**Definition**: Testing strategy with many fast unit tests, fewer slow integration tests.
-
-**Structure**:
-```
-        /\
-       /E2E\       ← Few, slow, expensive (real AWS)
-      /------\
-     / Comp. \    ← Many, fast, cheap (local)
-    /________\
-```
-
-**Ratio**: ~10-20 composition tests per 1 E2E test
-
-**Philosophy**: Fast feedback (composition) + high confidence (E2E)
-
----
+Integration test with REAL AWS resources (30-40 min, mandatory for all features). See [TESTING_REFERENCE.md](TESTING_REFERENCE.md).
 
 ### assertResources
-**Definition**: Validates that composition function generates expected managed resources in composition tests.
-
-**Usage**:
-```kcl
-assertResources: [
-    {
-        apiVersion: "ec2.aws.upbound.io/v1beta1"
-        kind: "VPC"
-        name: "test-vpc"
-        # Assert specific fields...
-    }
-]
-```
-
-**Validates**: Resource exists, has correct spec, has correct metadata
-
----
+Validates expected managed resources in composition tests. See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for syntax.
 
 ### observedResources
-**Definition**: Validates resource status and conditions in composition or E2E tests.
-
-**Usage**:
-```kcl
-observedResources: [
-    {
-        name: "test-vpc"
-        conditions: [
-            { type: "Ready", status: "True" }
-            { type: "Synced", status: "True" }
-        ]
-    }
-]
-```
-
-**Validates**: Resource reached desired state (Ready, Synced, etc.)
-
----
-
-### defaultConditions
-**Definition**: List of conditions that ALL resources must meet for E2E test to pass.
-
-**Common values**:
-- `["Ready"]` - Resource is ready
-- `["Synced"]` - Resource is synced with cloud
-- `["Ready", "Synced"]` - Both (recommended)
-
-**Usage in E2E tests**:
-```kcl
-spec.defaultConditions: ["Ready", "Synced"]
-```
+Validates resource status/conditions in tests. See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for details.
 
 ---
 
@@ -513,44 +425,6 @@ spec.defaultConditions: ["Ready", "Synced"]
 
 ---
 
-## Quick Reference
-
-### Hierarchy
-
-```
-Control Plane
-  └── Configuration Package
-      ├── XRD (API definition)
-      ├── Composition (orchestration)
-      └── Function (KCL logic)
-          └── Generates Managed Resources
-              └── Synced by Provider
-                  └── Creates Cloud Resources (AWS)
-```
-
-### User Flow
-
-```
-User creates Claim/XR
-  → Composition function executes
-    → Generates managed resources
-      → Provider syncs with AWS
-        → AWS resources created
-          → Resources reach Ready state
-            → User can use infrastructure
-```
-
-### Testing Flow
-
-```
-Write composition test (RED)
-  → Implement feature (GREEN)
-    → Refactor code (BLUE)
-      → Write E2E test (E2E)
-        → All tests pass (COMMIT)
-```
-
----
 
 ## See Also
 

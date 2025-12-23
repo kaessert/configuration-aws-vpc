@@ -1,6 +1,6 @@
 # Git Command Reference
 
-A comprehensive command reference for git operations. This is a pure command syntax guide - for workflows and conventions, see [git-workflow.md](git-workflow.md).
+A comprehensive command reference for git operations. This is a pure command syntax guide - for workflows and conventions, see [GIT_WORKFLOW.md](GIT_WORKFLOW.md).
 
 ---
 
@@ -111,14 +111,10 @@ EOF
 # Commit all tracked changes (skip staging)
 git commit -a -m "commit message"
 
-# Amend last commit (WARNING: only if not pushed!)
-git commit --amend -m "new message"
-
-# Amend without changing message
-git commit --amend --no-edit
-
 # Empty commit (for triggering CI)
 git commit --allow-empty -m "trigger CI"
+
+# Amend commits: See "Undoing Changes → Amending Commits" section
 ```
 
 ---

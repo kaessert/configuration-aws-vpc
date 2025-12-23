@@ -6,9 +6,7 @@ Welcome! This guide will get you productive in under 2 hours.
 
 ## Overview
 
-This project builds an Upbound control plane configuration for AWS VPC with complete feature parity to the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module.
-
-**See [../CLAUDE.md](../CLAUDE.md) for complete project overview, architecture, and requirements.**
+**Project Goal**: Build feature-complete AWS VPC configuration for Upbound. **See [../CLAUDE.md](../CLAUDE.md) for complete overview, architecture, and requirements.**
 
 ---
 
@@ -79,30 +77,19 @@ up project build
 
 ## Reading Plan (Essential Docs)
 
-**Read in this order** (~75 minutes):
+**Read in this order** (~60 minutes):
 
-1. **[TASKS.md → Current Status](TASKS.md#current-status)** (15 min) - Current task list, see what's done and what's next
-2. **[IMPLEMENTATION_GUIDE.md → Architecture](IMPLEMENTATION_GUIDE.md#architecture-overview)** (20 min) - Architecture, modular design, code organization
-3. **[SPECIFICATION.md](SPECIFICATION.md)** (10 min) - Feature requirements from Terraform module (skim for now)
-4. **[TDD_STRATEGY.md → TDD Workflow](TDD_STRATEGY.md#tdd-workflow-step-by-step)** (30 min) - Complete TDD workflow (CRITICAL for development)
+1. **[TASKS.md](TASKS.md)** (15 min) - Current status (at top) + task priorities
+2. **[IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md)** (20 min) - Architecture & module structure
+3. **[TDD_STRATEGY.md](TDD_STRATEGY.md)** (25 min) - TDD workflow (CRITICAL)
 
-**Reference docs** (lookup as needed):
-
-- **[TESTING_REFERENCE.md](TESTING_REFERENCE.md)** - Complete testing guide
-- **[GIT_WORKFLOW.md](GIT_WORKFLOW.md)** - Git conventions and workflow
-- **[GIT_REFERENCE.md](GIT_REFERENCE.md)** - Git command syntax
-- **[KCL_REFERENCE.md](KCL_REFERENCE.md)** - KCL language reference
-- **[UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)** - Upbound CLI commands
-- **[GLOSSARY.md](GLOSSARY.md)** - Project terminology
+**Reference docs**: See [README.md](README.md) for complete index. Key references: [TESTING_REFERENCE.md](TESTING_REFERENCE.md), [KCL_REFERENCE.md](KCL_REFERENCE.md), [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md)
 
 ---
 
 ## Common Mistakes to Avoid
 
-**Quick reminders**:
-- ✅ Follow TDD workflow (RED → GREEN → REFACTOR → E2E → COMMIT)
-- ✅ E2E tests are MANDATORY for all features
-- ✅ Update [TASKS.md](TASKS.md) as you work
+See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete TDD workflow and [GIT_WORKFLOW.md](GIT_WORKFLOW.md) for commit conventions.
 
 ---
 
@@ -145,23 +132,14 @@ up project build
 ## Next Steps
 
 **Today** (2 hours):
-1. ✅ Complete setup (above)
-2. ✅ Read 4 essential docs (75 minutes)
-3. ✅ Pick a task from [TASKS.md → Current Status](TASKS.md#current-status)
-4. ✅ Complete your first task using TDD workflow
-5. ✅ Make your first commit following [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits)
+1. Complete setup (above)
+2. Read 3 essential docs (60 minutes)
+3. Pick first task from [TASKS.md](TASKS.md)
+4. Complete task using TDD workflow
+5. Make first commit per [GIT_WORKFLOW.md](GIT_WORKFLOW.md)
 
-**This Week**:
-- Master TDD workflow
-- Learn KCL patterns from [KCL_REFERENCE.md](KCL_REFERENCE.md)
-- Complete current priority tasks
-- Write E2E tests
-
-**Ongoing**:
-- Check [TASKS.md](TASKS.md) daily
-- Update documentation when you learn something
-- Run tests frequently
-- Follow TDD religiously
+**This Week**: Master TDD, learn KCL patterns, complete priority tasks
+**Ongoing**: Check [TASKS.md](TASKS.md) daily, run tests frequently, follow TDD
 
 ---
 
