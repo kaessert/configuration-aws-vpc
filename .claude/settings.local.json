@@ -84,7 +84,15 @@
       "Bash(tee:*)",
       "Bash(/tasks)",
       "Bash(pkill:*)",
-      "WebFetch(domain:registry.terraform.io)"
+      "WebFetch(domain:registry.terraform.io)",
+      "Bash(up dependency list)",
+      "Bash(up space list:*)",
+      "Bash(kill:*)",
+      "Bash(pgrep:*)",
+      "Bash(while ps aux)",
+      "Bash(do echo \"Test still running \\(PID 44312\\)...\")",
+      "Bash(up function build functions/vpc)",
+      "Bash(wait:*)"
     ]
   }
 }

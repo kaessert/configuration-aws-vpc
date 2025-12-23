@@ -22,4 +22,4 @@ priority and take the SMALLEST POSSIBLE increment at a time.
 Remember: The goal of this project is defined in CLAUDE.md and in thoughts/initial_prompt.md
 
 IMPORTANT: Whenever you encounter issues, slow down, relax, think deeply what could have went
-wrong and once you are able to resolve them leave notes for further agents in the thoughs folder.
+wrong and once you are able to resolve them, document the solution further agents in the thoughs folder.
