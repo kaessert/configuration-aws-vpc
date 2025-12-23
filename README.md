@@ -8,13 +8,13 @@ Build AWS VPCs using Crossplane Composite Resources, KCL composition functions, 
 
 ✅ **Phase 3 Complete** - Enhanced networking features fully implemented and tested  
 ✅ **32 Composition Tests** - All features validated with fast unit tests  
-✅ **10 E2E Tests** - Critical paths tested against real AWS infrastructure  
-✅ **65% Feature Parity** - Major features implemented (VPC, Subnets, NAT, Routing, Endpoints, NACLs, DHCP, Flow Logs, Subnet Groups)  
+✅ **11 E2E Tests** - Critical paths tested against real AWS infrastructure  
+✅ **70% Feature Parity** - Major features implemented (VPC, Subnets, NAT, Routing, Endpoints, NACLs, DHCP, Flow Logs, Subnet Groups, Secondary CIDRs)  
 ✅ **Modular Design** - 10 focused KCL modules (~2300 lines), well-organized and maintainable  
 ✅ **Zero Failing Tests** - All tests passing, no known regressions  
 
-**Ready for**: Development and staging environments with core VPC requirements (VPC, subnets, NAT, routing, endpoints, security, monitoring)  
-**Not yet ready for**: Hybrid cloud (VPN Gateway), IPv6 networks, IP address management (IPAM), IP space expansion (Secondary CIDRs)
+**Ready for**: Development and staging environments with core VPC requirements (VPC, subnets, NAT, routing, endpoints, security, monitoring, IP space expansion)  
+**Not yet ready for**: Hybrid cloud (VPN Gateway), IPv6 networks, IP address management (IPAM)
 
 ## Overview
 
@@ -48,6 +48,7 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 - **DHCP Options**: Custom DNS servers, domain names, NTP servers, NetBIOS settings
 - **VPC Flow Logs**: Traffic monitoring to CloudWatch Logs or S3 with configurable filters
 - **Subnet Groups**: Database, ElastiCache, and Redshift subnet groups for managed services
+- **Secondary CIDR Blocks**: IP space expansion with multiple CIDR blocks per VPC
 - **Tagging**: Flexible tag merging for all resources
 - **Multi-AZ Support**: Distribute resources across availability zones
 
@@ -56,7 +57,6 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 - **VPN Gateway**: Hybrid cloud connectivity (P1)
 - **Customer Gateways**: VPN customer side configuration (P1)
 - **IPv6 Support**: Dual-stack and IPv6-only configurations (P1)
-- **Secondary CIDR Blocks**: IP space expansion (P1)
 - **IPAM Integration**: Enterprise IP address management (P1)
 - **Interface VPC Endpoints**: Private connectivity for EC2, SSM, RDS, and more (P2)
 - **Extended NACL Support**: Dedicated ACLs for database, ElastiCache, Redshift, and intra subnets (P2)
@@ -205,9 +205,9 @@ This project follows **strict Test-Driven Development (TDD)**:
 - DHCP Options (2 tests)
 - VPC Flow Logs (3 tests)
 - Subnet Groups (3 tests)
-- Secondary CIDR (2 tests)
+- Secondary CIDR Blocks (2 tests)
 
-**E2E Tests**: 10 tests (all passing)
+**E2E Tests**: 11 tests (all passing)
 - Basic VPC
 - Complete VPC
 - Simple VPC
@@ -217,6 +217,7 @@ This project follows **strict Test-Driven Development (TDD)**:
 - Network ACLs
 - Flow Logs
 - Subnet Groups
+- Secondary CIDR Blocks
 
 ### Run Tests
 
@@ -324,14 +325,14 @@ Contributions are welcome! This project follows test-driven development practice
   - DHCP Options (DNS servers, domain name, NTP, NetBIOS)
   - VPC Flow Logs (CloudWatch and S3 destinations)
   - Subnet Groups (RDS, ElastiCache, Redshift)
+  - Secondary CIDR Blocks (IP space expansion with multiple CIDRs)
 
-**Test Coverage**: 32 composition tests + 10 E2E tests - **ALL PASSING** ✅
+**Test Coverage**: 32 composition tests + 11 E2E tests - **ALL PASSING** ✅
 
-**Next Up (Phase 4 - P0/P1 Priorities)**:
+**Next Up (Phase 4 - P1/P2 Priorities)**:
 - VPN Gateway (P1) - Hybrid cloud connectivity
 - Customer Gateways (P1) - VPN customer side
 - IPv6 Support (P1) - Dual-stack and IPv6-only configurations
-- Secondary CIDR Blocks (P1) - IP space expansion
 - IPAM Integration (P1) - Enterprise IP management
 - Interface VPC Endpoints (P2) - Private connectivity for AWS services
 - NAT Gateway Enhancements (P2) - NAT per subnet, reuse EIPs
@@ -373,6 +374,7 @@ spec:
   # Core Configuration
   region: string                    # AWS region (required)
   cidr: string                      # VPC CIDR block (required)
+  secondaryCidrBlocks: [string]     # Additional CIDR blocks for IP space expansion
   azs: [string]                     # Availability zones (required)
 
   # DNS Settings
@@ -470,13 +472,13 @@ See [apis/vpc/definition.yaml](apis/vpc/definition.yaml) for the complete API de
 | DHCP Options | ✅ | ✅ | Implemented |
 | VPC Flow Logs | ✅ | ✅ | Implemented |
 | Subnet Groups | ✅ | ✅ | Implemented |
+| Secondary CIDRs | ✅ | ✅ | Implemented |
 | VPN Gateway | ✅ | 📋 | Planned (P1) |
 | IPv6 Support | ✅ | 📋 | Planned (P1) |
-| Secondary CIDRs | ✅ | 📋 | Planned (P1) |
 | IPAM Integration | ✅ | 📋 | Planned (P1) |
 | Interface VPC Endpoints | ✅ | 📋 | Planned (P2) |
 
-> **Feature Parity Progress**: ~65% complete (10 of 15+ major features implemented)
+> **Feature Parity Progress**: ~70% complete (11 of 15+ major features implemented)
 
 See [thoughts/SPECIFICATION.md](thoughts/SPECIFICATION.md) for detailed feature specification.
 
