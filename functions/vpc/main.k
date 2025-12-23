@@ -92,6 +92,7 @@ vpcName = oxrMeta.name
 # Extract core configuration from spec
 region = oxrSpec.region
 cidr = oxrSpec.cidr
+secondaryCidrBlocks = oxrSpec.secondaryCidrBlocks or []
 azs = oxrSpec.azs or []
 tags = oxrSpec.tags or {}
 
@@ -178,6 +179,7 @@ config = {
     vpcName = vpcName
     region = region
     cidr = cidr
+    secondaryCidrBlocks = secondaryCidrBlocks
     azs = azs
     tags = tags
 
@@ -251,7 +253,7 @@ config = {
 
 # Main composition logic - returns list of desired resources
 items = \
-    vpc._generateVPC(config) + \
+    vpc.generateVPCResources(config) + \
     subnets.generateAllSubnets(config) + \
     gateways.generateAllGateways(config) + \
     routing.generateAllRouting(config) + \
