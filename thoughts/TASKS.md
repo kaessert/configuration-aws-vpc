@@ -30,7 +30,7 @@
 - ✅ DHCP Options (3.3)
 - ✅ VPC Flow Logs - CloudWatch and S3 destinations (3.4)
 
-**Test Coverage**: 27 composition tests, 8 E2E tests - ALL PASSING ✅
+**Test Coverage**: 32 composition tests, 10 E2E tests - ALL PASSING ✅
 
 ### Feature Parity: ~65% (vs Terraform Module)
 
