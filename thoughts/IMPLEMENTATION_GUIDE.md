@@ -68,24 +68,55 @@ Design for growth:
 - **Performant**: Resources created in parallel where possible
 - **Maintainable**: Clear boundaries, minimal coupling
 
+## Implementation Patterns
+
+### 1. Conditional Resource Creation
+- Resources created based on feature flags (enable_nat_gateway, create_igw, etc.)
+- Subnet types only created when CIDR blocks provided
+- Example: `_igw = [InternetGateway{...}] if oxrSpec.createIgw else []`
+
+### 2. Looping and Distribution
+- Subnets created for each AZ using list comprehensions
+- NAT gateways created per AZ based on strategy
+- Route tables created per subnet type
+- Example: `[Subnet{...} for i, cidr in enumerate(publicSubnets)]`
+
+### 3. Dependencies and Relationships
+- Use selectors, not hardcoded references: `vpcIdSelector.matchControllerRef`
+- Subnets depend on VPC via label matching
+- Route tables depend on gateways
+- Routes depend on route tables
+- Subnet associations depend on route tables
+
+### 4. Dynamic Routing
+- Public subnets route to IGW (0.0.0.0/0 → IGW)
+- Private subnets route to NAT gateway (0.0.0.0/0 → NAT)
+- Specialized subnets have isolated routing (local VPC only)
+- Route table associations link subnets to tables
+
+### 5. Naming Conventions
+- Resources named with pattern: `${name}-{type}-{az}`
+- Example: `my-vpc-public-us-west-2a`
+- Consistent naming across regions/accounts
+- Metadata helpers ensure consistency
+
+### 6. Default Values and Validation
+- Sensible defaults for optional parameters
+- Validate inputs early (AZ count, CIDR format)
+- Document assumptions clearly
+- Example: `assert len(azs) >= len(publicSubnets)`
+
+### 7. Tagging Strategy
+- Common tags merged with resource-specific tags
+- Type-specific tags for resource categorization (subnet-type: "public")
+- Name tags automatically generated
+- Tag merging utilities in `utils/tags.k`
+
 ### 5. Architecture Decisions
 
-#### Namespaced VPC Claims (Crossplane v2)
+**CRITICAL**: This project uses Crossplane v2 with **namespaced claims**. Use `kind: VPC` (NOT `XVPC`) for all claims.
 
-**CRITICAL**: This project uses Crossplane v2 with **namespaced claims**.
-
-**What This Means**:
-- XRD kind: `VPC` (NO X prefix)
-- All resources require: `namespace: default`
-- ProviderConfigs must be namespaced
-
-**Common Mistake**:
-- DO NOT use `kind: XVPC` (cluster-scoped composite)
-- ALWAYS use `kind: VPC` (namespaced claim)
-
-If you see `kind: XVPC` anywhere in examples or user-facing documentation, it's a documentation error. Report it immediately.
-
-**For complete details, see thoughts/ARCHITECTURE_DECISIONS.md** (if it exists)
+**For complete architectural decisions and rationale, see [ARCHITECTURE_DECISIONS.md](ARCHITECTURE_DECISIONS.md)**
 
 ## Composition Pipeline Requirements
 
@@ -123,64 +154,7 @@ project-root/
     └── e2etest-complete/
 ```
 
-### Module Responsibilities
-
-**For complete list of AWS resources created**, see [SPECIFICATION.md → AWS Resources Created](SPECIFICATION.md#aws-resources-created).
-
-**main.k** - Entry point and orchestration:
-- Access composition parameters (oxr, ocds, dxr, dcds)
-- Extract typed metadata and spec
-- Coordinate module calls
-- Combine all resources into items list
-
-**vpc.k** - VPC resource generation:
-- VPC creation with CIDR
-- DNS settings (hostnames, support)
-- Secondary CIDR blocks
-
-**subnet.k** - Subnet generation:
-- Public subnets (with auto-assign public IP)
-- Private subnets
-- Database subnets
-- Elasticache subnets
-- Redshift subnets
-- Intra subnets (isolated)
-
-**gateway.k** - Gateway resources:
-- Internet Gateway creation
-- NAT Gateway creation (single or per-AZ)
-- EIP allocation for NAT
-- VPN Gateway (optional)
-
-**route.k** - Routing configuration:
-- Route table creation (per subnet type)
-- Route creation (IGW, NAT, custom)
-- Route table associations
-
-**endpoints.k** - VPC endpoints:
-- Gateway endpoints (S3, DynamoDB)
-- Interface endpoints
-- Endpoint policies
-
-**nacl.k** - Network ACL rules:
-- Custom inbound rules
-- Custom outbound rules
-
-**dhcp.k** - DHCP options:
-- Custom DNS servers
-- Custom domain name
-- NTP servers
-
-**flowlogs.k** - VPC Flow Logs:
-- CloudWatch destination
-- S3 destination
-- Traffic type configuration
-
-**utils/** - Shared utilities:
-- Metadata helpers (resource naming)
-- Tag merging logic
-- CIDR calculation
-- Input validation
+**AWS Resources**: See [SPECIFICATION.md → AWS Resources Created](SPECIFICATION.md#aws-resources-created) for complete list of managed resources.
 
 ## Development Workflow
 
@@ -296,13 +270,7 @@ assert all cidr in oxrSpec.publicSubnets satisfies \
 
 Every module has corresponding tests. See [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete testing workflow.
 
-### Success Metrics
-
-#### Code Quality
-- ✅ All modules < 300 lines
-- ✅ 100% of functions documented
-- ✅ No code duplication
-- ✅ Clear separation of concerns
+**Code Quality Requirements**: See [SPECIFICATION.md → Code Quality Requirements](SPECIFICATION.md#code-quality-requirements) for quality standards and success metrics.
 
 ## References
 

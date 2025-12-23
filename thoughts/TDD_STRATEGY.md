@@ -1,13 +1,6 @@
 # Test-Driven Development (TDD) Strategy
 
-## Related Documentation
-
-This document covers TDD workflow and strategy. For technical testing details, see [TESTING_REFERENCE.md](TESTING_REFERENCE.md).
-
-For related topics, see:
-- **Test Schemas & Patterns**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md)
-- **up CLI Commands**: [UPBOUND_REFERENCE.md → Testing Commands](UPBOUND_REFERENCE.md#testing)
-- **Git Workflows**: [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits)
+**Related**: [TESTING_REFERENCE.md](TESTING_REFERENCE.md) (technical details) | [GIT_WORKFLOW.md](GIT_WORKFLOW.md) (commit conventions)
 
 ---
 
@@ -289,7 +282,7 @@ git push
 
 ## Test Organization
 
-**For complete test organization, directory structure, and naming conventions, see [TESTING_REFERENCE.md → Test Organization](TESTING_REFERENCE.md#test-organization)**
+See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) for test organization, directory structure, and naming conventions.
 
 ## Test Content Standards
 
@@ -493,32 +486,11 @@ test "public subnets created with correct specs"
 
 ## CI/CD Integration
 
-**For complete CI/CD workflows, GitHub Actions configuration, local testing commands, and cost considerations, see [TESTING_REFERENCE.md → CI/CD Integration](TESTING_REFERENCE.md#cicd-integration)**
-
-**Quick reference**:
 - **Composition tests**: Run on every PR (fast, free)
-- **E2E tests**: Run with "run-e2e-tests" label (slow, creates real AWS resources)
+- **E2E tests**: Run with "run-e2e-tests" label (slow, ~30-40 min)
 - **Local testing**: `up test run tests/test-*` before every commit
 
----
-
-## Quick Reference
-
-> 📖 **Command Syntax**: See [TESTING_REFERENCE.md](TESTING_REFERENCE.md) and [UPBOUND_REFERENCE.md](UPBOUND_REFERENCE.md) for complete command reference
-
-**Essential Commands**:
-```bash
-up test generate test-xvpc-<feature> --language=kcl    # Generate composition test
-up test run tests/test-*                                # Run all composition tests
-up test run tests/e2etest-* --e2e                       # Run all E2E tests
-```
-
-## Related Documentation
-
-- **Commands**: [UPBOUND_REFERENCE.md → Quick Reference](UPBOUND_REFERENCE.md#quick-reference) - Complete `up` CLI reference
-- **Git Workflow**: [GIT_WORKFLOW.md → Making Commits](GIT_WORKFLOW.md#3-making-commits) - TDD commit workflow
-- **Implementation**: [IMPLEMENTATION_GUIDE.md → Architecture](IMPLEMENTATION_GUIDE.md#architecture-overview) - Architecture and patterns
-- **Specification**: [SPECIFICATION.md](SPECIFICATION.md) - Feature requirements
+See [TESTING_REFERENCE.md → CI/CD](TESTING_REFERENCE.md#cicd-integration) for GitHub Actions workflows and configuration.
 
 ---
 

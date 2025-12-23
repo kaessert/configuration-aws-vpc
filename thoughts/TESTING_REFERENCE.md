@@ -85,6 +85,139 @@ The test suite validates:
 
 ---
 
+## KCL Testing Patterns
+
+### XR Definition - Always Inline
+
+**✅ GOOD** - XR defined inline (recommended):
+```kcl
+spec: {
+    xr: {
+        apiVersion: "awsm.upbound.io/v1alpha1"
+        kind: "VPC"
+        metadata: { name: "test-vpc" }
+        spec: {
+            cidr: "10.0.0.0/16"
+            azs: ["us-west-2a", "us-west-2b"]
+        }
+    }
+}
+```
+
+**❌ AVOID** - Separate XR file (adds complexity):
+```kcl
+spec: {
+    xrPath: "xr.yaml"  # Avoid unless necessary
+}
+```
+
+### Test Naming Conventions
+
+```kcl
+# Composition tests: test-<resource-type>-<scenario>
+metadata.name: "test-xvpc-simple"
+metadata.name: "test-xvpc-public-subnets"
+metadata.name: "test-xvpc-nat-per-az"
+
+# E2E tests: e2etest-<resource-type>-<scenario>
+metadata.name: "e2etest-xvpc-basic"
+metadata.name: "e2etest-xvpc-complete"
+```
+
+### Timeout Configuration
+
+```kcl
+# Composition tests (no real resources)
+timeoutSeconds: 60  # 1 minute sufficient
+
+# E2E tests (creates real AWS resources)
+timeoutSeconds: 1800  # 30 minutes
+cleanupTimeoutSeconds: 600  # 10 minutes for cleanup
+```
+
+### Testing Conditional Resources
+
+```kcl
+# Test resource IS created when flag is true
+xr: {
+    spec: {
+        createIgw: True
+        publicSubnets: ["10.0.1.0/24"]
+    }
+}
+assertResources: [
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "InternetGateway"
+        metadata: { name: "igw-test-vpc" }
+    }
+]
+
+# Test resource is NOT created when flag is false
+# (simply omit from assertResources)
+```
+
+### Testing Resource Counts
+
+```kcl
+# Test correct number of subnets across AZs
+xr: {
+    spec: {
+        azs: ["us-west-2a", "us-west-2b", "us-west-2c"]
+        publicSubnets: ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+    }
+}
+assertResources: [
+    # List each expected subnet explicitly
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "Subnet"
+        metadata: { name: "subnet-public-test-vpc-us-west-2a" }
+    },
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "Subnet"
+        metadata: { name: "subnet-public-test-vpc-us-west-2b" }
+    },
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "Subnet"
+        metadata: { name: "subnet-public-test-vpc-us-west-2c" }
+    }
+]
+```
+
+### Testing Tag Propagation
+
+```kcl
+xr: {
+    spec: {
+        tags: {
+            Environment: "production"
+            Team: "platform"
+        }
+    }
+}
+assertResources: [
+    {
+        apiVersion: "ec2.aws.upbound.io/v1beta1"
+        kind: "VPC"
+        metadata: { name: "vpc-test-vpc" }
+        spec: {
+            forProvider: {
+                tags: {
+                    Environment: "production"
+                    Team: "platform"
+                    # Name tag added automatically
+                }
+            }
+        }
+    }
+]
+```
+
+---
+
 ## Testing Types
 
 **For test pyramid, test strategy, and TDD workflow, see [TDD_STRATEGY.md](TDD_STRATEGY.md)**
@@ -434,30 +567,24 @@ _items = [
             defaultConditions: ["Ready", "Synced"]
 
             # Additional resources (ProviderConfig, etc.)
+            # See "Authentication: No AWS Credentials Required" section for ProviderConfig details
             extraResources: [
                 {
-                    # CRITICAL: Use aws.m.upbound.io (note the .m. suffix) for namespaced providers
-                    # Parent provider: aws.upbound.io
-                    # Namespaced provider: aws.m.upbound.io
                     apiVersion: "aws.m.upbound.io/v1beta1"
                     kind: "ProviderConfig"
                     metadata: {
                         name: "default"
-                        # REQUIRED: namespace field is MANDATORY for namespaced claims
-                        # Without this, E2E test will hang on "Applying Extra Resources"
-                        namespace: "default"
+                        namespace: "default"  # REQUIRED for namespaced claims
                     }
                     spec: {
-                        # REQUIRED: credentials.source field for Upbound Spaces
                         credentials: {
-                            source: "Upbound"  # Integrates with Upbound identity injection
-                        }
-                        # Use IAM role, NEVER static credentials
-                        assumeRoleChain: [
-                            {
-                                roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                            source: "Upbound"
+                            upbound: {
+                                webIdentity: {
+                                    roleARN: "arn:aws:iam::609897127049:role/solutions-e2e-provider-aws"
+                                }
                             }
-                        ]
+                        }
                     }
                 }
             ]
@@ -561,17 +688,7 @@ up test run tests/e2etest-* --e2e
 
 **Available group**: `claude-testing` (in organization "solutions", space "upbound-gcp-us-central-1")
 
-### E2E Test Lifecycle
-
-When you run an E2E test with `--e2e`:
-
-1. Creates temporary dev control plane in specified group
-2. Installs providers and configuration
-3. Applies test manifests (Claims/XRs)
-4. Waits for Ready/Synced conditions
-5. Automatically cleans up (unless `--skip-control-plane-cleanup`)
-
-**Duration**: 10-30 minutes for AWS resources
+**For complete E2E test execution flow, see [E2E Test Execution Flow](#e2e-test-execution-flow) section above.**
 
 ### Useful E2E Flags
 
