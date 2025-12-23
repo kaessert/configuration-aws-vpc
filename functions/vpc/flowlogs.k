@@ -32,7 +32,12 @@ _generateFlowLogGroup = lambda name: str, region: str, tags: {str:str} -> [any] 
     """
     [
         cloudwatchlogs.Group {
-            metadata.name = "flowlog-loggroup-${name}"
+            metadata = {
+                name = "flowlog-loggroup-${name}"
+                labels = {
+                    "resource-type" = "flowlog-loggroup"
+                }
+            }
             spec = {
                 providerConfigRef = {
                     kind = "ProviderConfig"
@@ -67,7 +72,12 @@ _generateFlowLogRole = lambda name: str, tags: {str:str} -> [any] {
 
     [
         iam.Role {
-            metadata.name = "flowlog-role-${name}"
+            metadata = {
+                name = "flowlog-role-${name}"
+                labels = {
+                    "resource-type" = "flowlog-role"
+                }
+            }
             spec = {
                 providerConfigRef = {
                     kind = "ProviderConfig"
@@ -187,9 +197,15 @@ _generateFlowLog = lambda name: str, region: str, trafficType: str, maxAggregati
                     maxAggregationInterval = maxAggregationInterval
                     logDestinationType = "cloud-watch-logs"
                     iamRoleArnSelector = {
+                        matchLabels = {
+                            "resource-type" = "flowlog-role"
+                        }
                         matchControllerRef = True
                     }
                     logDestinationSelector = {
+                        matchLabels = {
+                            "resource-type" = "flowlog-loggroup"
+                        }
                         matchControllerRef = True
                     }
                     tags = tags | {

@@ -148,7 +148,10 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("elasticache-subnet-${i}") | {
                 name = "subnet-elasticache-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.elasticacheSubnetTags
+                labels = config.tags | config.elasticacheSubnetTags | {
+                    "subnet-type": "elasticache"
+                    "az": config.azs[i % len(config.azs)]
+                }
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
@@ -185,7 +188,10 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("redshift-subnet-${i}") | {
                 name = "subnet-redshift-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.redshiftSubnetTags
+                labels = config.tags | config.redshiftSubnetTags | {
+                    "subnet-type": "redshift"
+                    "az": config.azs[i % len(config.azs)]
+                }
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
