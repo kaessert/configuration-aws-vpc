@@ -238,6 +238,47 @@ spec:
                   description: Create a VPN Gateway attached to the VPC
                   default: false
 
+                vpnGatewayId:
+                  type: string
+                  description: Use existing VPN Gateway ID (optional, if not specified a new one will be created)
+
+                amazonSideAsn:
+                  type: integer
+                  description: BGP ASN for Amazon side of the VPN Gateway (default 64512)
+                  default: 64512
+                  minimum: 64512
+                  maximum: 65534
+
+                vpnGatewayAz:
+                  type: string
+                  description: Availability zone for VPN Gateway (optional)
+
+                propagatePublicRouteTablesVgw:
+                  type: boolean
+                  description: Propagate VPN Gateway routes to public route tables
+                  default: true
+
+                propagatePrivateRouteTablesVgw:
+                  type: boolean
+                  description: Propagate VPN Gateway routes to private route tables
+                  default: true
+
+                propagateIntraRouteTablesVgw:
+                  type: boolean
+                  description: Propagate VPN Gateway routes to intra route tables
+                  default: false
+
+                propagateDatabaseRouteTablesVgw:
+                  type: boolean
+                  description: Propagate VPN Gateway routes to database route tables
+                  default: false
+
+                vpnGatewayTags:
+                  type: object
+                  description: Additional tags for VPN Gateway
+                  additionalProperties:
+                    type: string
+
                 enableIpv6:
                   type: boolean
                   description: Enable IPv6 CIDR block for the VPC

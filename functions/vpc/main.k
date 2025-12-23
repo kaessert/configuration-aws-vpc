@@ -39,6 +39,7 @@ import dhcp
 import nacl
 import flowlogs
 import subnetgroups
+import vpn
 
 # ============================================================================
 # ACCESS COMPOSITION FUNCTION PARAMETERS
@@ -145,6 +146,17 @@ flowLogFileFormat = oxrSpec.flowLogFileFormat if oxrSpec.flowLogFileFormat else 
 flowLogHiveCompatiblePartitions = oxrSpec.flowLogHiveCompatiblePartitions if oxrSpec.flowLogHiveCompatiblePartitions != None else False
 flowLogPerHourPartition = oxrSpec.flowLogPerHourPartition if oxrSpec.flowLogPerHourPartition != None else False
 
+# Extract VPN Gateway configuration
+enableVpnGateway = oxrSpec.enableVpnGateway if oxrSpec.enableVpnGateway != None else False
+vpnGatewayId = oxrSpec.vpnGatewayId if oxrSpec.vpnGatewayId else None
+amazonSideAsn = oxrSpec.amazonSideAsn if oxrSpec.amazonSideAsn != None else 64512
+vpnGatewayAz = oxrSpec.vpnGatewayAz if oxrSpec.vpnGatewayAz else None
+propagatePublicRouteTablesVgw = oxrSpec.propagatePublicRouteTablesVgw if oxrSpec.propagatePublicRouteTablesVgw != None else True
+propagatePrivateRouteTablesVgw = oxrSpec.propagatePrivateRouteTablesVgw if oxrSpec.propagatePrivateRouteTablesVgw != None else True
+propagateIntraRouteTablesVgw = oxrSpec.propagateIntraRouteTablesVgw if oxrSpec.propagateIntraRouteTablesVgw != None else False
+propagateDatabaseRouteTablesVgw = oxrSpec.propagateDatabaseRouteTablesVgw if oxrSpec.propagateDatabaseRouteTablesVgw != None else False
+vpnGatewayTags = oxrSpec.vpnGatewayTags or {}
+
 # Extract subnet configuration
 publicSubnets = oxrSpec.publicSubnets or []
 mapPublicIpOnLaunch = oxrSpec.mapPublicIpOnLaunch if oxrSpec.mapPublicIpOnLaunch != None else True
@@ -245,6 +257,17 @@ config = {
     flowLogFileFormat = flowLogFileFormat
     flowLogHiveCompatiblePartitions = flowLogHiveCompatiblePartitions
     flowLogPerHourPartition = flowLogPerHourPartition
+
+    # VPN Gateway configuration
+    enableVpnGateway = enableVpnGateway
+    vpnGatewayId = vpnGatewayId
+    amazonSideAsn = amazonSideAsn
+    vpnGatewayAz = vpnGatewayAz
+    propagatePublicRouteTablesVgw = propagatePublicRouteTablesVgw
+    propagatePrivateRouteTablesVgw = propagatePrivateRouteTablesVgw
+    propagateIntraRouteTablesVgw = propagateIntraRouteTablesVgw
+    propagateDatabaseRouteTablesVgw = propagateDatabaseRouteTablesVgw
+    vpnGatewayTags = vpnGatewayTags
 }
 
 # ============================================================================
@@ -261,4 +284,5 @@ items = \
     dhcp.generateAllDHCP(config) + \
     nacl.generateAllNACLs(config) + \
     flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.createFlowLogS3Bucket, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.flowLogFileFormat, config.flowLogHiveCompatiblePartitions, config.flowLogPerHourPartition, config.tags) + \
-    subnetgroups.generateSubnetGroups(oxr, dxr, ocds, dcds, region, tags)
+    subnetgroups.generateSubnetGroups(oxr, dxr, ocds, dcds, region, tags) + \
+    vpn.generateAllVPN(config)
