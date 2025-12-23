@@ -185,43 +185,9 @@ public_subnet_tags       →  publicSubnetTags
 private_subnet_tags      →  privateSubnetTags
 ```
 
-## Key Implementation Patterns
+**Implementation Patterns**: See [IMPLEMENTATION_GUIDE.md → Implementation Patterns](IMPLEMENTATION_GUIDE.md#implementation-patterns) for conditional creation, looping, dependencies, routing, naming, and tagging strategies.
 
-### 1. Conditional Resource Creation
-- Resources created based on feature flags (enable_nat_gateway, create_igw, etc.)
-- Subnet types only created when CIDR blocks provided
-
-### 2. Looping and Counting
-- Subnets created for each AZ using count/for_each
-- NAT gateways created per AZ based on strategy
-- Route tables created per subnet type
-
-### 3. Dependencies and Relationships
-- Subnets depend on VPC
-- Route tables depend on gateways
-- Routes depend on route tables
-- Subnet associations depend on route tables
-
-### 4. Dynamic Routing
-- Public subnets route to IGW
-- Private subnets route to NAT gateway
-- Specialized subnets have isolated routing
-
-### 5. Naming Conventions
-- Resources named with pattern: `${var.name}-{type}-{az}`
-- Consistent naming across regions/accounts
-
-### 6. Default Values
-- Sensible defaults for optional parameters
-- Automatic AZ detection when not specified
-- Default CIDR allocation patterns
-
-### 7. Tagging Strategy
-- Common tags merged with resource-specific tags
-- Type-specific tags for resource categorization
-- Name tags automatically generated
-
-## Special Considerations
+## Requirements
 
 1. **Region Handling**: Auto-detection of available AZs
 2. **CIDR Math**: Automatic subnet CIDR calculation options
@@ -231,6 +197,35 @@ private_subnet_tags      →  privateSubnetTags
 6. **Monitoring**: Built-in Flow Logs integration
 7. **Compliance**: DHCP customization for corporate requirements
 8. **Scalability**: Support for secondary CIDR blocks
+
+## Code Quality Requirements
+
+The implementation must meet these code quality standards:
+
+### Module Size and Organization
+- ✅ All modules < 300 lines
+- ✅ Clear separation of concerns (one responsibility per module)
+- ✅ Modular, testable, maintainable code structure
+
+### Documentation Standards
+- ✅ 100% of functions documented with:
+  - Purpose description
+  - Parameter documentation
+  - Return value description
+  - Usage examples where appropriate
+
+### Code Quality Standards
+- ✅ No code duplication
+- ✅ Type-safe implementations
+- ✅ Input validation for all user-facing parameters
+- ✅ Consistent naming conventions
+
+### Testing Requirements
+- ✅ 100% of features have composition tests
+- ✅ 100% of critical paths have E2E tests
+- ✅ All tests documented with expected behavior
+
+**Implementation Guidance**: See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for how to achieve these standards.
 
 ## References
 

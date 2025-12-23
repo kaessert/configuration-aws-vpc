@@ -1,33 +1,106 @@
 # Project Tasks: AWS VPC Configuration for Upbound
 
-This document contains a prioritized list of all tasks needed to build an Upbound control plane project with feature parity to the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module.
+**Quick Links**: [TDD Workflow](TDD_STRATEGY.md) | [Implementation Guide](IMPLEMENTATION_GUIDE.md) | [Current Status](#current-status)
+
+---
+
+## Current Status
+
+**Phase 3: Enhanced Networking Features** - COMPLETED ✅
+**Phase 4: Advanced Features** - NOT STARTED (11 tasks identified)
+
+### What We Have Built ✅
+
+**Phase 1: Project Foundation (COMPLETED)**
+- ✅ Project initialization (1.1)
+- ✅ XRD definition (1.2)
+- ✅ Composition function scaffold (1.3)
+
+**Phase 2: Core VPC Features (COMPLETED)**
+- ✅ VPC creation with DNS settings (2.1)
+- ✅ All 6 subnet types: public, private, database, elasticache, redshift, intra (2.2)
+- ✅ Internet Gateway with conditional creation (2.3)
+- ✅ NAT Gateway with 2 strategies: single NAT, NAT per AZ (2.4)
+- ✅ Comprehensive routing for all subnet types (2.5)
+- ✅ Modular code structure (8 KCL modules) (2.6)
+
+**Phase 3: Enhanced Networking Features (COMPLETED)**
+- ✅ VPC Endpoints - Gateway (S3, DynamoDB) (3.1)
+- ✅ Network ACLs - Public and Private subnets (3.2)
+- ✅ DHCP Options (3.3)
+- ✅ VPC Flow Logs - CloudWatch and S3 destinations (3.4)
+
+**Test Coverage**: 27 composition tests, 8 E2E tests - ALL PASSING ✅
+
+### Feature Parity: ~65% (vs Terraform Module)
+
+**Current Feature Gaps** (based on comprehensive Terraform comparison):
+
+**P0 - CRITICAL (Blocking production use):**
+1. ❌ **Subnet Groups** (3.5) - RDS/ElastiCache/Redshift requirement
+   - Impact: Cannot deploy managed database services
+   - Effort: Medium (2-3 days)
+
+**P1 - HIGH PRIORITY (Enterprise requirements):**
+2. ❌ **VPN Gateway** (4.1) - Hybrid cloud connectivity
+3. ❌ **Customer Gateways** (4.2) - VPN customer side
+4. ❌ **IPv6 Support** (4.3) - Modern cloud requirement (0% implemented)
+5. ❌ **Secondary CIDR Blocks** (3.6) - IP space expansion
+6. ❌ **IPAM Integration** (3.7) - Enterprise IP management
+
+**P2 - IMPORTANT (Significant value):**
+7. ❌ **NAT Gateway Enhancements** (4.4) - NAT per subnet, reuse EIPs, custom destination
+8. ❌ **Interface VPC Endpoints** (4.5) - EC2, SSM, RDS private connectivity
+9. ❌ **Extended NACL Support** (4.6) - Database, ElastiCache, Redshift, Intra NACLs
+10. ❌ **Extended Routing Options** (4.7) - Per-AZ public routes, ElastiCache/Redshift routing
+11. ❌ **Default Resource Management** (4.8) - Security hardening
+
+**P3 - NICE TO HAVE (Optional):**
+12. ❌ **Subnet Configuration Enhancements** (4.9) - Custom names, suffixes, per-AZ tags
+13. ❌ **VPC Configuration Enhancements** (4.10) - Instance tenancy, block public access
+14. ❌ **Outpost Subnets** (4.11) - AWS Outposts support
+
+### Next Priorities (Recommended Order)
+
+**IMMEDIATE (P0):**
+- **Task 3.5: Subnet Groups** - CRITICAL for production use
+
+**SHORT TERM (P1):**
+- Task 4.1: VPN Gateway Support
+- Task 4.3: IPv6 Support (large effort, high impact)
+- Task 3.6: Secondary CIDR Blocks
+- Task 3.7: IPAM Integration
+
+**MEDIUM TERM (P2):**
+- Task 4.4: NAT Gateway Enhancements
+- Task 4.5: Interface VPC Endpoints
+- Task 4.6-4.8: Extended NACLs, Routing, Default Resources
+
+**LONG TERM (P3):**
+- Tasks 4.9-4.11: Configuration enhancements, Outposts
+
+### Development Velocity
+
+- **Phase 1-3 completed**: ~22 days (estimated 22-30 days)
+- **On track**: Yes ✅
+- **Test coverage**: Excellent (27 comp + 8 E2E)
+- **Code quality**: Excellent (modular, maintainable)
+
+---
 
 ## Project Goal
 
 Build a production-ready **drop-in replacement** for the [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) module using Upbound, KCL, and Crossplane.
 
-**Critical Requirements**:
-- ✅ **Feature Parity**: All Terraform inputs/outputs supported
-- ✅ **Behavior Match**: Exact same behavior as Terraform module
-- ✅ **Test-Driven**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) workflow
-- ✅ **E2E Tests MANDATORY**: All features require E2E validation
+**Critical Requirements**: Feature parity, behavior match, test-driven development, E2E tests mandatory.
 
-**Current Status**: ~65% feature parity achieved. See "Current Status" section below for detailed breakdown.
-
-> 📊 **Comparison Analysis**: A comprehensive feature-by-feature comparison with the Terraform module was conducted in December 2024. All task priorities (P0/P1/P2/P3) are based on this analysis, which identified critical gaps, implementation approaches, and architectural differences. The comparison revealed strong parity in core features with strategic gaps in advanced features like IPv6, VPN Gateway, IPAM, and Subnet Groups.
+> 📊 **Comparison Analysis**: Comprehensive feature-by-feature comparison completed December 2024. All task priorities (P0/P1/P2/P3) based on this analysis.
 
 ## Task Priority Legend
 
-- **P0**: Critical path items - project cannot proceed without these
-- **P1**: Core functionality - essential features
-- **P2**: Important features - significant value
-- **P3**: Nice-to-have - optional enhancements
+- **P0**: Critical path items - **P1**: Core functionality - **P2**: Important features - **P3**: Nice-to-have
 
-## Development Workflow (MANDATORY)
-
-**CRITICAL**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete workflow. E2E tests are MANDATORY before marking ANY task as complete.
-
-> 📖 **Architecture**: See [IMPLEMENTATION_GUIDE.md](IMPLEMENTATION_GUIDE.md) for design principles and module structure
+**Development Workflow**: Follow [TDD_STRATEGY.md](TDD_STRATEGY.md) for complete RED→GREEN→REFACTOR→E2E→COMMIT workflow.
 
 ---
 
@@ -1804,92 +1877,6 @@ For someone picking up this project, start with these tasks in order:
 
 **Total Estimated Time**: 22-30 days (core features only)
 
-## Current Status
-
-**Phase 3: Enhanced Networking Features** - COMPLETED ✅
-**Phase 4: Advanced Features** - NOT STARTED (11 tasks identified)
-
-### What We Have Built ✅
-
-**Phase 1: Project Foundation (COMPLETED)**
-- ✅ Project initialization (1.1)
-- ✅ XRD definition (1.2)
-- ✅ Composition function scaffold (1.3)
-
-**Phase 2: Core VPC Features (COMPLETED)**
-- ✅ VPC creation with DNS settings (2.1)
-- ✅ All 6 subnet types: public, private, database, elasticache, redshift, intra (2.2)
-- ✅ Internet Gateway with conditional creation (2.3)
-- ✅ NAT Gateway with 2 strategies: single NAT, NAT per AZ (2.4)
-- ✅ Comprehensive routing for all subnet types (2.5)
-- ✅ Modular code structure (8 KCL modules) (2.6)
-
-**Phase 3: Enhanced Networking Features (COMPLETED)**
-- ✅ VPC Endpoints - Gateway (S3, DynamoDB) (3.1)
-- ✅ Network ACLs - Public and Private subnets (3.2)
-- ✅ DHCP Options (3.3)
-- ✅ VPC Flow Logs - CloudWatch and S3 destinations (3.4)
-
-**Test Coverage**: 27 composition tests, 8 E2E tests - ALL PASSING ✅
-
-### Feature Parity: ~65% (vs Terraform Module)
-
-**Current Feature Gaps** (based on comprehensive Terraform comparison):
-
-**P0 - CRITICAL (Blocking production use):**
-1. ❌ **Subnet Groups** (3.5) - RDS/ElastiCache/Redshift requirement
-   - Impact: Cannot deploy managed database services
-   - Effort: Medium (2-3 days)
-
-**P1 - HIGH PRIORITY (Enterprise requirements):**
-2. ❌ **VPN Gateway** (4.1) - Hybrid cloud connectivity
-3. ❌ **Customer Gateways** (4.2) - VPN customer side
-4. ❌ **IPv6 Support** (4.3) - Modern cloud requirement (0% implemented)
-5. ❌ **Secondary CIDR Blocks** (3.6) - IP space expansion
-6. ❌ **IPAM Integration** (3.7) - Enterprise IP management
-
-**P2 - IMPORTANT (Significant value):**
-7. ❌ **NAT Gateway Enhancements** (4.4) - NAT per subnet, reuse EIPs, custom destination
-8. ❌ **Interface VPC Endpoints** (4.5) - EC2, SSM, RDS private connectivity
-9. ❌ **Extended NACL Support** (4.6) - Database, ElastiCache, Redshift, Intra NACLs
-10. ❌ **Extended Routing Options** (4.7) - Per-AZ public routes, ElastiCache/Redshift routing
-11. ❌ **Default Resource Management** (4.8) - Security hardening
-
-**P3 - NICE TO HAVE (Optional):**
-12. ❌ **Subnet Configuration Enhancements** (4.9) - Custom names, suffixes, per-AZ tags
-13. ❌ **VPC Configuration Enhancements** (4.10) - Instance tenancy, block public access
-14. ❌ **Outpost Subnets** (4.11) - AWS Outposts support
-
-### Next Priorities (Recommended Order)
-
-**IMMEDIATE (P0):**
-- **Task 3.5: Subnet Groups** - CRITICAL for production use
-
-**SHORT TERM (P1 - next 2-3 months):**
-- Task 4.1: VPN Gateway Support
-- Task 4.3: IPv6 Support (large effort, high impact)
-- Task 3.6: Secondary CIDR Blocks
-- Task 3.7: IPAM Integration
-
-**MEDIUM TERM (P2 - next 3-6 months):**
-- Task 4.4: NAT Gateway Enhancements
-- Task 4.5: Interface VPC Endpoints
-- Task 4.6-4.8: Extended NACLs, Routing, Default Resources
-
-**LONG TERM (P3 - future enhancements):**
-- Tasks 4.9-4.11: Configuration enhancements, Outposts
-
-### Development Velocity
-
-- **Phase 1-3 completed**: ~22 days (estimated 22-30 days)
-- **On track**: Yes ✅
-- **Test coverage**: Excellent (27 comp + 8 E2E)
-- **Code quality**: Excellent (modular, maintainable)
-
-### Reference
-
-All priorities and feature gaps identified through comprehensive comparison with terraform-aws-modules/terraform-aws-vpc module. See comparison analysis for detailed feature matrices and rationale.
-
 ---
 
-**Note**: This task list should be updated as the project progresses. Mark tasks as complete, add new tasks as needed, and adjust priorities based on feedback and requirements.
+**Note**: Task list updated regularly. See [Current Status](#current-status) at top for latest state and priorities.
