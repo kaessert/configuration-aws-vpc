@@ -32,6 +32,11 @@ _generateDBSubnetGroup = lambda oxr: any, dxr: any, ocds: any, dcds: any, region
                 "krm.kcl.dev/composition-resource-name" = "${_name}-db-subnet-group"
             }
             spec = {
+                providerConfigRef = {
+                    kind = "ProviderConfig"
+                    name = "default"
+                }
+                managementPolicies = ["*"]
                 forProvider = {
                     region = region
                     # Use label selector to match database subnets
@@ -72,6 +77,11 @@ _generateElastiCacheSubnetGroup = lambda oxr: any, dxr: any, ocds: any, dcds: an
                 "krm.kcl.dev/composition-resource-name" = "${_name}-elasticache-subnet-group"
             }
             spec = {
+                providerConfigRef = {
+                    kind = "ProviderConfig"
+                    name = "default"
+                }
+                managementPolicies = ["*"]
                 forProvider = {
                     region = region
                     # Use label selector to match elasticache subnets
@@ -112,6 +122,11 @@ _generateRedshiftSubnetGroup = lambda oxr: any, dxr: any, ocds: any, dcds: any, 
                 "krm.kcl.dev/composition-resource-name" = "${_name}-redshift-subnet-group"
             }
             spec = {
+                providerConfigRef = {
+                    kind = "ProviderConfig"
+                    name = "default"
+                }
+                managementPolicies = ["*"]
                 forProvider = {
                     region = region
                     # Use label selector to match redshift subnets
