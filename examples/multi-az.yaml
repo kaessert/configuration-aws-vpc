@@ -1,0 +1,206 @@
+# Multi-AZ High Availability VPC Configuration
+#
+# This example demonstrates a VPC designed for high availability across
+# three availability zones with fault-tolerant NAT Gateway configuration.
+#
+# Features:
+# - Three availability zones for maximum availability
+# - NAT Gateway per AZ for fault isolation
+# - Public and private subnets across all AZs
+# - Separate route tables per AZ for private subnets
+# - Automatic failover within each AZ
+#
+# Use Case: Production applications requiring 99.99% availability,
+#           fault tolerance, and isolation of failure domains.
+#
+# High Availability Design:
+# - Each AZ operates independently
+# - AZ failure only affects resources in that AZ
+# - Private subnets route through local NAT Gateway
+# - No cross-AZ dependencies for internet access
+# - Supports multi-AZ RDS, EKS, and other HA services
+#
+# Availability Calculation:
+# - Single AZ: ~99.5% (AWS SLA)
+# - Multi-AZ (2 zones): ~99.95%
+# - Multi-AZ (3 zones): ~99.99%
+# - Each NAT per AZ: Independent failure domain
+#
+# Cost Considerations:
+# - 3 NAT Gateways: ~$96/month + data transfer
+# - Higher availability justifies cost for production
+# - No cross-AZ data transfer for NAT traffic
+# - Can reduce to 2 AZs (~$64/month) if 99.95% is acceptable
+#
+# Fault Tolerance:
+# - AZ-a failure: Instances in AZ-b and AZ-c unaffected
+# - NAT Gateway failure: Isolated to single AZ
+# - Route table per AZ: No shared routing dependencies
+# - Application spans AZs: Automatic failover
+#
+# Best Practices:
+# - Distribute workloads evenly across AZs
+# - Use Application Load Balancer across AZs
+# - Deploy databases in Multi-AZ mode
+# - Configure auto-scaling across AZs
+# - Test AZ failure scenarios
+#
+# Related Examples:
+# - See nat-per-az.yaml for focused NAT per AZ explanation
+# - See complete-vpc.yaml for all features with multi-AZ
+# - See nat-single.yaml for cost-optimized single NAT alternative
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: multi-az-vpc
+  namespace: default
+  annotations:
+    description: "High availability VPC across 3 availability zones"
+    availability: "99.99%"
+    fault-tolerance: "per-az-isolation"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Three Availability Zones - Maximum HA
+  # AWS best practice: Use at least 3 AZs for production
+  azs:
+    - us-west-2a
+    - us-west-2b
+    - us-west-2c
+  
+  # Public subnets - one per AZ
+  # Each contains a NAT Gateway for its AZ
+  # Load balancers span these subnets for HA
+  publicSubnets:
+    - 10.0.0.0/24   # us-west-2a: NAT Gateway #1, ALB member
+    - 10.0.1.0/24   # us-west-2b: NAT Gateway #2, ALB member
+    - 10.0.2.0/24   # us-west-2c: NAT Gateway #3, ALB member
+  
+  # Private subnets - one per AZ
+  # Application servers, EKS worker nodes, etc.
+  # Each routes through its local AZ's NAT Gateway
+  privateSubnets:
+    - 10.0.10.0/24  # us-west-2a: Routes via NAT in 2a
+    - 10.0.11.0/24  # us-west-2b: Routes via NAT in 2b
+    - 10.0.12.0/24  # us-west-2c: Routes via NAT in 2c
+  
+  # Database subnets (optional, uncomment if needed)
+  # For Multi-AZ RDS deployments
+  # databaseSubnets:
+  #   - 10.0.20.0/24  # us-west-2a
+  #   - 10.0.21.0/24  # us-west-2b
+  #   - 10.0.22.0/24  # us-west-2c
+  # createDatabaseSubnetGroup: true
+  # createDatabaseSubnetRouteTable: true
+  # createDatabaseNatGatewayRoute: false  # Isolate databases
+  
+  # Gateway Configuration - HIGH AVAILABILITY
+  createIgw: true  # Single IGW (HA by design)
+  enableNatGateway: true  # Enable NAT Gateways
+  oneNatGatewayPerAz: true  # KEY SETTING: One NAT per AZ for fault isolation
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # Public IP Assignment
+  mapPublicIpOnLaunch: true
+  
+  # Tagging
+  tags:
+    Environment: production
+    ManagedBy: crossplane
+    HighAvailability: "true"
+    AvailabilityZones: "3"
+    FaultTolerance: per-az
+    SLA: "99.99"
+  
+  vpcTags:
+    Name: multi-az-vpc
+    Architecture: high-availability
+    NatStrategy: per-az
+  
+  publicSubnetTags:
+    Tier: public
+    Purpose: load-balancers-nat-gateways
+    HighAvailability: "true"
+    # Tag for AWS Load Balancer Controller
+    kubernetes.io/role/elb: "1"
+  
+  privateSubnetTags:
+    Tier: private
+    Purpose: application-servers
+    NatAccess: local-az
+    FaultIsolation: per-az
+    # Tag for internal load balancers
+    kubernetes.io/role/internal-elb: "1"
+
+# High Availability Architecture Notes
+#
+# Availability Zone Distribution:
+# 
+# AZ us-west-2a:
+#   - Public: 10.0.0.0/24 (ALB, NAT Gateway)
+#   - Private: 10.0.10.0/24 (App servers) → NAT in 2a
+#
+# AZ us-west-2b:
+#   - Public: 10.0.1.0/24 (ALB, NAT Gateway)
+#   - Private: 10.0.11.0/24 (App servers) → NAT in 2b
+#
+# AZ us-west-2c:
+#   - Public: 10.0.2.0/24 (ALB, NAT Gateway)
+#   - Private: 10.0.12.0/24 (App servers) → NAT in 2c
+#
+# Failure Scenarios:
+#
+# 1. AZ-a Failure (Infrastructure):
+#    - Impact: Resources in us-west-2a unavailable
+#    - Unaffected: us-west-2b and us-west-2c continue operating
+#    - ALB: Automatically removes unhealthy targets in 2a
+#    - NAT: Private subnets in 2b and 2c unaffected
+#    - Recovery: Automatic when AZ recovers
+#
+# 2. NAT Gateway Failure (Single AZ):
+#    - Impact: Private subnet in that AZ loses internet access
+#    - Unaffected: Other AZs' NAT Gateways continue working
+#    - Mitigation: Application instances in other AZs handle traffic
+#    - Note: NAT failures are rare (AWS manages redundancy)
+#
+# 3. Application Instance Failure:
+#    - Impact: Single instance unavailable
+#    - Mitigation: Auto Scaling launches replacement
+#    - ALB: Health checks remove failed instance
+#    - Recovery: Automatic via Auto Scaling
+#
+# Deployment Best Practices:
+#
+# 1. Auto Scaling Groups:
+#    - Min size: 3 (one per AZ)
+#    - Desired: 3+ (evenly distributed)
+#    - AZ rebalancing: Enabled
+#
+# 2. Application Load Balancer:
+#    - Enable all AZs (3)
+#    - Cross-zone load balancing: Enabled
+#    - Health checks: Configured properly
+#
+# 3. RDS Multi-AZ:
+#    - Primary: One AZ
+#    - Standby: Different AZ
+#    - Automatic failover: < 60 seconds
+#
+# 4. Amazon EKS:
+#    - Control plane: Spans multiple AZs (AWS managed)
+#    - Worker nodes: Deploy in all private subnets
+#    - Pod distribution: Use pod topology spread constraints
+#
+# Monitoring and Alerts:
+# - CloudWatch alarms for NAT Gateway metrics
+# - VPC Flow Logs for traffic analysis
+# - ALB health check failures
+# - Auto Scaling events
+# - RDS failover events
+

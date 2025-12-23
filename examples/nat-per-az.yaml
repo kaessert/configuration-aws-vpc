@@ -1,0 +1,97 @@
+# VPC with NAT Gateway per AZ - High Availability Strategy
+#
+# This example demonstrates a high availability NAT Gateway configuration with
+# one NAT Gateway per availability zone for fault tolerance.
+#
+# Features:
+# - NAT Gateway in each availability zone
+# - Each private subnet routes through its local AZ's NAT Gateway
+# - Fault isolation: AZ failure only affects that AZ's resources
+# - No cross-AZ data transfer for NAT traffic
+# - Public subnets for NAT Gateway placement
+#
+# Use Case: Production environments requiring high availability and fault tolerance
+#           for private subnet internet access.
+#
+# Cost Considerations:
+# - Multiple NAT Gateways: ~$32/month per NAT + data transfer
+# - 3 AZs = ~$96/month for NAT Gateways (vs ~$32/month for single NAT)
+# - Higher cost but improved availability and performance
+# - No cross-AZ data transfer charges for NAT traffic
+#
+# Benefits:
+# - Fault tolerance: Each AZ has independent NAT Gateway
+# - Better performance: Local NAT reduces latency
+# - Cost efficiency: No cross-AZ data transfer charges
+# - Production ready: Recommended for critical workloads
+#
+# Cost Optimization Alternative: See nat-single.yaml for single NAT configuration
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: ha-vpc
+  namespace: default
+  annotations:
+    description: "High availability VPC with NAT Gateway per AZ"
+    high-availability: "true"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Multiple availability zones for high availability
+  # Each AZ will get its own NAT Gateway
+  azs:
+    - us-west-2a
+    - us-west-2b
+    - us-west-2c
+  
+  # Public subnets - one NAT Gateway per public subnet/AZ
+  # Each NAT Gateway will be created in the public subnet of its AZ
+  publicSubnets:
+    - 10.0.0.0/24   # us-west-2a - will contain NAT Gateway #1
+    - 10.0.1.0/24   # us-west-2b - will contain NAT Gateway #2
+    - 10.0.2.0/24   # us-west-2c - will contain NAT Gateway #3
+  
+  # Private subnets - each routes through its local AZ's NAT Gateway
+  # Fault isolation: If us-west-2a fails, only 10.0.10.0/24 is affected
+  privateSubnets:
+    - 10.0.10.0/24  # us-west-2a - routes through NAT in us-west-2a
+    - 10.0.11.0/24  # us-west-2b - routes through NAT in us-west-2b
+    - 10.0.12.0/24  # us-west-2c - routes through NAT in us-west-2c
+  
+  # Gateway Configuration - NAT PER AZ strategy
+  createIgw: true  # Internet Gateway for public subnets
+  enableNatGateway: true  # Enable NAT Gateways
+  oneNatGatewayPerAz: true  # KEY SETTING: Create one NAT Gateway per AZ
+  # singleNatGateway: false  # Not set - mutually exclusive with oneNatGatewayPerAz
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # Public IP Assignment
+  mapPublicIpOnLaunch: true
+  
+  # Tagging
+  tags:
+    Environment: production
+    ManagedBy: crossplane
+    HighAvailability: nat-per-az
+    FaultTolerance: enabled
+  
+  vpcTags:
+    Name: ha-vpc
+    NatStrategy: per-az
+    Resilience: high
+  
+  publicSubnetTags:
+    Tier: public
+    NatGateway: "contains-local-nat"
+  
+  privateSubnetTags:
+    Tier: private
+    NatGateway: "uses-local-nat"
+    InternetAccess: "via-local-nat"
+    FaultIsolation: "per-az"

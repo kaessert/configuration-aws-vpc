@@ -132,14 +132,28 @@ kubectl describe xvpc my-vpc
 
 ### More Examples
 
-See the [examples/](examples/) directory for comprehensive examples:
+See the [examples/](examples/) directory for comprehensive, production-ready examples:
 
+**Basic Examples:**
 - `simple-vpc.yaml` - Minimal VPC with public subnets
 - `multi-subnet-vpc.yaml` - All subnet types across multiple AZs
-- `example.yaml` - Complete VPC with all features
-- `xr-simple-vpc.yaml` - Basic VPC configuration
 
-**Want to contribute?** We welcome additional examples showcasing the implemented features (NAT strategies, VPC endpoints, Network ACLs, DHCP options, Flow Logs, and Subnet Groups).
+**Feature Showcases:**
+- `complete-vpc.yaml` ⭐ - **Complete reference** with all features (NAT, endpoints, ACLs, DHCP, Flow Logs, Subnet Groups, Secondary CIDRs)
+- `with-endpoints.yaml` - VPC Endpoints for private AWS service access
+- `with-flow-logs.yaml` - Traffic monitoring with VPC Flow Logs
+
+**NAT Gateway Strategies:**
+- `nat-single.yaml` - Single NAT Gateway (cost-optimized: ~$32/month)
+- `nat-per-az.yaml` - NAT Gateway per AZ (high availability: ~$96/month)
+
+**Advanced Configurations:**
+- `private-only.yaml` - Private subnets without direct internet access
+- `multi-az.yaml` - High availability across 3 availability zones
+
+**Total**: 9 production-ready examples covering all implemented features with inline documentation, cost analysis, and use case guidance.
+
+See [examples/README.md](examples/README.md) for detailed documentation, cost comparisons, and usage guidance.
 
 ## Architecture
 

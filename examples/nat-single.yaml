@@ -1,0 +1,93 @@
+# VPC with Single NAT Gateway - Cost Optimization Strategy
+#
+# This example demonstrates a cost-optimized NAT Gateway configuration using
+# a single NAT Gateway shared across all availability zones and private subnets.
+#
+# Features:
+# - Single NAT Gateway in one availability zone
+# - All private subnets across all AZs route through this single NAT
+# - Public subnets for Internet Gateway routing
+# - Cost savings compared to NAT per AZ strategy
+#
+# Use Case: Development, staging, or cost-sensitive environments where high
+#           availability for NAT is not critical.
+#
+# Cost Considerations:
+# - Single NAT Gateway: ~$32/month + data transfer
+# - Savings: ~$64-96/month vs NAT per AZ (2-3 AZs)
+# - Data transfer charges still apply
+#
+# Trade-offs:
+# - Lower cost: Only one NAT Gateway to pay for
+# - Single point of failure: If the AZ with NAT fails, all private subnets lose internet
+# - Cross-AZ data transfer: Private subnets in other AZs incur cross-AZ transfer costs
+# - Not recommended for production workloads requiring high availability
+#
+# High Availability Alternative: See nat-per-az.yaml for fault-tolerant configuration
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: cost-optimized-vpc
+  namespace: default
+  annotations:
+    description: "VPC with single NAT Gateway for cost optimization"
+    cost-optimization: "true"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Multiple availability zones for resource distribution
+  # Note: Despite 3 AZs, only ONE NAT Gateway will be created
+  azs:
+    - us-west-2a
+    - us-west-2b
+    - us-west-2c
+  
+  # Public subnets for NAT Gateway and internet-facing resources
+  publicSubnets:
+    - 10.0.0.0/24
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+  
+  # Private subnets - all will share the single NAT Gateway
+  # Note: Private subnets in us-west-2b and us-west-2c will route through
+  # the NAT Gateway in us-west-2a, incurring cross-AZ data transfer costs
+  privateSubnets:
+    - 10.0.10.0/24
+    - 10.0.11.0/24
+    - 10.0.12.0/24
+  
+  # Gateway Configuration - SINGLE NAT strategy
+  createIgw: true  # Internet Gateway for public subnets
+  enableNatGateway: true  # Enable NAT Gateway
+  singleNatGateway: true  # KEY SETTING: Use only one NAT Gateway
+  # oneNatGatewayPerAz: false  # Not set - mutually exclusive with singleNatGateway
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # Public IP Assignment
+  mapPublicIpOnLaunch: true
+  
+  # Tagging
+  tags:
+    Environment: development
+    ManagedBy: crossplane
+    CostOptimization: single-nat
+    HighAvailability: "false"
+  
+  vpcTags:
+    Name: cost-optimized-vpc
+    NatStrategy: single
+  
+  publicSubnetTags:
+    Tier: public
+    NatGateway: "contains-nat"  # First public subnet contains the NAT Gateway
+  
+  privateSubnetTags:
+    Tier: private
+    NatGateway: "shared-single"
+    InternetAccess: "via-single-nat"

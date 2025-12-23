@@ -1,0 +1,186 @@
+# Private-Only VPC - No Direct Internet Access
+#
+# This example demonstrates a VPC with private and database subnets only,
+# without an Internet Gateway. External connectivity is provided through
+# NAT Gateway and VPC endpoints.
+#
+# Features:
+# - No Internet Gateway (no direct internet access)
+# - Private subnets with NAT Gateway for outbound access
+# - Database subnets completely isolated (no NAT routing)
+# - VPC Endpoints for private AWS service access (S3, DynamoDB)
+# - Database subnet group for RDS instances
+# - Enhanced security posture
+#
+# Use Case: Highly secure environments where resources must not have direct
+#           internet access. Common in financial services, healthcare (HIPAA),
+#           PCI DSS compliant environments, or any workload requiring strict
+#           network isolation.
+#
+# Security Benefits:
+# - No public IP addresses assigned
+# - No direct internet exposure
+# - Database tier completely isolated
+# - AWS service access via VPC endpoints (traffic stays in AWS)
+# - Reduced attack surface
+#
+# Connectivity Options:
+# - Outbound internet: Via NAT Gateway (private subnets only)
+# - AWS services: Via VPC endpoints (no internet required)
+# - Inbound access: Requires VPN Gateway or AWS Direct Connect (not shown)
+# - Management: AWS Systems Manager Session Manager (no SSH bastion needed)
+#
+# Cost Considerations:
+# - Single NAT Gateway: ~$32/month + data transfer
+# - VPC Endpoints (Gateway): FREE for S3 and DynamoDB
+# - No Internet Gateway charges (N/A)
+# - Consider Interface endpoints for other AWS services (~$7/month each)
+#
+# Production Notes:
+# - For production access, add VPN Gateway or Direct Connect
+# - Use AWS Systems Manager for instance management (no bastion required)
+# - Consider AWS PrivateLink for third-party service access
+# - Database subnets are fully isolated - no internet access at all
+#
+# Related Examples:
+# - See complete-vpc.yaml for full feature set including public subnets
+# - See with-endpoints.yaml for detailed VPC endpoint configuration
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: private-only-vpc
+  namespace: default
+  annotations:
+    description: "Private VPC without Internet Gateway"
+    security: "high"
+    compliance: "pci-dss-hipaa-ready"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Availability zones for high availability
+  azs:
+    - us-west-2a
+    - us-west-2b
+  
+  # NO PUBLIC SUBNETS - this is key for private-only configuration
+  # publicSubnets: []  # Not specified = no public subnets
+  
+  # Private subnets - for application servers
+  # These subnets can access internet via NAT Gateway for updates, etc.
+  privateSubnets:
+    - 10.0.10.0/24
+    - 10.0.11.0/24
+  
+  # Database subnets - completely isolated
+  # No internet access, no NAT Gateway routing
+  databaseSubnets:
+    - 10.0.20.0/24
+    - 10.0.21.0/24
+  
+  # Gateway Configuration - NO INTERNET GATEWAY
+  createIgw: false  # KEY SETTING: No direct internet access
+  
+  # NAT Gateway for private subnet outbound access
+  # Note: NAT Gateway requires public subnet to be placed in
+  # If no public subnets exist, implementation may need adjustment
+  # For true private-only, consider removing NAT or using Transit Gateway
+  enableNatGateway: true
+  singleNatGateway: true  # Cost optimization
+  
+  # Route Table Configuration - Isolate database tier
+  createDatabaseSubnetRouteTable: true
+  createDatabaseNatGatewayRoute: false  # KEY SETTING: Database has no internet access
+  
+  # VPC Endpoints - Private AWS service access without NAT
+  enableS3Endpoint: true
+  s3EndpointType: "Gateway"  # Free gateway endpoint
+  enableDynamodbEndpoint: true  # Free gateway endpoint
+  
+  # Applications in private subnets can access S3 and DynamoDB
+  # without going through NAT Gateway, saving costs and improving security
+  
+  # Database Subnet Group - For RDS instances
+  createDatabaseSubnetGroup: true
+  databaseSubnetGroupName: "private-vpc-rds"
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # Public IP Assignment - not applicable without public subnets
+  mapPublicIpOnLaunch: false  # No public IPs
+  
+  # Tagging
+  tags:
+    Environment: production
+    ManagedBy: crossplane
+    Security: private-only
+    Compliance: pci-dss
+    InternetAccess: none-direct
+  
+  vpcTags:
+    Name: private-only-vpc
+    Type: isolated
+    InternetGateway: "false"
+  
+  privateSubnetTags:
+    Tier: private
+    InternetAccess: nat-gateway-only
+    Workload: application
+  
+  databaseSubnetTags:
+    Tier: database
+    InternetAccess: none
+    Isolation: complete
+    Workload: database
+    Compliance: isolated
+  
+  vpcEndpointTags:
+    Purpose: private-aws-access
+    Security: no-internet-required
+  
+  databaseSubnetGroupTags:
+    Service: rds
+    Isolation: complete
+    Internet: none
+
+# Access Patterns for Private-Only VPC
+#
+# Management Access:
+# 1. AWS Systems Manager Session Manager (recommended):
+#    - No bastion host required
+#    - No SSH keys to manage
+#    - Fully audited access
+#    - Works with private-only instances
+#
+# 2. VPN Gateway (for user access):
+#    - Add: enableVpnGateway: true
+#    - Configure customer gateway
+#    - Corporate network access to VPC
+#
+# 3. AWS Direct Connect (for dedicated connection):
+#    - Private, dedicated network connection
+#    - Consistent network performance
+#    - Reduced data transfer costs
+#
+# Application Access:
+# - Load Balancer in public subnet (if you add public subnets)
+# - AWS PrivateLink for service exposure
+# - API Gateway with VPC Link
+#
+# AWS Service Access:
+# - S3, DynamoDB: Via free Gateway endpoints (configured)
+# - Other services: Add Interface endpoints (~$7/month each)
+#   - enableSecretsManagerEndpoint: true
+#   - enableEcrApiEndpoint: true
+#   - enableEcrDkrEndpoint: true
+#
+# Database Access:
+# - RDS instances in database subnets
+# - Access only from private subnet resources
+# - No internet connectivity
+# - Use Secrets Manager for credentials (via Interface endpoint)
+

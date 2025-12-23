@@ -1,0 +1,112 @@
+# VPC with VPC Endpoints - Private AWS Service Access
+#
+# This example demonstrates VPC endpoints for accessing AWS services privately
+# without requiring internet gateway, NAT device, VPN connection, or AWS Direct Connect.
+#
+# Features:
+# - S3 Gateway Endpoint for private S3 access
+# - DynamoDB Gateway Endpoint for private DynamoDB access
+# - Private subnets can access AWS services without NAT Gateway
+# - No data transfer charges for Gateway endpoints
+# - Enhanced security: traffic stays within AWS network
+#
+# Use Case: Applications that need to access S3 or DynamoDB from private subnets
+#           without routing through NAT Gateway or internet, improving security
+#           and reducing data transfer costs.
+#
+# Cost Considerations:
+# - Gateway endpoints (S3, DynamoDB): FREE - no hourly or data transfer charges
+# - No NAT Gateway charges for S3/DynamoDB traffic
+# - Significant cost savings for high-volume S3/DynamoDB access
+#
+# Security Benefits:
+# - Traffic never leaves AWS network
+# - No exposure to internet
+# - Can restrict access with endpoint policies
+# - Reduced attack surface
+#
+# Performance Benefits:
+# - Lower latency than going through NAT Gateway
+# - No NAT Gateway bandwidth limits
+# - Direct access to service
+#
+# Related Examples:
+# - See complete-vpc.yaml for endpoints combined with other features
+# - See private-only.yaml for endpoints with isolated private subnets
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: vpc-with-endpoints
+  namespace: default
+  annotations:
+    description: "VPC with Gateway endpoints for S3 and DynamoDB"
+    feature: "vpc-endpoints"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Availability zones
+  azs:
+    - us-west-2a
+    - us-west-2b
+  
+  # Public subnets - for resources that need direct internet access
+  publicSubnets:
+    - 10.0.0.0/24
+    - 10.0.1.0/24
+  
+  # Private subnets - will access S3 and DynamoDB via VPC endpoints
+  # No NAT Gateway needed for S3/DynamoDB access thanks to endpoints
+  privateSubnets:
+    - 10.0.10.0/24
+    - 10.0.11.0/24
+  
+  # Gateway Configuration
+  createIgw: true  # Internet Gateway for public subnets
+  enableNatGateway: false  # No NAT Gateway needed - endpoints provide AWS service access
+  
+  # VPC Endpoints Configuration - Gateway Endpoints (FREE)
+  enableS3Endpoint: true
+  s3EndpointType: "Gateway"  # Gateway endpoint - no charge
+  # Gateway endpoints are added to route tables automatically
+  # Private subnets can now access S3 without NAT Gateway
+  
+  enableDynamodbEndpoint: true
+  # DynamoDB Gateway endpoint - also no charge
+  # Private subnets can now access DynamoDB without NAT Gateway
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # Public IP Assignment
+  mapPublicIpOnLaunch: true
+  
+  # Tagging
+  tags:
+    Environment: production
+    ManagedBy: crossplane
+    Feature: vpc-endpoints
+    CostOptimization: "true"
+  
+  vpcTags:
+    Name: vpc-with-endpoints
+    Purpose: demonstrate-endpoints
+  
+  publicSubnetTags:
+    Tier: public
+    Endpoints: available
+  
+  privateSubnetTags:
+    Tier: private
+    Endpoints: s3-dynamodb
+    InternetAccess: "none-via-endpoints"
+    CostSavings: "no-nat-for-aws-services"
+  
+  vpcEndpointTags:
+    Purpose: private-aws-access
+    Cost: free-gateway-endpoints
+    Services: s3-dynamodb
+    Security: traffic-stays-in-aws

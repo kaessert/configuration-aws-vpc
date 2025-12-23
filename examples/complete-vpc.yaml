@@ -1,0 +1,265 @@
+# Complete VPC Configuration with All Features
+#
+# This example demonstrates ALL implemented features of the VPC composition:
+# - Primary and secondary CIDR blocks for IP address expansion
+# - All 6 subnet types across multiple availability zones
+# - Internet Gateway for public subnet access
+# - NAT Gateway per AZ for high availability private subnet internet access
+# - VPC Endpoints (S3 and DynamoDB) for private AWS service access
+# - Network ACLs with custom rules for public and private subnets
+# - Custom DHCP options (DNS, NTP, NetBIOS configuration)
+# - VPC Flow Logs to CloudWatch for traffic monitoring
+# - Subnet Groups for RDS, ElastiCache, and Redshift
+# - Comprehensive tagging strategy for cost allocation and management
+#
+# Use Case: Production environment requiring maximum security, high availability,
+#           and comprehensive monitoring across all infrastructure components.
+#
+# Cost Considerations:
+# - 3 NAT Gateways (~$96/month + data transfer)
+# - 2 VPC Endpoints (~$14/month)
+# - Flow Logs storage (varies by traffic volume)
+# - Standard VPC resources (no charge)
+#
+# Production Notes:
+# - High availability: NAT per AZ ensures AZ failure doesn't affect other zones
+# - Security: Network ACLs provide additional layer beyond security groups
+# - Monitoring: Flow Logs capture all network traffic for analysis
+# - Service isolation: Multiple subnet types for different workload tiers
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: complete-vpc
+  namespace: default
+  annotations:
+    description: "Complete VPC with all features enabled"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Secondary CIDR Blocks - expand IP address space
+  # Useful when initial CIDR is exhausted or for network segregation
+  secondaryCidrBlocks:
+    - 10.1.0.0/16
+  
+  # Availability Zones - 3 AZs for high availability
+  azs:
+    - us-west-2a
+    - us-west-2b
+    - us-west-2c
+  
+  # All 6 Subnet Types
+  # Public subnets: Internet-facing resources (load balancers, bastion hosts)
+  publicSubnets:
+    - 10.0.0.0/24
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+  
+  # Private subnets: Application servers without direct internet access
+  privateSubnets:
+    - 10.0.10.0/24
+    - 10.0.11.0/24
+    - 10.0.12.0/24
+  
+  # Database subnets: RDS and other database services
+  databaseSubnets:
+    - 10.0.20.0/24
+    - 10.0.21.0/24
+    - 10.0.22.0/24
+  
+  # ElastiCache subnets: Redis and Memcached clusters
+  elasticacheSubnets:
+    - 10.0.30.0/24
+    - 10.0.31.0/24
+    - 10.0.32.0/24
+  
+  # Redshift subnets: Data warehouse clusters
+  redshiftSubnets:
+    - 10.0.40.0/24
+    - 10.0.41.0/24
+    - 10.0.42.0/24
+  
+  # Intra subnets: Completely isolated, no internet access
+  intraSubnets:
+    - 10.0.50.0/24
+    - 10.0.51.0/24
+    - 10.0.52.0/24
+  
+  # Gateway Configuration
+  createIgw: true  # Internet Gateway for public subnets
+  enableNatGateway: true  # NAT Gateways for private subnet outbound access
+  oneNatGatewayPerAz: true  # High availability: one NAT per AZ
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # DHCP Options - custom DNS and NTP servers
+  enableDhcpOptions: true
+  dhcpOptionsDomainName: "example.internal"
+  dhcpOptionsDomainNameServers:
+    - "10.0.0.2"  # VPC DNS resolver
+    - "8.8.8.8"   # Google DNS as fallback
+  dhcpOptionsNtpServers:
+    - "169.254.169.123"  # AWS Time Sync Service
+  dhcpOptionsNetbiosNodeType: 2  # P-node (point-to-point)
+  
+  # VPC Endpoints - private access to AWS services without NAT Gateway
+  enableS3Endpoint: true
+  s3EndpointType: "Gateway"  # No hourly charge for Gateway endpoints
+  enableDynamodbEndpoint: true
+  
+  # VPC Flow Logs - comprehensive traffic monitoring
+  enableFlowLog: true
+  createFlowLogCloudwatchLogGroup: true
+  flowLogTrafficType: "ALL"  # Log ACCEPT, REJECT, and ALL traffic
+  flowLogMaxAggregationInterval: 60  # 1-minute aggregation for faster analysis
+  
+  # Network ACLs - additional security layer for public subnets
+  publicDedicatedNetworkAcl: true
+  publicInboundAclRules:
+    # Allow HTTP traffic
+    - ruleNumber: 100
+      protocol: "6"  # TCP
+      ruleAction: "allow"
+      cidrBlock: "0.0.0.0/0"
+      fromPort: 80
+      toPort: 80
+    # Allow HTTPS traffic
+    - ruleNumber: 110
+      protocol: "6"  # TCP
+      ruleAction: "allow"
+      cidrBlock: "0.0.0.0/0"
+      fromPort: 443
+      toPort: 443
+    # Allow SSH from corporate network only
+    - ruleNumber: 120
+      protocol: "6"  # TCP
+      ruleAction: "allow"
+      cidrBlock: "203.0.113.0/24"  # Example corporate IP range
+      fromPort: 22
+      toPort: 22
+    # Allow ephemeral ports for return traffic
+    - ruleNumber: 130
+      protocol: "6"  # TCP
+      ruleAction: "allow"
+      cidrBlock: "0.0.0.0/0"
+      fromPort: 1024
+      toPort: 65535
+  
+  publicOutboundAclRules:
+    # Allow all outbound traffic (stateless, must explicitly allow)
+    - ruleNumber: 100
+      protocol: "-1"  # All protocols
+      ruleAction: "allow"
+      cidrBlock: "0.0.0.0/0"
+  
+  # Network ACLs - security layer for private subnets
+  privateDedicatedNetworkAcl: true
+  privateInboundAclRules:
+    # Allow traffic from VPC CIDR
+    - ruleNumber: 100
+      protocol: "-1"  # All protocols
+      ruleAction: "allow"
+      cidrBlock: "10.0.0.0/16"
+    # Allow ephemeral ports from internet (return traffic)
+    - ruleNumber: 110
+      protocol: "6"  # TCP
+      ruleAction: "allow"
+      cidrBlock: "0.0.0.0/0"
+      fromPort: 1024
+      toPort: 65535
+  
+  privateOutboundAclRules:
+    # Allow all outbound traffic
+    - ruleNumber: 100
+      protocol: "-1"  # All protocols
+      ruleAction: "allow"
+      cidrBlock: "0.0.0.0/0"
+  
+  # Route Table Configuration
+  createDatabaseSubnetRouteTable: true  # Separate routing for database tier
+  createDatabaseNatGatewayRoute: false  # Databases isolated from internet
+  createElasticacheSubnetRouteTable: true
+  createRedshiftSubnetRouteTable: true
+  
+  # Subnet Groups for AWS Services
+  createDatabaseSubnetGroup: true  # For RDS instances
+  databaseSubnetGroupName: "complete-vpc-rds"
+  
+  createElasticacheSubnetGroup: true  # For ElastiCache clusters
+  elasticacheSubnetGroupName: "complete-vpc-cache"
+  
+  createRedshiftSubnetGroup: true  # For Redshift clusters
+  redshiftSubnetGroupName: "complete-vpc-dw"
+  
+  # Public IP Assignment
+  mapPublicIpOnLaunch: true  # Auto-assign public IPs to public subnet instances
+  
+  # Comprehensive Tagging Strategy
+  tags:
+    Environment: production
+    ManagedBy: crossplane
+    Project: complete-vpc-demo
+    CostCenter: engineering
+    Compliance: required
+  
+  vpcTags:
+    Name: complete-vpc
+    Type: production
+  
+  publicSubnetTags:
+    Tier: public
+    InternetAccess: direct
+    kubernetes.io/role/elb: "1"  # For AWS Load Balancer Controller
+  
+  privateSubnetTags:
+    Tier: private
+    InternetAccess: nat
+    kubernetes.io/role/internal-elb: "1"  # For internal load balancers
+  
+  databaseSubnetTags:
+    Tier: database
+    InternetAccess: none
+    Workload: database
+  
+  elasticacheSubnetTags:
+    Tier: cache
+    InternetAccess: none
+    Workload: cache
+  
+  redshiftSubnetTags:
+    Tier: warehouse
+    InternetAccess: none
+    Workload: analytics
+  
+  intraSubnetTags:
+    Tier: isolated
+    InternetAccess: none
+    Workload: internal
+  
+  vpcEndpointTags:
+    Purpose: private-aws-access
+    CostOptimization: "true"
+  
+  publicAclTags:
+    Purpose: public-subnet-security
+    Layer: network
+  
+  privateAclTags:
+    Purpose: private-subnet-security
+    Layer: network
+  
+  databaseSubnetGroupTags:
+    Service: rds
+    Purpose: database-instances
+  
+  elasticacheSubnetGroupTags:
+    Service: elasticache
+    Purpose: cache-clusters
+  
+  redshiftSubnetGroupTags:
+    Service: redshift
+    Purpose: data-warehouse

@@ -1,0 +1,174 @@
+# VPC with Flow Logs - Traffic Monitoring and Analysis
+#
+# This example demonstrates VPC Flow Logs configuration for capturing and
+# analyzing network traffic patterns, troubleshooting connectivity issues,
+# and meeting compliance requirements.
+#
+# Features:
+# - VPC Flow Logs to CloudWatch Logs
+# - Traffic filtering options (ALL, ACCEPT, REJECT)
+# - Custom aggregation intervals
+# - Alternative S3 destination (commented)
+# - S3-specific options: Parquet format, Hive partitions
+#
+# Use Case: Security monitoring, network troubleshooting, compliance auditing,
+#           cost analysis, and understanding traffic patterns.
+#
+# Cost Considerations:
+# - CloudWatch Logs: $0.50/GB ingested + $0.03/GB stored
+# - S3: $0.023/GB stored (cheaper for long-term storage)
+# - Typical VPC: 10-50 GB/month depending on traffic volume
+# - Use S3 with Parquet format for cost-effective long-term storage
+#
+# Flow Log Destinations:
+# - CloudWatch Logs: Real-time analysis, CloudWatch Insights queries
+# - S3: Cost-effective long-term storage, Athena queries, Parquet format
+#
+# Traffic Analysis Use Cases:
+# - Security: Detect unusual traffic patterns, unauthorized access attempts
+# - Troubleshooting: Identify connection failures, routing issues
+# - Compliance: Audit network traffic for regulatory requirements
+# - Cost optimization: Analyze data transfer patterns
+#
+# Related Examples:
+# - See complete-vpc.yaml for Flow Logs with all other features
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: vpc-with-flow-logs
+  namespace: default
+  annotations:
+    description: "VPC with Flow Logs for traffic monitoring"
+    feature: "vpc-flow-logs"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+  
+  # Availability zones
+  azs:
+    - us-west-2a
+    - us-west-2b
+  
+  # Public and private subnets
+  publicSubnets:
+    - 10.0.0.0/24
+    - 10.0.1.0/24
+  
+  privateSubnets:
+    - 10.0.10.0/24
+    - 10.0.11.0/24
+  
+  # Gateway Configuration
+  createIgw: true
+  enableNatGateway: true
+  singleNatGateway: true
+  
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+  
+  # VPC Flow Logs Configuration - CloudWatch Destination
+  enableFlowLog: true
+  createFlowLogCloudwatchLogGroup: true  # Create CloudWatch Log Group
+  
+  # Traffic Type Options:
+  # - ALL: Capture all traffic (accepted and rejected)
+  # - ACCEPT: Only capture accepted traffic
+  # - REJECT: Only capture rejected traffic (useful for security analysis)
+  flowLogTrafficType: "ALL"
+  
+  # Aggregation Interval Options:
+  # - 60 seconds: Faster visibility, higher costs, more detailed
+  # - 600 seconds (10 minutes): Lower costs, less detail (default)
+  flowLogMaxAggregationInterval: 60  # 1-minute intervals for faster analysis
+  
+  # Alternative Configuration: S3 Destination (uncomment to use)
+  # More cost-effective for long-term storage and large volumes
+  # Requires CloudWatch destination to be disabled
+  #
+  # createFlowLogCloudwatchLogGroup: false  # Disable CloudWatch
+  # createFlowLogS3Bucket: true  # Create S3 bucket instead
+  #
+  # # S3 Flow Log Format Options:
+  # # - plain-text: Human-readable, larger files
+  # # - parquet: Columnar format, 50-80% smaller, optimized for Athena
+  # flowLogFileFormat: "parquet"
+  #
+  # # Hive-compatible partitions for efficient Athena queries
+  # # Creates partition structure: s3://bucket/AWSLogs/account/vpclogs/region/year/month/day/
+  # flowLogHiveCompatiblePartitions: true
+  #
+  # # Per-hour partitioning for finer granularity
+  # # Adds hour to partition structure: .../day/hour/
+  # flowLogPerHourPartition: true
+  #
+  # # Example Athena query with Hive partitions:
+  # # SELECT * FROM vpc_flow_logs
+  # # WHERE year='2024' AND month='01' AND day='15'
+  # #   AND sourceaddress = '10.0.1.5'
+  
+  # Public IP Assignment
+  mapPublicIpOnLaunch: true
+  
+  # Tagging
+  tags:
+    Environment: production
+    ManagedBy: crossplane
+    Feature: vpc-flow-logs
+    Monitoring: enabled
+    Compliance: required
+  
+  vpcTags:
+    Name: vpc-with-flow-logs
+    Monitoring: flow-logs-enabled
+    SecurityAnalysis: enabled
+  
+  publicSubnetTags:
+    Tier: public
+    FlowLogs: enabled
+  
+  privateSubnetTags:
+    Tier: private
+    FlowLogs: enabled
+
+# Example Flow Log Analysis Queries
+#
+# CloudWatch Insights Query Examples:
+#
+# 1. Top 10 source IPs by traffic volume:
+#    fields @timestamp, srcAddr, bytes
+#    | stats sum(bytes) as totalBytes by srcAddr
+#    | sort totalBytes desc
+#    | limit 10
+#
+# 2. Rejected connections (security analysis):
+#    fields @timestamp, srcAddr, dstAddr, srcPort, dstPort, action
+#    | filter action = "REJECT"
+#    | sort @timestamp desc
+#
+# 3. Traffic to specific destination port:
+#    fields @timestamp, srcAddr, dstAddr, protocol, action, bytes
+#    | filter dstPort = 443
+#    | stats count(*) as requestCount, sum(bytes) as totalBytes by srcAddr
+#
+# Athena Query Examples (for S3 destination with Parquet):
+#
+# 1. Create table (Hive partitions):
+#    CREATE EXTERNAL TABLE vpc_flow_logs (
+#      srcaddr string, dstaddr string, srcport int, dstport int,
+#      protocol bigint, packets bigint, bytes bigint,
+#      start bigint, `end` bigint, action string, logstatus string
+#    )
+#    PARTITIONED BY (year string, month string, day string, hour string)
+#    STORED AS PARQUET
+#    LOCATION 's3://your-bucket/AWSLogs/account-id/vpcflowlogs/region/'
+#
+# 2. Query rejected traffic:
+#    SELECT srcaddr, dstaddr, dstport, COUNT(*) as attempts
+#    FROM vpc_flow_logs
+#    WHERE action = 'REJECT' AND year='2024' AND month='01'
+#    GROUP BY srcaddr, dstaddr, dstport
+#    ORDER BY attempts DESC
+
