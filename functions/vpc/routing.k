@@ -29,7 +29,7 @@ _generatePublicRouteTable = lambda config: {str: any} -> [any] {
         ec2v1beta1.RouteTable{
             metadata = config.metadata("public-route-table") | {
                 name = "rtb-public-${config.vpcName}"
-                labels = config.tags | {
+                labels = config.sanitizeLabels(config.tags) | {
                     "route-table-type": "public"
                 }
             }
@@ -142,7 +142,7 @@ _generatePrivateRouteTables = lambda config: {str: any} -> [any] {
         ec2v1beta1.RouteTable{
             metadata = config.metadata("private-route-table-${i}") | {
                 name = "rtb-private-${config.vpcName}-${config.azs[i]}"
-                labels = config.tags | {
+                labels = config.sanitizeLabels(config.tags) | {
                     "route-table-type": "private"
                     "az": config.azs[i]
                 }
@@ -167,7 +167,7 @@ _generatePrivateRouteTables = lambda config: {str: any} -> [any] {
         ec2v1beta1.RouteTable{
             metadata = config.metadata("private-route-table") | {
                 name = "rtb-private-${config.vpcName}"
-                labels = config.tags | {
+                labels = config.sanitizeLabels(config.tags) | {
                     "route-table-type": "private"
                 }
             }
@@ -327,7 +327,7 @@ _generateDatabaseRouteTable = lambda config: {str: any} -> [any] {
         ec2v1beta1.RouteTable{
             metadata = config.metadata("database-route-table") | {
                 name = "rtb-database-${config.vpcName}"
-                labels = config.tags | {
+                labels = config.sanitizeLabels(config.tags) | {
                     "route-table-type": "database"
                 }
             }
@@ -438,7 +438,7 @@ _generateIntraRouteTable = lambda config: {str: any} -> [any] {
         ec2v1beta1.RouteTable{
             metadata = config.metadata("intra-route-table") | {
                 name = "rtb-intra-${config.vpcName}"
-                labels = config.tags | {
+                labels = config.sanitizeLabels(config.tags) | {
                     "route-table-type": "intra"
                 }
             }

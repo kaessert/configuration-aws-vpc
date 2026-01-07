@@ -28,7 +28,7 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("public-subnet-${i}") | {
                 name = "subnet-public-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.publicSubnetTags | {
+                labels = config.sanitizeLabels(config.tags | config.publicSubnetTags) | {
                     "subnet-type": "public"
                     "az": config.azs[i % len(config.azs)]
                 }
@@ -68,7 +68,7 @@ _generatePrivateSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("private-subnet-${i}") | {
                 name = "subnet-private-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.privateSubnetTags | {
+                labels = config.sanitizeLabels(config.tags | config.privateSubnetTags) | {
                     "subnet-type": "private"
                     "az": config.azs[i % len(config.azs)]
                 }
@@ -108,7 +108,7 @@ _generateDatabaseSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("database-subnet-${i}") | {
                 name = "subnet-database-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.databaseSubnetTags | {
+                labels = config.sanitizeLabels(config.tags | config.databaseSubnetTags) | {
                     "subnet-type": "database"
                     "az": config.azs[i % len(config.azs)]
                 }
@@ -148,7 +148,7 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("elasticache-subnet-${i}") | {
                 name = "subnet-elasticache-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.elasticacheSubnetTags | {
+                labels = config.sanitizeLabels(config.tags | config.elasticacheSubnetTags) | {
                     "subnet-type": "elasticache"
                     "az": config.azs[i % len(config.azs)]
                 }
@@ -188,7 +188,7 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("redshift-subnet-${i}") | {
                 name = "subnet-redshift-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.redshiftSubnetTags | {
+                labels = config.sanitizeLabels(config.tags | config.redshiftSubnetTags) | {
                     "subnet-type": "redshift"
                     "az": config.azs[i % len(config.azs)]
                 }
@@ -229,7 +229,7 @@ _generateIntraSubnets = lambda config: {str: any} -> [any] {
         ec2v1beta1.Subnet{
             metadata = config.metadata("intra-subnet-${i}") | {
                 name = "subnet-intra-${config.vpcName}-${config.azs[i % len(config.azs)]}"
-                labels = config.tags | config.intraSubnetTags | {
+                labels = config.sanitizeLabels(config.tags | config.intraSubnetTags) | {
                     "subnet-type": "intra"
                     "az": config.azs[i % len(config.azs)]
                 }

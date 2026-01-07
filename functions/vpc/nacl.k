@@ -42,7 +42,7 @@ _generatePublicNetworkAcl = lambda config: {str: any} -> [any] {
         ec2v1beta1.NetworkACL{
             metadata = config.metadata("public-nacl") | {
                 name = "nacl-public-${config.vpcName}"
-                labels = config.tags | config.publicAclTags | {
+                labels = config.sanitizeLabels(config.tags | config.publicAclTags) | {
                     "subnet-type": "public"
                 }
             }
@@ -96,12 +96,8 @@ _generatePublicInboundAclRules = lambda config: {str: any} -> [any] {
                     protocol = _protocolToNumber(rule.protocol)
                     ruleAction = rule.ruleAction
                     cidrBlock = rule.cidrBlock
-                    fromPort = rule.fromPort if rule?.fromPort else None
-                    toPort = rule.toPort if rule?.toPort else None
-                    icmpType = rule.icmpType if rule?.icmpType else None
-                    icmpCode = rule.icmpCode if rule?.icmpCode else None
                     egress = False
-                }
+                } | ({fromPort = rule.fromPort} if rule?.fromPort else {}) | ({toPort = rule.toPort} if rule?.toPort else {}) | ({icmpType = rule.icmpType} if rule?.icmpType else {}) | ({icmpCode = rule.icmpCode} if rule?.icmpCode else {})
             }
         }
         for rule in config.publicInboundAclRules
@@ -137,12 +133,8 @@ _generatePublicOutboundAclRules = lambda config: {str: any} -> [any] {
                     protocol = _protocolToNumber(rule.protocol)
                     ruleAction = rule.ruleAction
                     cidrBlock = rule.cidrBlock
-                    fromPort = rule.fromPort if rule?.fromPort else None
-                    toPort = rule.toPort if rule?.toPort else None
-                    icmpType = rule.icmpType if rule?.icmpType else None
-                    icmpCode = rule.icmpCode if rule?.icmpCode else None
                     egress = True
-                }
+                } | ({fromPort = rule.fromPort} if rule?.fromPort else {}) | ({toPort = rule.toPort} if rule?.toPort else {}) | ({icmpType = rule.icmpType} if rule?.icmpType else {}) | ({icmpCode = rule.icmpCode} if rule?.icmpCode else {})
             }
         }
         for rule in config.publicOutboundAclRules
@@ -168,7 +160,7 @@ _generatePrivateNetworkAcl = lambda config: {str: any} -> [any] {
         ec2v1beta1.NetworkACL{
             metadata = config.metadata("private-nacl") | {
                 name = "nacl-private-${config.vpcName}"
-                labels = config.tags | config.privateAclTags | {
+                labels = config.sanitizeLabels(config.tags | config.privateAclTags) | {
                     "subnet-type": "private"
                 }
             }
@@ -222,12 +214,8 @@ _generatePrivateInboundAclRules = lambda config: {str: any} -> [any] {
                     protocol = _protocolToNumber(rule.protocol)
                     ruleAction = rule.ruleAction
                     cidrBlock = rule.cidrBlock
-                    fromPort = rule.fromPort if rule?.fromPort else None
-                    toPort = rule.toPort if rule?.toPort else None
-                    icmpType = rule.icmpType if rule?.icmpType else None
-                    icmpCode = rule.icmpCode if rule?.icmpCode else None
                     egress = False
-                }
+                } | ({fromPort = rule.fromPort} if rule?.fromPort else {}) | ({toPort = rule.toPort} if rule?.toPort else {}) | ({icmpType = rule.icmpType} if rule?.icmpType else {}) | ({icmpCode = rule.icmpCode} if rule?.icmpCode else {})
             }
         }
         for rule in config.privateInboundAclRules
@@ -263,12 +251,8 @@ _generatePrivateOutboundAclRules = lambda config: {str: any} -> [any] {
                     protocol = _protocolToNumber(rule.protocol)
                     ruleAction = rule.ruleAction
                     cidrBlock = rule.cidrBlock
-                    fromPort = rule.fromPort if rule?.fromPort else None
-                    toPort = rule.toPort if rule?.toPort else None
-                    icmpType = rule.icmpType if rule?.icmpType else None
-                    icmpCode = rule.icmpCode if rule?.icmpCode else None
                     egress = True
-                }
+                } | ({fromPort = rule.fromPort} if rule?.fromPort else {}) | ({toPort = rule.toPort} if rule?.toPort else {}) | ({icmpType = rule.icmpType} if rule?.icmpType else {}) | ({icmpCode = rule.icmpCode} if rule?.icmpCode else {})
             }
         }
         for rule in config.privateOutboundAclRules

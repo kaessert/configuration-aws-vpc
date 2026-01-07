@@ -31,7 +31,7 @@ generateInternetGateway = lambda config: {str: any} -> [any] {
         ec2v1beta1.InternetGateway{
             metadata = config.metadata("igw") | {
                 name = "igw-${config.vpcName}"
-                labels = config.tags
+                labels = config.sanitizeLabels(config.tags)
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
@@ -63,7 +63,7 @@ generateEIPs = lambda config: {str: any} -> [any] {
         ec2v1beta1.EIP{
             metadata = config.metadata("eip-nat-${i}") | {
                 name = "eip-nat-${config.vpcName}-${config.azs[i]}"
-                labels = config.tags | {"az": config.azs[i]}
+                labels = config.sanitizeLabels(config.tags) | {"az": config.azs[i]}
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
@@ -82,7 +82,7 @@ generateEIPs = lambda config: {str: any} -> [any] {
         ec2v1beta1.EIP{
             metadata = config.metadata("eip-nat-0") | {
                 name = "eip-nat-${config.vpcName}-${config.azs[0]}"
-                labels = config.tags
+                labels = config.sanitizeLabels(config.tags)
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
@@ -116,7 +116,7 @@ generateNATGateways = lambda config: {str: any} -> [any] {
         ec2v1beta1.NATGateway{
             metadata = config.metadata("nat-${i}") | {
                 name = "nat-${config.vpcName}-${config.azs[i]}"
-                labels = config.tags | {"az": config.azs[i]}
+                labels = config.sanitizeLabels(config.tags) | {"az": config.azs[i]}
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
@@ -145,7 +145,7 @@ generateNATGateways = lambda config: {str: any} -> [any] {
         ec2v1beta1.NATGateway{
             metadata = config.metadata("nat-0") | {
                 name = "nat-${config.vpcName}-${config.azs[0]}"
-                labels = config.tags
+                labels = config.sanitizeLabels(config.tags)
             }
             spec = config.defaultV2Spec | {
                 forProvider = {

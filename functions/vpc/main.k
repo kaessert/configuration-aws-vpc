@@ -69,6 +69,25 @@ _metadata = lambda name: str -> any {
     { annotations = { "krm.kcl.dev/composition-resource-name" = name }}
 }
 
+# Sanitize tags for Kubernetes label values
+_sanitizeLabels = lambda tags: {str:str} -> {str:str} {
+    """
+    Sanitizes tag values to comply with Kubernetes label value constraints.
+
+    K8s label values must:
+    - Be 63 characters or less
+    - Consist only of alphanumeric characters, '-', '_', or '.'
+    - Start and end with an alphanumeric character
+
+    Args:
+        tags: Dictionary of tag key-value pairs
+
+    Returns:
+        Dictionary with sanitized values suitable for K8s labels
+    """
+    {k: v.replace("/", "-").replace(":", "-")[:63] for k, v in tags}
+}
+
 # v2 Common Spec Configuration
 # Crossplane v2 requires providerConfigRef.kind and managementPolicies
 _defaultV2Spec = {
@@ -186,6 +205,7 @@ config = {
     # Helper functions
     metadata = _metadata
     defaultV2Spec = _defaultV2Spec
+    sanitizeLabels = _sanitizeLabels
 
     # Core configuration
     vpcName = vpcName
