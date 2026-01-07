@@ -1,5 +1,5 @@
 [package]
-name = "test-test-xvpc-subnets-redshift"
+name = "test-vpc-subnets-redshift"
 version = "0.0.1"
 
 [dependencies]

@@ -1,5 +1,5 @@
 [package]
-name = "test-test-xvpc-igw-disabled"
+name = "test-vpc-igw-disabled"
 version = "0.0.1"
 
 [dependencies]

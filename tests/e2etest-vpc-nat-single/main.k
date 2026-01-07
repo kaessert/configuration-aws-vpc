@@ -19,7 +19,7 @@ import models.io.upbound.dev.meta.v1alpha1 as metav1alpha1
 
 _items = [
     metav1alpha1.E2ETest{
-        metadata.name: "e2etest-xvpc-nat-single"
+        metadata.name: "e2etest-vpc-nat-single"
         spec= {
             crossplane = {
                 version = "2.0.2-up.5"

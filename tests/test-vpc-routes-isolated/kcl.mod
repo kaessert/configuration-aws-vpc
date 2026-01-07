@@ -1,5 +1,5 @@
 [package]
-name = "test-test-xvpc-routes-isolated"
+name = "test-vpc-routes-isolated"
 version = "0.0.1"
 
 [dependencies]

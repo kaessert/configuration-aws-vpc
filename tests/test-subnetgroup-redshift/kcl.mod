@@ -1,5 +1,5 @@
 [package]
-name = "test-test-vpc-flowlogs-s3"
+name = "test-subnetgroup-redshift"
 version = "0.0.1"
 
 [dependencies]

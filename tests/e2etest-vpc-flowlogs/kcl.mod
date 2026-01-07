@@ -1,5 +1,5 @@
 [package]
-name = "test-e2etest-vpc-secondary-cidr"
+name = "e2etest-vpc-flowlogs"
 version = "0.0.1"
 
 [dependencies]

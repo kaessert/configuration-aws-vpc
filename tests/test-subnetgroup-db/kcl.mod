@@ -1,5 +1,5 @@
 [package]
-name = "e2etest-e2etest-vpc-flowlogs"
+name = "test-subnetgroup-db"
 version = "0.0.1"
 
 [dependencies]

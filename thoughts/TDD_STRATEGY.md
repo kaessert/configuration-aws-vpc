@@ -109,10 +109,10 @@ With comprehensive tests:
 
 **Example**:
 ```bash
-up test generate e2etest-xvpc-complete --e2e --language=kcl
+up test generate e2etest-vpc-complete --e2e --language=kcl
 
 # Run locally (requires up login)
-up test run tests/e2etest-xvpc-complete --e2e
+up test run tests/e2etest-vpc-complete --e2e
 
 # Validates:
 # - Resources created in AWS
@@ -234,10 +234,10 @@ up test run tests/test-*
 
 ```bash
 # Generate E2E test
-up test generate e2etest-xvpc-<feature> --e2e --language=kcl
+up test generate e2etest-vpc-<feature> --e2e --language=kcl
 
 # Run locally
-up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-testing
+up test run tests/e2etest-vpc-<feature> --e2e --control-plane-group=claude-testing
 ```
 
 **See [TESTING_REFERENCE.md → E2E Tests](TESTING_REFERENCE.md#e2e-tests) for complete E2E test setup, test duration expectations, ProviderConfig configuration, and authentication details.**
@@ -251,7 +251,7 @@ up test run tests/e2etest-xvpc-<feature> --e2e --control-plane-group=claude-test
 # But do NOT commit yet
 
 # Step 8: Run E2E test (MANDATORY - 30-40 minutes)
-up test run tests/e2etest-xvpc-<feature> --e2e
+up test run tests/e2etest-vpc-<feature> --e2e
 
 # ✅ E2E test MUST pass before ANY commit
 ```
@@ -464,14 +464,14 @@ test "public subnets created with correct specs"
 - ✅ test-xvpc-nat-per-az
 - ✅ test-xvpc-routes-public
 - ✅ test-xvpc-routes-private
-- ✅ e2etest-xvpc-basic (E2E)
+- ✅ e2etest-vpc-basic (E2E)
 
 ### Phase 3: Enhanced Features
 - ✅ test-xvpc-database-subnets
 - ✅ test-xvpc-endpoints-gateway
 - ✅ test-xvpc-nacl
 - ✅ test-xvpc-flowlogs-cw
-- ✅ e2etest-xvpc-complete (E2E)
+- ✅ e2etest-vpc-complete (E2E)
 
 ### Phase 4: Advanced Features
 - ✅ test-xvpc-ipv6

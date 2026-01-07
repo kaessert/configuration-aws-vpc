@@ -1,5 +1,5 @@
 [package]
-name = "test-test-xvpc-subnets-public"
+name = "test-vpc-subnets-public"
 version = "0.0.1"
 
 [dependencies]

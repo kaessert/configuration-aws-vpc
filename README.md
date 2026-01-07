@@ -244,7 +244,7 @@ up test run tests/test-xvpc-public-subnets
 
 # Run E2E tests (requires AWS credentials)
 up login
-up test run tests/e2etest-xvpc-basic --e2e
+up test run tests/e2etest-vpc-basic --e2e
 ```
 
 ### Test Types

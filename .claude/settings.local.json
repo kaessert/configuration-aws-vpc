@@ -31,6 +31,8 @@
       "Bash(git restore:*)",
       "Bash(ls:*)",
       "Bash(up dep update-cache:*)",
+      "Bash(mkdir:*)",
+      "Bash(up function generate:*)",
       "Bash(for file in tests/test-test-xvpc-subnets-*/main.k)",
       "Bash(do)",
       "Bash(if ! grep -q \"ec2v1beta1\" \"$file\")",
@@ -92,7 +94,21 @@
       "Bash(while ps aux)",
       "Bash(do echo \"Test still running \\(PID 44312\\)...\")",
       "Bash(up function build functions/vpc)",
-      "Bash(wait:*)"
+      "Bash(wait:*)",
+      "Skill(e2e-test)",
+      "Bash(aws ec2 describe-vpcs:*)",
+      "Bash(aws ec2 describe-subnets:*)",
+      "Bash(aws ec2 describe-nat-gateways:*)",
+      "Bash(aws ec2 describe-internet-gateways:*)",
+      "Bash(aws ec2 describe-route-tables:*)",
+      "Bash(aws ec2 describe-network-acls:*)",
+      "Bash(aws ec2 describe-security-groups:*)",
+      "Bash(aws ec2 delete-subnet:*)",
+      "Bash(aws ec2 describe-network-interfaces:*)",
+      "Bash(aws ds describe-directories:*)",
+      "Bash(xargs:*)",
+      "Skill(e2e-test-configuration)",
+      "Skill(verify-configuration)"
     ]
   }
 }

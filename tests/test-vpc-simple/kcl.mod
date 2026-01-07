@@ -1,5 +1,5 @@
 [package]
-name = "test-test-vpc-simple"
+name = "test-vpc-simple"
 version = "0.0.1"
 
 [dependencies]

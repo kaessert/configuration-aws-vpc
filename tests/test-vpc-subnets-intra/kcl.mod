@@ -1,5 +1,5 @@
 [package]
-name = "test-test-vpc-subnets-intra"
+name = "test-vpc-subnets-intra"
 version = "0.0.1"
 
 [dependencies]

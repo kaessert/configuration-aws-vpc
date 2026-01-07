@@ -1,5 +1,5 @@
 [package]
-name = "test-test-nacl-public-dedicated"
+name = "test-nacl-public-dedicated"
 version = "0.0.1"
 
 [dependencies]

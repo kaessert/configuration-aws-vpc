@@ -1,5 +1,5 @@
 [package]
-name = "test-test-xvpc-routes-public"
+name = "test-vpc-routes-public"
 version = "0.0.1"
 
 [dependencies]

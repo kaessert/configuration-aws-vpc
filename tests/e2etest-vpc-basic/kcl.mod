@@ -1,5 +1,5 @@
 [package]
-name = "e2etest-e2etest-xvpc-basic"
+name = "e2etest-vpc-basic"
 version = "0.0.1"
 
 [dependencies]

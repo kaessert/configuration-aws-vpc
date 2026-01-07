@@ -1,5 +1,5 @@
 [package]
-name = "e2etest-e2etest-xvpc-nat-per-az"
+name = "e2etest-vpc-nat-per-az"
 version = "0.0.1"
 
 [dependencies]

@@ -1,5 +1,5 @@
 [package]
-name = "test-test-vpc-dhcp-disabled"
+name = "test-vpc-dhcp-disabled"
 version = "0.0.1"
 
 [dependencies]

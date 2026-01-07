@@ -1,5 +1,5 @@
 [package]
-name = "test-test-vpc-subnets-database"
+name = "test-vpc-subnets-database"
 version = "0.0.1"
 
 [dependencies]

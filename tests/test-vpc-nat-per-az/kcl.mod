@@ -1,5 +1,5 @@
 [package]
-name = "test-test-xvpc-nat-per-az"
+name = "test-vpc-nat-per-az"
 version = "0.0.1"
 
 [dependencies]

@@ -1,5 +1,5 @@
 [package]
-name = "test-test-vpc-dhcp-custom"
+name = "test-vpc-dhcp-custom"
 version = "0.0.1"
 
 [dependencies]

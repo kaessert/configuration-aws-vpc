@@ -20,7 +20,7 @@ import models.k8s.apimachinery.pkg.apis.meta.v1 as metav1
 
 _items = [
     metav1alpha1.E2ETest{
-        metadata.name: "e2etest-xvpc-simple"
+        metadata.name: "e2etest-vpc-simple"
         spec= {
             # Crossplane configuration
             crossplane: {

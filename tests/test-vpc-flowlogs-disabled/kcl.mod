@@ -1,5 +1,5 @@
 [package]
-name = "e2etest-e2etest-vpc-subnetgroups"
+name = "test-vpc-flowlogs-disabled"
 version = "0.0.1"
 
 [dependencies]

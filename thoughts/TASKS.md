@@ -927,8 +927,8 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 - [x] Support subnets from secondary CIDRs
 - [x] Update routing logic to handle all CIDRs (routing automatically works across all CIDRs)
 - [x] Add secondaryCidrBlocks field to XRD
-- [x] Add composition tests (test-test-vpc-secondary-cidr)
-- [x] Add E2E test (test-e2etest-vpc-secondary-cidr)
+- [x] Add composition tests (test-vpc-secondary-cidr)
+- [x] Add E2E test (e2etest-vpc-secondary-cidr)
 - [x] Document IP space expansion use case
 
 **AWS Resources**: `ec2.aws.upbound.io/v1beta1/VPCIPv4CidrBlockAssociation`
@@ -943,14 +943,14 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 - Generator function `_generateSecondaryCidrBlocks` creates association resources
 
 **Test Coverage**:
-- ✅ Composition test: `test-test-vpc-secondary-cidr` - PASSING
+- ✅ Composition test: `test-vpc-secondary-cidr` - PASSING
   - Tests VPC with primary CIDR (10.0.0.0/16)
   - Tests two secondary CIDRs (10.1.0.0/16, 10.2.0.0/16)
   - Tests VPCIPv4CidrBlockAssociation resources created
   - Tests subnets using primary CIDR (public: 10.0.x.x)
   - Tests subnets using first secondary CIDR (private: 10.1.x.x)
   - Tests subnets using second secondary CIDR (database: 10.2.x.x)
-- ✅ E2E test: `test-e2etest-vpc-secondary-cidr` - Ready to run
+- ✅ E2E test: `e2etest-vpc-secondary-cidr` - Ready to run
   - Tests real AWS resource creation
   - Tests 3 AZs with subnets across all CIDR blocks
   - Tests NAT Gateway, IGW, and routing
@@ -1561,9 +1561,9 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 **Description**: Create E2E tests for critical scenarios
 
 **Tasks**:
-- [ ] Create e2etest-xvpc-basic (see task 2.5.2)
-- [ ] Create `e2etest-xvpc-nat` - VPC with NAT Gateway
-- [ ] Create `e2etest-xvpc-complete` - All features enabled
+- [ ] Create e2etest-vpc-basic (see task 2.5.2)
+- [ ] Create `e2etest-vpc-nat` - VPC with NAT Gateway
+- [ ] Create `e2etest-vpc-complete` - All features enabled
 - [ ] Configure tests with proper timeouts (1800+ seconds)
 - [ ] Add ProviderConfig with IAM role to all E2E tests: `arn:aws:iam::609897127049:role/solutions-e2e-provider-aws`
 - [ ] IMPORTANT: Use assumeRoleChain, NEVER static credentials
