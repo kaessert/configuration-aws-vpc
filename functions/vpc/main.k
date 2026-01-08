@@ -187,6 +187,26 @@ privateInboundAclRules = oxrSpec.privateInboundAclRules or []
 privateOutboundAclRules = oxrSpec.privateOutboundAclRules or []
 privateAclTags = oxrSpec.privateAclTags or {}
 
+databaseDedicatedNetworkAcl = oxrSpec.databaseDedicatedNetworkAcl if oxrSpec.databaseDedicatedNetworkAcl != None else False
+databaseInboundAclRules = oxrSpec.databaseInboundAclRules or []
+databaseOutboundAclRules = oxrSpec.databaseOutboundAclRules or []
+databaseAclTags = oxrSpec.databaseAclTags or {}
+
+elasticacheDedicatedNetworkAcl = oxrSpec.elasticacheDedicatedNetworkAcl if oxrSpec.elasticacheDedicatedNetworkAcl != None else False
+elasticacheInboundAclRules = oxrSpec.elasticacheInboundAclRules or []
+elasticacheOutboundAclRules = oxrSpec.elasticacheOutboundAclRules or []
+elasticacheAclTags = oxrSpec.elasticacheAclTags or {}
+
+redshiftDedicatedNetworkAcl = oxrSpec.redshiftDedicatedNetworkAcl if oxrSpec.redshiftDedicatedNetworkAcl != None else False
+redshiftInboundAclRules = oxrSpec.redshiftInboundAclRules or []
+redshiftOutboundAclRules = oxrSpec.redshiftOutboundAclRules or []
+redshiftAclTags = oxrSpec.redshiftAclTags or {}
+
+intraDedicatedNetworkAcl = oxrSpec.intraDedicatedNetworkAcl if oxrSpec.intraDedicatedNetworkAcl != None else False
+intraInboundAclRules = oxrSpec.intraInboundAclRules or []
+intraOutboundAclRules = oxrSpec.intraOutboundAclRules or []
+intraAclTags = oxrSpec.intraAclTags or {}
+
 # Extract Flow Logs configuration
 enableFlowLog = oxrSpec.enableFlowLog if oxrSpec.enableFlowLog != None else False
 createFlowLogCloudwatchLogGroup = oxrSpec.createFlowLogCloudwatchLogGroup if oxrSpec.createFlowLogCloudwatchLogGroup != None else False
@@ -331,6 +351,22 @@ config = {
     privateInboundAclRules = privateInboundAclRules
     privateOutboundAclRules = privateOutboundAclRules
     privateAclTags = privateAclTags
+    databaseDedicatedNetworkAcl = databaseDedicatedNetworkAcl
+    databaseInboundAclRules = databaseInboundAclRules
+    databaseOutboundAclRules = databaseOutboundAclRules
+    databaseAclTags = databaseAclTags
+    elasticacheDedicatedNetworkAcl = elasticacheDedicatedNetworkAcl
+    elasticacheInboundAclRules = elasticacheInboundAclRules
+    elasticacheOutboundAclRules = elasticacheOutboundAclRules
+    elasticacheAclTags = elasticacheAclTags
+    redshiftDedicatedNetworkAcl = redshiftDedicatedNetworkAcl
+    redshiftInboundAclRules = redshiftInboundAclRules
+    redshiftOutboundAclRules = redshiftOutboundAclRules
+    redshiftAclTags = redshiftAclTags
+    intraDedicatedNetworkAcl = intraDedicatedNetworkAcl
+    intraInboundAclRules = intraInboundAclRules
+    intraOutboundAclRules = intraOutboundAclRules
+    intraAclTags = intraAclTags
 
     # Flow Logs configuration
     enableFlowLog = enableFlowLog

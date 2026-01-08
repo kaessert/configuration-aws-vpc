@@ -742,6 +742,238 @@ spec:
                   additionalProperties:
                     type: string
 
+                # Database subnet Network ACLs
+                databaseDedicatedNetworkAcl:
+                  type: boolean
+                  description: Create dedicated Network ACL for database subnets
+                  default: false
+
+                databaseInboundAclRules:
+                  type: array
+                  description: Inbound ACL rules for database subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                databaseOutboundAclRules:
+                  type: array
+                  description: Outbound ACL rules for database subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                databaseAclTags:
+                  type: object
+                  description: Additional tags for database subnet Network ACLs
+                  additionalProperties:
+                    type: string
+
+                # ElastiCache subnet Network ACLs
+                elasticacheDedicatedNetworkAcl:
+                  type: boolean
+                  description: Create dedicated Network ACL for ElastiCache subnets
+                  default: false
+
+                elasticacheInboundAclRules:
+                  type: array
+                  description: Inbound ACL rules for ElastiCache subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                elasticacheOutboundAclRules:
+                  type: array
+                  description: Outbound ACL rules for ElastiCache subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                elasticacheAclTags:
+                  type: object
+                  description: Additional tags for ElastiCache subnet Network ACLs
+                  additionalProperties:
+                    type: string
+
+                # Redshift subnet Network ACLs
+                redshiftDedicatedNetworkAcl:
+                  type: boolean
+                  description: Create dedicated Network ACL for Redshift subnets
+                  default: false
+
+                redshiftInboundAclRules:
+                  type: array
+                  description: Inbound ACL rules for Redshift subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                redshiftOutboundAclRules:
+                  type: array
+                  description: Outbound ACL rules for Redshift subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                redshiftAclTags:
+                  type: object
+                  description: Additional tags for Redshift subnet Network ACLs
+                  additionalProperties:
+                    type: string
+
+                # Intra subnet Network ACLs
+                intraDedicatedNetworkAcl:
+                  type: boolean
+                  description: Create dedicated Network ACL for intra subnets
+                  default: false
+
+                intraInboundAclRules:
+                  type: array
+                  description: Inbound ACL rules for intra subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                intraOutboundAclRules:
+                  type: array
+                  description: Outbound ACL rules for intra subnets
+                  items:
+                    type: object
+                    properties:
+                      ruleNumber:
+                        type: integer
+                      protocol:
+                        type: string
+                      ruleAction:
+                        type: string
+                      cidrBlock:
+                        type: string
+                      fromPort:
+                        type: integer
+                      toPort:
+                        type: integer
+                      icmpType:
+                        type: integer
+                      icmpCode:
+                        type: integer
+
+                intraAclTags:
+                  type: object
+                  description: Additional tags for intra subnet Network ACLs
+                  additionalProperties:
+                    type: string
+
             status:
               type: object
               properties:

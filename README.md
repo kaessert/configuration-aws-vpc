@@ -6,10 +6,10 @@ Build AWS VPCs using Crossplane Composite Resources, KCL composition functions, 
 
 ## Production Readiness
 
-✅ **Phase 4 In Progress** - Advanced features (6 of 11 tasks complete)
-✅ **47 Composition Tests** - All features validated with fast unit tests
-✅ **13 E2E Tests** - Critical paths tested against real AWS infrastructure
-✅ **75% Feature Parity** - Major features implemented including VPN Gateway, IPv6, and IPAM
+✅ **Phase 4 In Progress** - Advanced features (7 of 11 tasks complete)
+✅ **51 Composition Tests** - All features validated with fast unit tests
+✅ **14 E2E Tests** - Critical paths tested against real AWS infrastructure
+✅ **78% Feature Parity** - Major features implemented including VPN Gateway, IPv6, and IPAM
 ✅ **Modular Design** - 10 focused KCL modules (~3000 lines), well-organized and maintainable
 ✅ **Zero Failing Tests** - All tests passing, no known regressions
 
@@ -44,7 +44,7 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 - **NAT Gateway**: Three strategies (single NAT, per-AZ, per-subnet), EIP reuse, custom destination CIDR
 - **Route Tables**: Public, private, database, and isolated routing with flexible association
 - **VPC Endpoints**: Gateway endpoints for S3 and DynamoDB
-- **Network ACLs**: Dedicated ACLs with custom rules for public and private subnets
+- **Network ACLs**: Dedicated ACLs with custom rules for all subnet types (public, private, database, ElastiCache, Redshift, intra)
 - **DHCP Options**: Custom DNS servers, domain names, NTP servers, NetBIOS settings
 - **VPC Flow Logs**: Traffic monitoring to CloudWatch Logs or S3 with configurable filters
 - **Subnet Groups**: Database, ElastiCache, and Redshift subnet groups for managed services
@@ -55,7 +55,6 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 ### Roadmap 📋
 
 - **Interface VPC Endpoints**: Private connectivity for EC2, SSM, RDS, and more (P2)
-- **Extended NACL Support**: Dedicated ACLs for database, ElastiCache, Redshift, and intra subnets (P2)
 
 See [thoughts/tasks.md](thoughts/tasks.md) for the complete roadmap.
 
@@ -204,30 +203,37 @@ This project follows **strict Test-Driven Development (TDD)**:
 
 ### Current Test Coverage
 
-**Composition Tests**: 32 tests (all passing)
+**Composition Tests**: 51 tests (all passing)
 - VPC basics (1 test)
 - All 6 subnet types (6 tests)
 - Internet Gateway (2 tests)
 - NAT Gateway strategies (3 tests)
 - Route tables (5 tests)
 - VPC Endpoints (3 tests)
-- Network ACLs (2 tests)
+- Network ACLs - All subnet types (6 tests: public, private, database, ElastiCache, Redshift, intra)
 - DHCP Options (2 tests)
 - VPC Flow Logs (3 tests)
 - Subnet Groups (3 tests)
 - Secondary CIDR Blocks (2 tests)
+- VPN Gateway (3 tests)
+- Customer Gateway (2 tests)
+- IPv6 Support (4 tests)
+- IPAM Integration (6 tests)
 
-**E2E Tests**: 11 tests (all passing)
+**E2E Tests**: 14 tests (all passing)
 - Basic VPC
 - Complete VPC
 - Simple VPC
 - NAT strategies (2 tests)
 - VPC Endpoints
 - DHCP Options
-- Network ACLs
+- Network ACLs (2 tests: public/private, extended all subnet types)
 - Flow Logs
 - Subnet Groups
 - Secondary CIDR Blocks
+- VPN Gateway
+- IPv6 Support
+- IPAM Integration
 
 ### Run Tests
 
@@ -337,7 +343,7 @@ Contributions are welcome! This project follows test-driven development practice
   - Subnet Groups (RDS, ElastiCache, Redshift)
   - Secondary CIDR Blocks (IP space expansion with multiple CIDRs)
 
-**Test Coverage**: 32 composition tests + 11 E2E tests - **ALL PASSING** ✅
+**Test Coverage**: 51 composition tests + 14 E2E tests - **ALL PASSING** ✅
 
 **Next Up (Phase 4 - P1/P2 Priorities)**:
 - VPN Gateway (P1) - Hybrid cloud connectivity
@@ -418,12 +424,28 @@ spec:
   # Network ACLs
   publicDedicatedNetworkAcl: bool   # Create dedicated NACL for public subnets (default: false)
   privateDedicatedNetworkAcl: bool  # Create dedicated NACL for private subnets (default: false)
+  databaseDedicatedNetworkAcl: bool # Create dedicated NACL for database subnets (default: false)
+  elasticacheDedicatedNetworkAcl: bool  # Create dedicated NACL for ElastiCache subnets (default: false)
+  redshiftDedicatedNetworkAcl: bool # Create dedicated NACL for Redshift subnets (default: false)
+  intraDedicatedNetworkAcl: bool    # Create dedicated NACL for intra subnets (default: false)
   publicInboundAclRules: [object]   # Custom inbound rules for public NACL
   publicOutboundAclRules: [object]  # Custom outbound rules for public NACL
   privateInboundAclRules: [object]  # Custom inbound rules for private NACL
   privateOutboundAclRules: [object] # Custom outbound rules for private NACL
+  databaseInboundAclRules: [object] # Custom inbound rules for database NACL
+  databaseOutboundAclRules: [object]# Custom outbound rules for database NACL
+  elasticacheInboundAclRules: [object]  # Custom inbound rules for ElastiCache NACL
+  elasticacheOutboundAclRules: [object] # Custom outbound rules for ElastiCache NACL
+  redshiftInboundAclRules: [object] # Custom inbound rules for Redshift NACL
+  redshiftOutboundAclRules: [object]# Custom outbound rules for Redshift NACL
+  intraInboundAclRules: [object]    # Custom inbound rules for intra NACL
+  intraOutboundAclRules: [object]   # Custom outbound rules for intra NACL
   publicAclTags: {string: string}   # Tags for public NACL
   privateAclTags: {string: string}  # Tags for private NACL
+  databaseAclTags: {string: string} # Tags for database NACL
+  elasticacheAclTags: {string: string}  # Tags for ElastiCache NACL
+  redshiftAclTags: {string: string} # Tags for Redshift NACL
+  intraAclTags: {string: string}    # Tags for intra NACL
 
   # DHCP Options
   enableDhcpOptions: bool           # Create DHCP options set (default: false)
@@ -478,7 +500,7 @@ See [apis/vpc/definition.yaml](apis/vpc/definition.yaml) for the complete API de
 | NAT Gateway | ✅ | ✅ | Implemented |
 | Route Tables | ✅ | ✅ | Implemented |
 | VPC Endpoints (Gateway) | ✅ | ✅ | Implemented |
-| Network ACLs (Public/Private) | ✅ | ✅ | Implemented |
+| Network ACLs (All Subnet Types) | ✅ | ✅ | Implemented |
 | DHCP Options | ✅ | ✅ | Implemented |
 | VPC Flow Logs | ✅ | ✅ | Implemented |
 | Subnet Groups | ✅ | ✅ | Implemented |
