@@ -279,6 +279,42 @@ spec:
                   additionalProperties:
                     type: string
 
+                # Customer Gateway Configuration
+                customerGateways:
+                  type: object
+                  description: Map of Customer Gateway configurations (key is a unique name for each gateway)
+                  additionalProperties:
+                    type: object
+                    properties:
+                      bgpAsn:
+                        type: integer
+                        description: Border Gateway Protocol ASN (1-2147483647)
+                        minimum: 1
+                        maximum: 2147483647
+                      bgpAsnExtended:
+                        type: string
+                        description: Extended BGP ASN (2147483648-4294967295, conflicts with bgpAsn)
+                      ipAddress:
+                        type: string
+                        description: IPv4 address for the customer gateway device's outside interface
+                      type:
+                        type: string
+                        description: Type of VPN connection (only ipsec.1 is supported)
+                        default: ipsec.1
+                        enum:
+                          - ipsec.1
+                      deviceName:
+                        type: string
+                        description: Name for the customer gateway device
+                      certificateArn:
+                        type: string
+                        description: Amazon Resource Name for the customer gateway certificate
+                      tags:
+                        type: object
+                        description: Additional tags for this customer gateway
+                        additionalProperties:
+                          type: string
+
                 enableIpv6:
                   type: boolean
                   description: Enable IPv6 CIDR block for the VPC
@@ -734,6 +770,18 @@ spec:
                 vpnGatewayArn:
                   type: string
                   description: ARN of the VPN Gateway
+
+                customerGatewayIds:
+                  type: object
+                  description: Map of Customer Gateway names to their IDs
+                  additionalProperties:
+                    type: string
+
+                customerGatewayArns:
+                  type: object
+                  description: Map of Customer Gateway names to their ARNs
+                  additionalProperties:
+                    type: string
 
                 # Route Table Outputs
                 publicRouteTableIds:

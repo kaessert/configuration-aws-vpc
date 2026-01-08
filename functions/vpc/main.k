@@ -40,6 +40,7 @@ import nacl
 import flowlogs
 import subnetgroups
 import vpn
+import customergateways
 
 # ============================================================================
 # ACCESS COMPOSITION FUNCTION PARAMETERS
@@ -176,6 +177,9 @@ propagateIntraRouteTablesVgw = oxrSpec.propagateIntraRouteTablesVgw if oxrSpec.p
 propagateDatabaseRouteTablesVgw = oxrSpec.propagateDatabaseRouteTablesVgw if oxrSpec.propagateDatabaseRouteTablesVgw != None else False
 vpnGatewayTags = oxrSpec.vpnGatewayTags or {}
 
+# Extract Customer Gateway configuration
+customerGateways = oxrSpec.customerGateways or {}
+
 # Extract subnet configuration
 publicSubnets = oxrSpec.publicSubnets or []
 mapPublicIpOnLaunch = oxrSpec.mapPublicIpOnLaunch if oxrSpec.mapPublicIpOnLaunch != None else True
@@ -288,6 +292,9 @@ config = {
     propagateIntraRouteTablesVgw = propagateIntraRouteTablesVgw
     propagateDatabaseRouteTablesVgw = propagateDatabaseRouteTablesVgw
     vpnGatewayTags = vpnGatewayTags
+
+    # Customer Gateway configuration
+    customerGateways = customerGateways
 }
 
 # ============================================================================
@@ -305,4 +312,5 @@ items = \
     nacl.generateAllNACLs(config) + \
     flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.createFlowLogS3Bucket, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.flowLogFileFormat, config.flowLogHiveCompatiblePartitions, config.flowLogPerHourPartition, config.tags) + \
     subnetgroups.generateSubnetGroups(oxr, dxr, ocds, dcds, region, tags) + \
-    vpn.generateAllVPN(config)
+    vpn.generateAllVPN(config) + \
+    customergateways.generateCustomerGateways(config)
