@@ -108,7 +108,11 @@
       "Bash(aws ds describe-directories:*)",
       "Bash(xargs:*)",
       "Skill(e2e-test-configuration)",
-      "Skill(verify-configuration)"
+      "Skill(verify-configuration)",
+      "Bash(mv:*)",
+      "Skill(claude-plugin-solutions:author-tests-kcl)",
+      "Skill(claude-plugin-solutions:e2e-test-configuration)",
+      "Skill(claude-plugin-solutions:author-composition-kcl)"
     ]
   }
 }

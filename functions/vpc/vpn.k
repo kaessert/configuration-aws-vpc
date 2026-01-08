@@ -40,12 +40,11 @@ generateVPNGateway = lambda config: {str: any} -> [any] {
             spec = config.defaultV2Spec | {
                 forProvider = {
                     amazonSideAsn = str(config.amazonSideAsn)
-                    availabilityZone = config.vpnGatewayAz if config.vpnGatewayAz else None
                     region = config.region
                     tags = config.tags | config.vpnGatewayTags | {
                         Name = "vgw-${config.vpcName}"
                     }
-                }
+                } | ({"availabilityZone": config.vpnGatewayAz} if config.vpnGatewayAz else {})
             }
         }
     ] if config.enableVpnGateway and not config.vpnGatewayId else []

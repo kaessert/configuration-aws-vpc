@@ -14,12 +14,14 @@ You are instructed to find the next important task in this project and work on i
 
 ONLY WORK AT ONE ITEM IN THE TASKLIST AT A TIME
 
+CRUCIAL: USE SKILLS TO validate the project, write kcl code, write kcl tests, run e2e tests and whenever possible
+
 If you're done with the task, mark it as done in the tasklist.
 
 Remember at any point in time what the goal of this project is. Decide what has the highest
 priority and take the SMALLEST POSSIBLE increment at a time.
 
-Remember: The goal of this project is defined in CLAUDE.md and in thoughts/initial_prompt.md
+Remember: The goal of this project is defined in CLAUDE.md
 
 IMPORTANT: Whenever you encounter issues, slow down, relax, think deeply what could have went
 wrong and once you are able to resolve them, document the solution further agents in the thoughs folder.
