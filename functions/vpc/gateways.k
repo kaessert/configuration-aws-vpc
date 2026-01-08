@@ -53,13 +53,40 @@ generateEIPs = lambda config: {str: any} -> [any] {
     """
     Generates Elastic IP resources for NAT Gateways.
 
+    Supports three strategies:
+    - One NAT Gateway per subnet (oneNatGatewayPerSubnet)
+    - One NAT Gateway per AZ (oneNatGatewayPerAz)
+    - Single NAT Gateway (singleNatGateway)
+
+    When reuseNatIps is true, NO EIPs are created (external EIPs are used instead).
+
     Args:
         config: Configuration object containing NAT Gateway parameters
 
     Returns:
-        List of EIP resources
+        List of EIP resources, or empty list if reusing external EIPs
     """
+    # Strategy 1: NAT per subnet - create EIP per public subnet
     [
+        ec2v1beta1.EIP{
+            metadata = config.metadata("eip-nat-${i}") | {
+                name = "eip-nat-${config.vpcName}-${i}"
+                labels = config.sanitizeLabels(config.tags) | {"eip-index": str(i)}
+            }
+            spec = config.defaultV2Spec | {
+                forProvider = {
+                    domain = "vpc"
+                    region = config.region
+                    tags = config.tags | {
+                        Name = "eip-nat-${config.vpcName}-${i}"
+                        Index = str(i)
+                    }
+                }
+            }
+        }
+        for i in range(len(config.publicSubnets))
+    ] if config.enableNatGateway and config.oneNatGatewayPerSubnet and not config.reuseNatIps and len(config.publicSubnets) > 0 else [
+        # Strategy 2: NAT per AZ - create EIP per AZ
         ec2v1beta1.EIP{
             metadata = config.metadata("eip-nat-${i}") | {
                 name = "eip-nat-${config.vpcName}-${config.azs[i]}"
@@ -77,8 +104,8 @@ generateEIPs = lambda config: {str: any} -> [any] {
             }
         }
         for i in range(len(config.azs))
-    ] if config.enableNatGateway and config.oneNatGatewayPerAz and len(config.azs) > 0 and len(config.publicSubnets) > 0 else [
-        # Single EIP for single NAT Gateway strategy
+    ] if config.enableNatGateway and config.oneNatGatewayPerAz and not config.reuseNatIps and len(config.azs) > 0 and len(config.publicSubnets) > 0 else [
+        # Strategy 3: Single NAT Gateway - create single EIP
         ec2v1beta1.EIP{
             metadata = config.metadata("eip-nat-0") | {
                 name = "eip-nat-${config.vpcName}-${config.azs[0]}"
@@ -94,7 +121,28 @@ generateEIPs = lambda config: {str: any} -> [any] {
                 }
             }
         }
-    ] if config.enableNatGateway and config.singleNatGateway and len(config.azs) > 0 and len(config.publicSubnets) > 0 else []
+    ] if config.enableNatGateway and config.singleNatGateway and not config.reuseNatIps and len(config.azs) > 0 and len(config.publicSubnets) > 0 else []
+}
+
+# Helper function to build NAT Gateway forProvider with conditional EIP reference
+_buildNatForProvider = lambda subnetSelector: {str: any}, region: str, tags: {str: str}, eipConfig: {str: any} -> {str: any} {
+    """
+    Builds forProvider configuration for NAT Gateway with conditional EIP reference.
+
+    Args:
+        subnetSelector: Selector configuration for subnet
+        region: AWS region
+        tags: Resource tags
+        eipConfig: Either {"allocationId": "..."} or {"allocationIdSelector": {...}}
+
+    Returns:
+        Complete forProvider dictionary
+    """
+    {
+        subnetIdSelector = subnetSelector
+        region = region
+        tags = tags
+    } | eipConfig
 }
 
 # Generate NAT Gateway resources
@@ -102,9 +150,14 @@ generateNATGateways = lambda config: {str: any} -> [any] {
     """
     Generates NAT Gateway resources.
 
-    Supports two strategies:
+    Supports three strategies:
+    - One NAT Gateway per subnet (oneNatGatewayPerSubnet)
     - One NAT Gateway per AZ (oneNatGatewayPerAz)
     - Single NAT Gateway (singleNatGateway)
+
+    Supports two EIP modes:
+    - Create new EIPs (default): Uses allocationIdSelector
+    - Reuse external EIPs (reuseNatIps): Uses allocationId field with external IDs
 
     Args:
         config: Configuration object containing NAT Gateway parameters
@@ -112,57 +165,96 @@ generateNATGateways = lambda config: {str: any} -> [any] {
     Returns:
         List of NAT Gateway resources
     """
+    # Strategy 1: NAT per subnet - create NAT Gateway per public subnet
     [
+        ec2v1beta1.NATGateway{
+            metadata = config.metadata("nat-${i}") | {
+                name = "nat-${config.vpcName}-${i}"
+                labels = config.sanitizeLabels(config.tags) | {"nat-index": str(i)}
+            }
+            spec = config.defaultV2Spec | {
+                forProvider = _buildNatForProvider(
+                    {
+                        matchLabels = {
+                            "subnet-type": "public"
+                            "subnet-index": str(i)
+                        }
+                    },
+                    config.region,
+                    config.tags | {
+                        Name = "nat-${config.vpcName}-${i}"
+                        Index = str(i)
+                    },
+                    # EIP configuration: use external ID or selector
+                    {allocationId = config.externalNatIpIds[i]} if config.reuseNatIps and len(config.externalNatIpIds) > i else {
+                        allocationIdSelector = {
+                            matchLabels = {
+                                "eip-index": str(i)
+                            }
+                        }
+                    }
+                )
+            }
+        }
+        for i in range(len(config.publicSubnets))
+    ] if config.enableNatGateway and config.oneNatGatewayPerSubnet and len(config.publicSubnets) > 0 else [
+        # Strategy 2: NAT per AZ - create NAT Gateway per AZ
         ec2v1beta1.NATGateway{
             metadata = config.metadata("nat-${i}") | {
                 name = "nat-${config.vpcName}-${config.azs[i]}"
                 labels = config.sanitizeLabels(config.tags) | {"az": config.azs[i]}
             }
             spec = config.defaultV2Spec | {
-                forProvider = {
-                    subnetIdSelector = {
+                forProvider = _buildNatForProvider(
+                    {
                         matchLabels = {
                             "subnet-type": "public"
                             "az": config.azs[i]
                         }
-                    }
-                    allocationIdSelector = {
-                        matchLabels = {
-                            "az": config.azs[i]
-                        }
-                    }
-                    region = config.region
-                    tags = config.tags | {
+                    },
+                    config.region,
+                    config.tags | {
                         Name = "nat-${config.vpcName}-${config.azs[i]}"
                         AZ = config.azs[i]
+                    },
+                    # EIP configuration: use external ID or selector
+                    {allocationId = config.externalNatIpIds[i]} if config.reuseNatIps and len(config.externalNatIpIds) > i else {
+                        allocationIdSelector = {
+                            matchLabels = {
+                                "az": config.azs[i]
+                            }
+                        }
                     }
-                }
+                )
             }
         }
         for i in range(len(config.azs))
     ] if config.enableNatGateway and config.oneNatGatewayPerAz and len(config.azs) > 0 and len(config.publicSubnets) > 0 else [
-        # Single NAT Gateway for single NAT strategy
+        # Strategy 3: Single NAT Gateway
         ec2v1beta1.NATGateway{
             metadata = config.metadata("nat-0") | {
                 name = "nat-${config.vpcName}-${config.azs[0]}"
                 labels = config.sanitizeLabels(config.tags)
             }
             spec = config.defaultV2Spec | {
-                forProvider = {
-                    subnetIdSelector = {
+                forProvider = _buildNatForProvider(
+                    {
                         matchLabels = {
                             "subnet-type": "public"
                             "az": config.azs[0]
                         }
-                    }
-                    allocationIdSelector = {
-                        matchControllerRef = True
-                    }
-                    region = config.region
-                    tags = config.tags | {
+                    },
+                    config.region,
+                    config.tags | {
                         Name = "nat-${config.vpcName}-${config.azs[0]}"
+                    },
+                    # EIP configuration: use external ID or selector
+                    {allocationId = config.externalNatIpIds[0]} if config.reuseNatIps and len(config.externalNatIpIds) > 0 else {
+                        allocationIdSelector = {
+                            matchControllerRef = True
+                        }
                     }
-                }
+                )
             }
         }
     ] if config.enableNatGateway and config.singleNatGateway and len(config.azs) > 0 and len(config.publicSubnets) > 0 else []

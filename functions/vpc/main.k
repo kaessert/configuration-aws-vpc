@@ -126,6 +126,10 @@ createIgw = oxrSpec.createIgw if oxrSpec.createIgw != None else True
 enableNatGateway = oxrSpec.enableNatGateway if oxrSpec.enableNatGateway != None else False
 singleNatGateway = oxrSpec.singleNatGateway if oxrSpec.singleNatGateway != None else False
 oneNatGatewayPerAz = oxrSpec.oneNatGatewayPerAz if oxrSpec.oneNatGatewayPerAz != None else False
+oneNatGatewayPerSubnet = oxrSpec.oneNatGatewayPerSubnet if oxrSpec.oneNatGatewayPerSubnet != None else False
+reuseNatIps = oxrSpec.reuseNatIps if oxrSpec.reuseNatIps != None else False
+externalNatIpIds = oxrSpec.externalNatIpIds if oxrSpec.externalNatIpIds else []
+natGatewayDestinationCidrBlock = oxrSpec.natGatewayDestinationCidrBlock if oxrSpec.natGatewayDestinationCidrBlock else "0.0.0.0/0"
 
 # Extract route table configuration
 createDatabaseSubnetRouteTable = oxrSpec.createDatabaseSubnetRouteTable if oxrSpec.createDatabaseSubnetRouteTable != None else False
@@ -279,6 +283,10 @@ config = {
     enableNatGateway = enableNatGateway
     singleNatGateway = singleNatGateway
     oneNatGatewayPerAz = oneNatGatewayPerAz
+    oneNatGatewayPerSubnet = oneNatGatewayPerSubnet
+    reuseNatIps = reuseNatIps
+    externalNatIpIds = externalNatIpIds
+    natGatewayDestinationCidrBlock = natGatewayDestinationCidrBlock
     createEgressOnlyIgw = createEgressOnlyIgw
 
     # Subnet configuration

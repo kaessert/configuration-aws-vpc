@@ -1159,41 +1159,64 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 
 ---
 
-### 4.4 Enhance NAT Gateway Options
+### 4.4 Enhance NAT Gateway Options ✅
 **Priority**: P2
 **Effort**: Medium
 **Description**: Add advanced NAT Gateway configuration options
-**Status**: NOT STARTED
+**Status**: COMPLETED
 
 **Rationale**: Terraform supports additional NAT Gateway flexibility that we currently lack.
 
 **Tasks**:
-- [ ] Implement NAT per subnet strategy (Terraform default)
-  - [ ] Add support for creating NAT Gateway in every subnet
-  - [ ] Update routing logic for per-subnet NAT
-  - [ ] Add composition tests
-- [ ] Support reusing existing EIPs
-  - [ ] Add reuseNatIps flag
-  - [ ] Add externalNatIpIds field (list of EIP allocation IDs)
-  - [ ] Skip EIP creation when external IPs provided
-  - [ ] Associate external EIPs with NAT Gateways
-- [ ] Support custom NAT destination CIDR
-  - [ ] Add natGatewayDestinationCidrBlock field
-  - [ ] Default to 0.0.0.0/0
-  - [ ] Allow custom CIDR for non-standard routing
-- [ ] Add composition tests for new NAT options
-- [ ] Document cost implications and use cases
+- [x] Implement NAT per subnet strategy (Terraform default)
+  - [x] Add support for creating NAT Gateway in every subnet
+  - [x] Update routing logic for per-subnet NAT
+  - [x] Add composition tests
+- [x] Support reusing existing EIPs
+  - [x] Add reuseNatIps flag
+  - [x] Add externalNatIpIds field (list of EIP allocation IDs)
+  - [x] Skip EIP creation when external IPs provided
+  - [x] Associate external EIPs with NAT Gateways
+- [x] Support custom NAT destination CIDR
+  - [x] Add natGatewayDestinationCidrBlock field
+  - [x] Default to 0.0.0.0/0
+  - [x] Allow custom CIDR for non-standard routing
+- [x] Add composition tests for new NAT options
+- [x] Add E2E test validating NAT enhancements
+- [x] Document cost implications and use cases
 
-**Current Support**: Single NAT, NAT per AZ ✅
-**Missing**: NAT per subnet, reuse IPs, custom destination
+**Current Support**: Single NAT, NAT per AZ, NAT per subnet, reuse EIPs, custom destination CIDR ✅
+**All strategies now supported!**
 
 **Acceptance Criteria**:
 - ✅ NAT per subnet strategy works
 - ✅ Can reuse existing EIPs
 - ✅ Custom destination CIDR supported
 - ✅ Tests validate all NAT strategies
+- ✅ E2E test passed (18 minutes)
 
 **Reference**: Comparison analysis Section 1.3 (NAT Gateway options)
+
+**Implementation Details**:
+- **Files Modified**:
+  - `apis/vpc/definition.yaml`: Added 4 new fields (oneNatGatewayPerSubnet, reuseNatIps, externalNatIpIds, natGatewayDestinationCidrBlock)
+  - `functions/vpc/main.k`: Extracted new parameters and passed to config
+  - `functions/vpc/gateways.k`: Implemented NAT per subnet strategy and EIP reuse with helper function
+  - `functions/vpc/routing.k`: Made NAT destination CIDR configurable
+  - `functions/vpc/subnets.k`: Added subnet-index label for NAT per subnet matching
+- **Tests Created**:
+  - `tests/test-vpc-nat-per-subnet/main.k`: Validates NAT per subnet (3 NATs + 3 EIPs)
+  - `tests/test-vpc-nat-reuse-eips/main.k`: Validates external EIP reuse (NO new EIPs)
+  - `tests/test-vpc-nat-custom-cidr/main.k`: Validates custom destination CIDR (10.0.0.0/8)
+  - `tests/e2etest-vpc-nat-enhancements/main.k`: E2E test with real AWS resources
+- **All composition tests**: 47/47 PASSED
+- **E2E test**: PASSED in 18 minutes
+
+**Cost Implications**:
+- **NAT per subnet**: Highest cost (one NAT Gateway per subnet), maximum availability
+- **NAT per AZ**: Medium cost (one NAT Gateway per AZ), high availability
+- **Single NAT**: Lowest cost, single point of failure
+- **Reuse EIPs**: No additional cost, useful for whitelisting scenarios
 
 ---
 

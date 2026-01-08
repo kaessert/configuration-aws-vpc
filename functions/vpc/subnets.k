@@ -80,6 +80,7 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
                 name = "subnet-public-${config.vpcName}-${config.azs[i % len(config.azs)]}"
                 labels = config.sanitizeLabels(config.tags | config.publicSubnetTags) | {
                     "subnet-type": "public"
+                    "subnet-index": str(i)
                     "az": config.azs[i % len(config.azs)]
                 }
             }

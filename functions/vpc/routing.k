@@ -252,7 +252,7 @@ _generatePrivateRoutes = lambda config: {str: any} -> [any] {
                         }
                     }
                     region = config.region
-                    destinationCidrBlock = "0.0.0.0/0"
+                    destinationCidrBlock = config.natGatewayDestinationCidrBlock
                 }
             }
         }
@@ -274,7 +274,7 @@ _generatePrivateRoutes = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     region = config.region
-                    destinationCidrBlock = "0.0.0.0/0"
+                    destinationCidrBlock = config.natGatewayDestinationCidrBlock
                 }
             }
         }
@@ -468,7 +468,7 @@ _generateDatabaseRoute = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     region = config.region
-                    destinationCidrBlock = "0.0.0.0/0"
+                    destinationCidrBlock = config.natGatewayDestinationCidrBlock
                 }
             }
         }

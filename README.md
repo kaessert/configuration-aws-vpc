@@ -6,9 +6,9 @@ Build AWS VPCs using Crossplane Composite Resources, KCL composition functions, 
 
 ## Production Readiness
 
-✅ **Phase 4 In Progress** - Advanced features (5 of 11 tasks complete)
-✅ **44 Composition Tests** - All features validated with fast unit tests
-✅ **12 E2E Tests** - Critical paths tested against real AWS infrastructure
+✅ **Phase 4 In Progress** - Advanced features (6 of 11 tasks complete)
+✅ **47 Composition Tests** - All features validated with fast unit tests
+✅ **13 E2E Tests** - Critical paths tested against real AWS infrastructure
 ✅ **75% Feature Parity** - Major features implemented including VPN Gateway, IPv6, and IPAM
 ✅ **Modular Design** - 10 focused KCL modules (~3000 lines), well-organized and maintainable
 ✅ **Zero Failing Tests** - All tests passing, no known regressions
@@ -41,7 +41,7 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
   - Redshift subnets
   - Intra subnets (no internet access)
 - **Internet Gateway**: Conditional creation and VPC attachment
-- **NAT Gateway**: Single NAT and NAT-per-AZ strategies
+- **NAT Gateway**: Three strategies (single NAT, per-AZ, per-subnet), EIP reuse, custom destination CIDR
 - **Route Tables**: Public, private, database, and isolated routing with flexible association
 - **VPC Endpoints**: Gateway endpoints for S3 and DynamoDB
 - **Network ACLs**: Dedicated ACLs with custom rules for public and private subnets
@@ -54,13 +54,8 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 
 ### Roadmap 📋
 
-- **VPN Gateway**: Hybrid cloud connectivity (P1)
-- **Customer Gateways**: VPN customer side configuration (P1)
-- **IPv6 Support**: Dual-stack and IPv6-only configurations (P1)
-- **IPAM Integration**: Enterprise IP address management (P1)
 - **Interface VPC Endpoints**: Private connectivity for EC2, SSM, RDS, and more (P2)
 - **Extended NACL Support**: Dedicated ACLs for database, ElastiCache, Redshift, and intra subnets (P2)
-- **NAT Gateway Enhancements**: NAT per subnet, reuse EIPs, custom destinations (P2)
 
 See [thoughts/tasks.md](thoughts/tasks.md) for the complete roadmap.
 
@@ -146,6 +141,7 @@ See the [examples/](examples/) directory for comprehensive, production-ready exa
 **NAT Gateway Strategies:**
 - `nat-single.yaml` - Single NAT Gateway (cost-optimized: ~$32/month)
 - `nat-per-az.yaml` - NAT Gateway per AZ (high availability: ~$96/month)
+- NAT per subnet - Maximum availability (cost: ~$32/month × number of subnets)
 
 **Advanced Configurations:**
 - `private-only.yaml` - Private subnets without direct internet access

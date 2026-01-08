@@ -122,6 +122,28 @@ spec:
                   description: Create one NAT Gateway per availability zone (high availability)
                   default: false
 
+                oneNatGatewayPerSubnet:
+                  type: boolean
+                  description: Create one NAT Gateway per public subnet (maximum availability, highest cost)
+                  default: false
+
+                reuseNatIps:
+                  type: boolean
+                  description: Reuse existing Elastic IPs for NAT Gateways instead of creating new ones
+                  default: false
+
+                externalNatIpIds:
+                  type: array
+                  description: List of EIP allocation IDs to use for NAT Gateways (used with reuseNatIps)
+                  items:
+                    type: string
+                  default: []
+
+                natGatewayDestinationCidrBlock:
+                  type: string
+                  description: Destination CIDR block for NAT Gateway routes in private route tables
+                  default: "0.0.0.0/0"
+
                 # DNS Configuration
                 enableDnsHostnames:
                   type: boolean
