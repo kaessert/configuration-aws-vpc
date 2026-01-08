@@ -112,10 +112,14 @@ vpcName = oxrMeta.name
 
 # Extract core configuration from spec
 region = oxrSpec.region
-cidr = oxrSpec.cidr
+cidr = oxrSpec.cidr if oxrSpec.cidr else None
 secondaryCidrBlocks = oxrSpec.secondaryCidrBlocks or []
 azs = oxrSpec.azs or []
 tags = oxrSpec.tags or {}
+
+# Extract IPAM configuration (mutually exclusive with static cidr)
+ipv4IpamPoolId = oxrSpec.ipv4IpamPoolId if oxrSpec.ipv4IpamPoolId else None
+ipv4NetmaskLength = oxrSpec.ipv4NetmaskLength if oxrSpec.ipv4NetmaskLength else None
 
 # Extract gateway configuration
 createIgw = oxrSpec.createIgw if oxrSpec.createIgw != None else True
@@ -218,6 +222,10 @@ config = {
     secondaryCidrBlocks = secondaryCidrBlocks
     azs = azs
     tags = tags
+
+    # IPAM configuration (mutually exclusive with cidr)
+    ipv4IpamPoolId = ipv4IpamPoolId
+    ipv4NetmaskLength = ipv4NetmaskLength
 
     # DNS configuration
     enableDnsHostnames = enableDnsHostnames

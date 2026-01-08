@@ -48,13 +48,21 @@ _generateVPC = lambda config: {str: any} -> [any] {
     """
     Generates the core VPC resource.
 
+    Supports two modes for CIDR allocation:
+    1. Static CIDR: Uses cidr field (explicit CIDR block)
+    2. IPAM: Uses ipv4IpamPoolId and ipv4NetmaskLength (dynamic allocation)
+
+    These modes are mutually exclusive. IPAM mode is used when ipv4IpamPoolId is provided.
+
     Args:
         config: Configuration object containing:
             - metadata: Metadata helper function
             - vpcName: Name of the VPC
             - tags: Tags to apply
             - defaultV2Spec: Default v2 spec configuration
-            - cidr: CIDR block for the VPC
+            - cidr: Static CIDR block for the VPC (optional, mutually exclusive with IPAM)
+            - ipv4IpamPoolId: IPAM pool ID for dynamic CIDR allocation (optional)
+            - ipv4NetmaskLength: Netmask length for IPAM allocation (optional)
             - region: AWS region
             - enableDnsHostnames: Enable DNS hostnames
             - enableDnsSupport: Enable DNS support
@@ -62,6 +70,33 @@ _generateVPC = lambda config: {str: any} -> [any] {
     Returns:
         List containing the VPC resource
     """
+    # Build base forProvider with common fields (always present)
+    baseForProvider = {
+        region = config.region
+        enableDnsHostnames = config.enableDnsHostnames
+        enableDnsSupport = config.enableDnsSupport
+        tags = config.tags | {
+            Name = config.vpcName
+        }
+    }
+
+    # Add CIDR configuration based on mode (static vs IPAM)
+    # Pattern 11: Complex Conditional Logic - use imperative approach for readability
+    # Two modes: IPAM (ipv4IpamPoolId) or Static (cidrBlock)
+    cidrConfig = {}
+    if config.ipv4IpamPoolId:
+        # IPAM mode: Use IPAM pool for dynamic CIDR allocation
+        cidrConfig = {ipv4IpamPoolId = config.ipv4IpamPoolId}
+        # Add netmask length if specified (optional in IPAM mode)
+        if config.ipv4NetmaskLength:
+            cidrConfig = cidrConfig | {ipv4NetmaskLength = config.ipv4NetmaskLength}
+    else:
+        # Static mode: Use explicit CIDR block
+        cidrConfig = {cidrBlock = config.cidr}
+
+    # Merge base config with CIDR configuration
+    forProvider = baseForProvider | cidrConfig
+
     [
         ec2v1beta1.VPC{
             metadata = config.metadata("vpc") | {
@@ -69,15 +104,7 @@ _generateVPC = lambda config: {str: any} -> [any] {
                 labels = config.tags
             }
             spec = config.defaultV2Spec | {
-                forProvider = {
-                    cidrBlock = config.cidr
-                    region = config.region
-                    enableDnsHostnames = config.enableDnsHostnames
-                    enableDnsSupport = config.enableDnsSupport
-                    tags = config.tags | {
-                        Name = config.vpcName
-                    }
-                }
+                forProvider = forProvider
             }
         }
     ]

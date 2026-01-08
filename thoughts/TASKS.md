@@ -31,8 +31,9 @@
 - ✅ VPC Flow Logs - CloudWatch and S3 destinations (3.4)
 - ✅ Subnet Groups - RDS, ElastiCache, Redshift (3.5)
 - ✅ Secondary CIDR Blocks - IP space expansion (3.6)
+- ✅ IPAM Integration - IPv4 support (3.7)
 
-**Test Coverage**: 32 composition tests, 11 E2E tests - ALL PASSING ✅
+**Test Coverage**: 38 composition tests, 11 E2E tests - ALL PASSING ✅
 
 ### Feature Parity: ~65% (vs Terraform Module)
 
@@ -47,7 +48,7 @@
 2. ❌ **VPN Gateway** (4.1) - Hybrid cloud connectivity
 3. ❌ **Customer Gateways** (4.2) - VPN customer side
 4. ❌ **IPv6 Support** (4.3) - Modern cloud requirement (0% implemented)
-5. ❌ **IPAM Integration** (3.7) - Enterprise IP management
+5. ✅ **IPAM Integration** (3.7) - Enterprise IP management (IPv4 complete)
 
 **P2 - IMPORTANT (Significant value):**
 7. ❌ **NAT Gateway Enhancements** (4.4) - NAT per subnet, reuse EIPs, custom destination
@@ -66,7 +67,6 @@
 **SHORT TERM (P1):**
 - Task 4.1: VPN Gateway Support
 - Task 4.3: IPv6 Support (large effort, high impact)
-- Task 3.7: IPAM Integration
 
 **MEDIUM TERM (P2):**
 - Task 4.4: NAT Gateway Enhancements
@@ -971,33 +971,47 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 **Priority**: P1
 **Effort**: Medium
 **Description**: Support AWS IPAM (IP Address Manager) for dynamic CIDR allocation
-**Status**: NOT STARTED
+**Status**: ✅ COMPLETED (IPv4 support)
 
 **Rationale**: Enterprise organizations use IPAM to centrally manage IP address space across AWS accounts and regions.
 
 **Tasks**:
-- [ ] Add IPAM pool support for IPv4
-  - [ ] Add ipv4IpamPoolId field to XRD
-  - [ ] Add ipv4NetmaskLength field
-  - [ ] Use IPAM pool instead of static CIDR when configured
-  - [ ] Handle dynamic CIDR allocation
-- [ ] Add IPAM pool support for IPv6 (with IPv6 feature)
+- [x] Add IPAM pool support for IPv4
+  - [x] Add ipv4IpamPoolId field to XRD
+  - [x] Add ipv4NetmaskLength field
+  - [x] Use IPAM pool instead of static CIDR when configured
+  - [x] Handle dynamic CIDR allocation
+  - [x] Make cidr field optional (mutually exclusive with IPAM)
+- [ ] Add IPAM pool support for IPv6 (DEFERRED - with IPv6 feature in Task 4.3)
   - [ ] Add ipv6IpamPoolId field
   - [ ] Add ipv6NetmaskLength field
-- [ ] Add useIpamPool flag
-- [ ] Add composition tests for IPAM scenarios
-- [ ] Add E2E test (requires IPAM pool setup)
-- [ ] Document IPAM setup requirements
-- [ ] Document CIDR preview workflow
+- [x] Add composition tests for IPAM scenarios
+- [ ] Add E2E test - ⏸️ **DEFERRED (requires manual IPAM pool setup)**
+- [ ] Document IPAM setup requirements - **TODO**
+- [ ] Document CIDR preview workflow - **TODO**
 
-**AWS Resources**: Uses VPC resource with IPAM fields
+**AWS Resources**: Uses VPC resource with IPAM fields (ipv4IpamPoolId, ipv4NetmaskLength)
+
+**Implementation Notes**:
+- IPAM mode and static CIDR mode are mutually exclusive
+- When ipv4IpamPoolId is provided, VPC uses IPAM for dynamic CIDR allocation
+- When cidr is provided, VPC uses static CIDR block
+- XRD updated: cidr field no longer required (either cidr OR ipv4IpamPoolId must be provided)
+- vpc.k updated: Conditional logic to build forProvider with IPAM fields or cidrBlock
+
+**Test Coverage**:
+- ✅ Composition test: test-test-vpc-ipam-ipv4 - PASSING
+- ⏸️ E2E test: DEFERRED (requires pre-existing IPAM pool in AWS account)
+  - **Reason**: IPAM pools are centrally managed enterprise infrastructure
+  - **Cannot be created/destroyed in test lifecycle**
+  - **Composition test validates correct resource generation**
 
 **Acceptance Criteria**:
-- ✅ VPC can allocate CIDR from IPAM pool
+- ✅ VPC can allocate CIDR from IPAM pool (IPv4)
 - ✅ Netmask length configurable
-- ✅ Works for both IPv4 and IPv6
-- ✅ Tests validate IPAM integration
-- ✅ Documentation clear on IPAM prerequisites
+- ⏸️ Works for both IPv4 and IPv6 (IPv6 deferred to Task 4.3)
+- ✅ Tests validate IPAM integration (composition level)
+- ⏸️ Documentation clear on IPAM prerequisites (TODO)
 
 **Reference**: Comparison analysis Section 1.10 (IPAM Integration)
 

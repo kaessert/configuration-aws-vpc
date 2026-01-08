@@ -21,7 +21,6 @@ spec:
               type: object
               required:
                 - region
-                - cidr
               properties:
                 # Core Network Configuration
                 region:
@@ -31,8 +30,19 @@ spec:
 
                 cidr:
                   type: string
-                  description: The IPv4 CIDR block for the VPC
+                  description: The IPv4 CIDR block for the VPC (mutually exclusive with IPAM pool)
                   pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+
+                # IPAM Configuration (mutually exclusive with cidr)
+                ipv4IpamPoolId:
+                  type: string
+                  description: ID of the IPAM pool from which to allocate the VPC CIDR (mutually exclusive with cidr)
+
+                ipv4NetmaskLength:
+                  type: integer
+                  description: Netmask length for IPAM-allocated CIDR (e.g., 16 for /16)
+                  minimum: 0
+                  maximum: 32
 
                 secondaryCidrBlocks:
                   type: array
