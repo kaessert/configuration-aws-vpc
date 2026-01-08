@@ -168,10 +168,51 @@ generateNATGateways = lambda config: {str: any} -> [any] {
     ] if config.enableNatGateway and config.singleNatGateway and len(config.azs) > 0 and len(config.publicSubnets) > 0 else []
 }
 
+# Generate Egress-Only Internet Gateway for IPv6
+generateEgressOnlyInternetGateway = lambda config: {str: any} -> [any] {
+    """
+    Generates the Egress-Only Internet Gateway resource for IPv6.
+
+    This gateway allows outbound IPv6 traffic from private subnets while
+    preventing inbound IPv6 connections from the internet.
+
+    Args:
+        config: Configuration object containing:
+            - createEgressOnlyIgw: Whether to create the Egress-Only IGW
+            - metadata: Metadata helper function
+            - vpcName: Name of the VPC
+            - tags: Tags to apply
+            - defaultV2Spec: Default v2 spec configuration
+            - region: AWS region
+
+    Returns:
+        List containing the Egress-Only IGW resource (or empty list if disabled)
+    """
+    [
+        ec2v1beta1.EgressOnlyInternetGateway{
+            metadata = config.metadata("eigw") | {
+                name = "eigw-${config.vpcName}"
+                labels = config.sanitizeLabels(config.tags)
+            }
+            spec = config.defaultV2Spec | {
+                forProvider = {
+                    vpcIdSelector = {
+                        matchControllerRef = True
+                    }
+                    region = config.region
+                    tags = config.tags | {
+                        Name = "eigw-${config.vpcName}"
+                    }
+                }
+            }
+        }
+    ] if config.createEgressOnlyIgw else []
+}
+
 # Generate all gateway resources
 generateAllGateways = lambda config: {str: any} -> [any] {
     """
-    Generates all gateway resources (IGW, EIPs, NAT Gateways).
+    Generates all gateway resources (IGW, Egress-Only IGW, EIPs, NAT Gateways).
 
     Args:
         config: Configuration object containing all gateway parameters
@@ -180,6 +221,7 @@ generateAllGateways = lambda config: {str: any} -> [any] {
         List of all gateway resources
     """
     generateInternetGateway(config) + \
+    generateEgressOnlyInternetGateway(config) + \
     generateEIPs(config) + \
     generateNATGateways(config)
 }

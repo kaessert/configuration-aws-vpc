@@ -49,10 +49,10 @@ _generatePublicRouteTable = lambda config: {str: any} -> [any] {
     ] if len(config.publicSubnets) > 0 else []
 }
 
-# Generate public route to Internet Gateway
+# Generate public route to Internet Gateway (IPv4)
 _generatePublicRoute = lambda config: {str: any} -> [any] {
     """
-    Generates the public route to the Internet Gateway.
+    Generates the public route to the Internet Gateway (IPv4).
 
     Args:
         config: Configuration object
@@ -81,6 +81,41 @@ _generatePublicRoute = lambda config: {str: any} -> [any] {
             }
         }
     ] if len(config.publicSubnets) > 0 and config.createIgw else []
+}
+
+# Generate public route to Internet Gateway (IPv6)
+_generatePublicRouteIpv6 = lambda config: {str: any} -> [any] {
+    """
+    Generates the public IPv6 route (::/0) to the Internet Gateway.
+
+    Args:
+        config: Configuration object
+
+    Returns:
+        List containing the public IPv6 route resource
+    """
+    [
+        ec2v1beta1.Route{
+            metadata = config.metadata("public-route-ipv6") | {
+                name = "route-public-ipv6-${config.vpcName}"
+            }
+            spec = config.defaultV2Spec | {
+                forProvider = {
+                    routeTableIdSelector = {
+                        matchLabels = {
+                            "route-table-type": "public"
+                        }
+                        matchControllerRef = True
+                    }
+                    gatewayIdSelector = {
+                        matchControllerRef = True
+                    }
+                    region = config.region
+                    destinationIpv6CidrBlock = "::/0"
+                }
+            }
+        }
+    ] if len(config.publicSubnets) > 0 and config.createIgw and config.enableIpv6 else []
 }
 
 # Generate public route table associations
@@ -244,6 +279,65 @@ _generatePrivateRoutes = lambda config: {str: any} -> [any] {
             }
         }
     ] if len(config.privateSubnets) > 0 and config.enableNatGateway and config.singleNatGateway else []
+}
+
+# Generate private IPv6 routes to Egress-Only Internet Gateway
+_generatePrivateRoutesIpv6 = lambda config: {str: any} -> [any] {
+    """
+    Generates private IPv6 routes (::/0) to Egress-Only Internet Gateway.
+
+    Args:
+        config: Configuration object
+
+    Returns:
+        List of private IPv6 route resources
+    """
+    [
+        ec2v1beta1.Route{
+            metadata = config.metadata("private-route-ipv6-${i}") | {
+                name = "route-private-ipv6-${config.vpcName}-${config.azs[i]}"
+            }
+            spec = config.defaultV2Spec | {
+                forProvider = {
+                    routeTableIdSelector = {
+                        matchLabels = {
+                            "route-table-type": "private"
+                            "az": config.azs[i]
+                        }
+                        matchControllerRef = True
+                    }
+                    egressOnlyGatewayIdSelector = {
+                        matchControllerRef = True
+                    }
+                    region = config.region
+                    destinationIpv6CidrBlock = "::/0"
+                }
+            }
+        }
+        for i in range(len(config.azs))
+    ] if len(config.privateSubnets) > 0 and config.createEgressOnlyIgw and config.enableIpv6 and config.oneNatGatewayPerAz else [
+        # Single route for single NAT Gateway strategy
+        ec2v1beta1.Route{
+            metadata = config.metadata("private-route-ipv6") | {
+                name = "route-private-ipv6-${config.vpcName}"
+            }
+            spec = config.defaultV2Spec | {
+                forProvider = {
+                    routeTableIdSelector = {
+                        matchLabels = {
+                            "route-table-type": "private"
+                        }
+                        matchControllerRef = True
+                    }
+                    egressOnlyGatewayIdSelector = {
+                        matchControllerRef = True
+                    }
+                    region = config.region
+                    destinationIpv6CidrBlock = "::/0"
+                }
+            }
+        }
+    ] if len(config.privateSubnets) > 0 and config.createEgressOnlyIgw and config.enableIpv6 else []
 }
 
 # Generate private route table associations
@@ -512,9 +606,11 @@ generateAllRouting = lambda config: {str: any} -> [any] {
     """
     _generatePublicRouteTable(config) + \
     _generatePublicRoute(config) + \
+    _generatePublicRouteIpv6(config) + \
     _generatePublicRouteTableAssociations(config) + \
     _generatePrivateRouteTables(config) + \
     _generatePrivateRoutes(config) + \
+    _generatePrivateRoutesIpv6(config) + \
     _generatePrivateRouteTableAssociations(config) + \
     _generateDatabaseRouteTable(config) + \
     _generateDatabaseRoute(config) + \

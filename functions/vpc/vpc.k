@@ -80,22 +80,38 @@ _generateVPC = lambda config: {str: any} -> [any] {
         }
     }
 
-    # Add CIDR configuration based on mode (static vs IPAM)
+    # Add IPv4 CIDR configuration based on mode (static vs IPAM)
     # Pattern 11: Complex Conditional Logic - use imperative approach for readability
     # Two modes: IPAM (ipv4IpamPoolId) or Static (cidrBlock)
-    cidrConfig = {}
+    ipv4CidrConfig = {}
     if config.ipv4IpamPoolId:
         # IPAM mode: Use IPAM pool for dynamic CIDR allocation
-        cidrConfig = {ipv4IpamPoolId = config.ipv4IpamPoolId}
+        ipv4CidrConfig = {ipv4IpamPoolId = config.ipv4IpamPoolId}
         # Add netmask length if specified (optional in IPAM mode)
         if config.ipv4NetmaskLength:
-            cidrConfig = cidrConfig | {ipv4NetmaskLength = config.ipv4NetmaskLength}
+            ipv4CidrConfig = ipv4CidrConfig | {ipv4NetmaskLength = config.ipv4NetmaskLength}
     else:
         # Static mode: Use explicit CIDR block
-        cidrConfig = {cidrBlock = config.cidr}
+        ipv4CidrConfig = {cidrBlock = config.cidr}
 
-    # Merge base config with CIDR configuration
-    forProvider = baseForProvider | cidrConfig
+    # Add IPv6 CIDR configuration if IPv6 is enabled
+    # Pattern 10: Optional Field Handling - conditional dict merging
+    ipv6CidrConfig = {}
+    if config.enableIpv6:
+        if config.ipv6IpamPoolId:
+            # IPv6 IPAM mode: Use IPAM pool for IPv6 allocation
+            ipv6CidrConfig = {ipv6IpamPoolId = config.ipv6IpamPoolId}
+            if config.ipv6NetmaskLength:
+                ipv6CidrConfig = ipv6CidrConfig | {ipv6NetmaskLength = config.ipv6NetmaskLength}
+        elif config.ipv6CidrBlock:
+            # Custom IPv6 CIDR block
+            ipv6CidrConfig = {ipv6CidrBlock = config.ipv6CidrBlock}
+        elif config.assignGeneratedIpv6CidrBlock:
+            # Amazon-provided IPv6 CIDR block (default)
+            ipv6CidrConfig = {assignGeneratedIpv6CidrBlock = True}
+
+    # Merge base config with IPv4 and IPv6 CIDR configuration
+    forProvider = baseForProvider | ipv4CidrConfig | ipv6CidrConfig
 
     [
         ec2v1beta1.VPC{

@@ -134,6 +134,29 @@ createDatabaseNatGatewayRoute = oxrSpec.createDatabaseNatGatewayRoute if oxrSpec
 # Extract DNS configuration
 enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames != None else True
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
+enableDns64 = oxrSpec.enableDns64 if oxrSpec.enableDns64 != None else False
+
+# Extract IPv6 configuration
+enableIpv6 = oxrSpec.enableIpv6 if oxrSpec.enableIpv6 != None else False
+assignGeneratedIpv6CidrBlock = oxrSpec.assignGeneratedIpv6CidrBlock if oxrSpec.assignGeneratedIpv6CidrBlock != None else True
+ipv6CidrBlock = oxrSpec.ipv6CidrBlock if oxrSpec.ipv6CidrBlock else None
+ipv6IpamPoolId = oxrSpec.ipv6IpamPoolId if oxrSpec.ipv6IpamPoolId else None
+ipv6NetmaskLength = oxrSpec.ipv6NetmaskLength if oxrSpec.ipv6NetmaskLength != None else None
+assignIpv6AddressOnCreation = oxrSpec.assignIpv6AddressOnCreation if oxrSpec.assignIpv6AddressOnCreation != None else False
+ipv6Native = oxrSpec.ipv6Native if oxrSpec.ipv6Native != None else False
+enableResourceNameDnsAaaaRecordOnLaunch = oxrSpec.enableResourceNameDnsAaaaRecordOnLaunch if oxrSpec.enableResourceNameDnsAaaaRecordOnLaunch != None else False
+privateDnsHostnameTypeOnLaunch = oxrSpec.privateDnsHostnameTypeOnLaunch if oxrSpec.privateDnsHostnameTypeOnLaunch else None
+
+# Extract IPv6 subnet prefixes
+publicSubnetIpv6Prefixes = oxrSpec.publicSubnetIpv6Prefixes or []
+privateSubnetIpv6Prefixes = oxrSpec.privateSubnetIpv6Prefixes or []
+databaseSubnetIpv6Prefixes = oxrSpec.databaseSubnetIpv6Prefixes or []
+elasticacheSubnetIpv6Prefixes = oxrSpec.elasticacheSubnetIpv6Prefixes or []
+redshiftSubnetIpv6Prefixes = oxrSpec.redshiftSubnetIpv6Prefixes or []
+intraSubnetIpv6Prefixes = oxrSpec.intraSubnetIpv6Prefixes or []
+
+# Extract IPv6 gateway configuration
+createEgressOnlyIgw = oxrSpec.createEgressOnlyIgw if oxrSpec.createEgressOnlyIgw != None else False
 
 # Extract DHCP Options configuration
 enableDhcpOptions = oxrSpec.enableDhcpOptions if oxrSpec.enableDhcpOptions != None else False
@@ -230,12 +253,33 @@ config = {
     # DNS configuration
     enableDnsHostnames = enableDnsHostnames
     enableDnsSupport = enableDnsSupport
+    enableDns64 = enableDns64
+
+    # IPv6 configuration
+    enableIpv6 = enableIpv6
+    assignGeneratedIpv6CidrBlock = assignGeneratedIpv6CidrBlock
+    ipv6CidrBlock = ipv6CidrBlock
+    ipv6IpamPoolId = ipv6IpamPoolId
+    ipv6NetmaskLength = ipv6NetmaskLength
+    assignIpv6AddressOnCreation = assignIpv6AddressOnCreation
+    ipv6Native = ipv6Native
+    enableResourceNameDnsAaaaRecordOnLaunch = enableResourceNameDnsAaaaRecordOnLaunch
+    privateDnsHostnameTypeOnLaunch = privateDnsHostnameTypeOnLaunch
+
+    # IPv6 subnet prefixes
+    publicSubnetIpv6Prefixes = publicSubnetIpv6Prefixes
+    privateSubnetIpv6Prefixes = privateSubnetIpv6Prefixes
+    databaseSubnetIpv6Prefixes = databaseSubnetIpv6Prefixes
+    elasticacheSubnetIpv6Prefixes = elasticacheSubnetIpv6Prefixes
+    redshiftSubnetIpv6Prefixes = redshiftSubnetIpv6Prefixes
+    intraSubnetIpv6Prefixes = intraSubnetIpv6Prefixes
 
     # Gateway configuration
     createIgw = createIgw
     enableNatGateway = enableNatGateway
     singleNatGateway = singleNatGateway
     oneNatGatewayPerAz = oneNatGatewayPerAz
+    createEgressOnlyIgw = createEgressOnlyIgw
 
     # Subnet configuration
     publicSubnets = publicSubnets
