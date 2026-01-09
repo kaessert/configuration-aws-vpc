@@ -1576,26 +1576,40 @@ Build a production-ready **drop-in replacement** for the [terraform-aws-modules/
 **Priority**: P1
 **Effort**: Medium
 **Description**: Create comprehensive examples matching Terraform module test cases
+**Status**: ✅ COMPLETED (Core examples done, Phase 4 examples added)
 
 **Tasks**:
-- [x] Create `examples/simple-vpc.yaml` - Minimal VPC (done)
-- [ ] Create `examples/complete-vpc.yaml` - All features
-- [ ] Create `examples/private-only.yaml` - No IGW
-- [ ] Create `examples/multi-az.yaml` - Multiple AZs
-- [ ] Create `examples/with-endpoints.yaml` - VPC endpoints
-- [ ] Create `examples/with-flow-logs.yaml` - Flow logs enabled
-- [ ] Create `examples/nat-single.yaml` - Single NAT Gateway
-- [ ] Create `examples/nat-per-az.yaml` - NAT per AZ
-- [ ] Document each example thoroughly
-- [ ] Add README.md in examples/ directory
+- [x] Create `examples/simple-vpc.yaml` - Minimal VPC ✅
+- [x] Create `examples/complete-vpc.yaml` - All Phase 1-3 features ✅
+- [x] Create `examples/private-only.yaml` - No IGW ✅
+- [x] Create `examples/multi-az.yaml` - Multiple AZs ✅
+- [x] Create `examples/with-endpoints.yaml` - VPC endpoints ✅
+- [x] Create `examples/with-flow-logs.yaml` - Flow logs enabled ✅
+- [x] Create `examples/nat-single.yaml` - Single NAT Gateway ✅
+- [x] Create `examples/nat-per-az.yaml` - NAT per AZ ✅
+- [x] Create `examples/with-ipv6-dual-stack.yaml` - IPv6 dual-stack ✅ **NEW**
+- [x] Create `examples/with-vpn.yaml` - VPN Gateway + Customer Gateways ✅ **NEW**
+- [x] Document each example thoroughly ✅
+- [x] Add README.md in examples/ directory ✅
+- [x] Update README with Phase 4 features ✅
+
+**Phase 4 Examples Created**:
+- **with-ipv6-dual-stack.yaml**: Demonstrates IPv6 support with dual-stack VPC, Egress-Only IGW, IPv6 routing
+- **with-vpn.yaml**: Demonstrates VPN Gateway, Customer Gateways, route propagation, hybrid cloud connectivity
+
+**Optional Future Examples** (P3):
+- [ ] `examples/with-interface-endpoints.yaml` - Interface VPC Endpoints (EC2, SSM, RDS, etc.)
+- [ ] `examples/with-default-resources.yaml` - Default resource management (security hardening)
+- [ ] `examples/with-ipam.yaml` - IPAM integration for dynamic CIDR allocation
 
 **Reference**: thoughts/spec/terraform-vpc-analysis.md (Test Cases section)
 
 **Acceptance Criteria**:
-- All major use cases covered
-- Examples match Terraform module examples
-- Documentation clear and helpful
-- Each example has inline comments
+- ✅ All major use cases covered (11 examples total)
+- ✅ Examples match Terraform module examples
+- ✅ Documentation clear and helpful (comprehensive README)
+- ✅ Each example has inline comments and cost considerations
+- ✅ Phase 4 features represented in examples
 
 ---
 

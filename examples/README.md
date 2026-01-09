@@ -8,25 +8,31 @@ This directory contains comprehensive examples demonstrating all features of the
 |---------|---------|--------------|----------|
 | **simple-vpc.yaml** | Minimal VPC | Basic VPC with public subnets | Getting started, simple workloads |
 | **multi-subnet-vpc.yaml** | Multiple subnet types | All 6 subnet types across AZs | Demonstrating subnet variety |
-| **complete-vpc.yaml** | ⭐ All features | Everything implemented | Reference implementation |
+| **complete-vpc.yaml** | ⭐ All features (Phase 1-3) | Core VPC features | Reference implementation |
 | **nat-single.yaml** | Cost optimization | Single NAT Gateway shared | Dev/test environments |
 | **nat-per-az.yaml** | High availability | NAT Gateway per AZ | Production workloads |
 | **with-endpoints.yaml** | VPC Endpoints | S3 and DynamoDB endpoints | Cost optimization for AWS services |
 | **with-flow-logs.yaml** | Traffic monitoring | VPC Flow Logs to CloudWatch/S3 | Security, compliance, troubleshooting |
 | **private-only.yaml** | Maximum security | No Internet Gateway | High-security/compliance requirements |
 | **multi-az.yaml** | Fault tolerance | 3 AZ distribution | Mission-critical applications |
+| **with-ipv6-dual-stack.yaml** ✨ | IPv6 Support | Dual-stack IPv4+IPv6, Egress-Only IGW | Modern cloud-native, IoT, mobile apps |
+| **with-vpn.yaml** ✨ | Hybrid Cloud | VPN Gateway, Customer Gateways | Enterprise data center connectivity |
+
+✨ = Phase 4 advanced features
 
 ## Feature Coverage
 
-All examples demonstrate features that are fully implemented and tested with 32 composition tests and 11 E2E tests.
+All examples demonstrate features that are fully implemented and tested with **68 composition tests** and **15 E2E tests**. This configuration provides **~90% feature parity** with the terraform-aws-modules/vpc module.
 
-### Core VPC Features ✅
+### ✅ Implemented Features (Phase 1-4)
 
 #### Network Foundation
 - **VPC Creation** with customizable CIDR blocks
 - **Secondary CIDR Blocks** for IP address space expansion
+- **Instance Tenancy** - Default or dedicated hardware
 - **DNS Configuration** (hostnames, resolution, DNS64)
 - **Multiple Availability Zones** for high availability
+- **IPAM Integration** - Dynamic IPv4 CIDR allocation from IPAM pools
 
 #### Subnet Types (All 6 Supported)
 - **Public Subnets** - Internet-facing resources (IGW routing)
@@ -38,22 +44,50 @@ All examples demonstrate features that are fully implemented and tested with 32 
 
 #### Internet Connectivity
 - **Internet Gateway** - Conditional creation for public subnets
-- **NAT Gateway** - Two strategies:
+- **NAT Gateway** - Four strategies:
   - Single NAT Gateway (cost-optimized)
   - NAT Gateway per AZ (high availability)
+  - NAT Gateway per subnet (maximum isolation)
+  - Reuse existing Elastic IPs
+- **Egress-Only Internet Gateway** - IPv6 outbound-only access
 - **Route Tables** - Automatic configuration for all subnet types
+  - Per-AZ public route tables
+  - Separate routing for ElastiCache and Redshift subnets
+
+#### IPv6 Support ✅
+- **IPv6 CIDR Association** - Dual-stack and IPv6-only modes
+- **IPv6 Subnets** - Automatic IPv6 prefix allocation
+- **IPv6 Routing** - Internet Gateway and Egress-Only IGW
+- **DNS64** - NAT64 for IPv6-only subnets
+- **IPAM Integration** - IPv6 CIDR allocation from IPAM pools
+
+#### VPN Connectivity ✅
+- **VPN Gateway** - Hybrid cloud connectivity
+  - Configurable Amazon-side ASN
+  - Route propagation to all subnet types
+- **Customer Gateways** - VPN customer side configuration
+  - BGP and static routing support
+  - Multiple customer gateways
 
 #### AWS Service Access
-- **VPC Endpoints** - Private access to AWS services:
-  - S3 Gateway Endpoint (FREE)
-  - DynamoDB Gateway Endpoint (FREE)
-  - Configurable endpoint policies
+- **Gateway VPC Endpoints** - Private access (FREE):
+  - S3 Gateway Endpoint
+  - DynamoDB Gateway Endpoint
+- **Interface VPC Endpoints** ✅ - PrivateLink connectivity:
+  - EC2, SSM, RDS, Secrets Manager
+  - Custom security groups
+  - Private DNS enabled
+  - Endpoint policies
 
 #### Security
-- **Network ACLs** - Stateless firewall rules:
-  - Public subnet ACLs with custom rules
-  - Private subnet ACLs with custom rules
-  - Flexible inbound/outbound rule configuration
+- **Network ACLs** - Stateless firewall rules for ALL subnet types:
+  - Public, Private, Database, ElastiCache, Redshift, Intra
+  - Custom inbound and outbound rules
+  - Protocol mapping (TCP, UDP, ICMP)
+- **Default Resource Management** ✅ - Security hardening:
+  - Manage default Security Group (lock down)
+  - Manage default Network ACL (custom rules)
+  - Manage default Route Table (custom routes)
 - **DHCP Options** - Custom DNS, NTP, NetBIOS configuration
 
 #### Monitoring & Compliance
@@ -78,24 +112,17 @@ All examples demonstrate features that are fully implemented and tested with 32 
   - Per-subnet-type tags
   - Service-specific tags (endpoints, ACLs, subnet groups)
 
-### Upcoming Features 📋
+### ⏸️ Deferred Features (Optional - P3)
 
-The following features are planned but not yet implemented:
+**Low Priority (P3)**
+- **Subnet Naming Enhancements** - Custom names and suffixes (low value)
+- **VPC Block Public Access** - Waiting for provider support (AWS Nov 2024 feature)
+- **Outpost Subnets** - AWS Outposts support (niche use case)
 
-**Priority 1 (P1) - High Impact**
-- VPN Gateway for site-to-site connectivity
-- IPv6 Support (dual-stack VPCs)
-- IPAM Integration for automated IP management
-
-**Priority 2 (P2) - Medium Impact**
-- Interface VPC Endpoints for additional AWS services
-- Transit Gateway attachments
-- VPC Peering connections
-
-**Priority 3 (P3) - Future Enhancements**
-- Network Firewall integration
-- PrivateLink endpoint services
-- IPv6 Egress-only Internet Gateway
+**Not Planned**
+- Transit Gateway attachments (separate configuration)
+- VPC Peering connections (separate configuration)
+- Network Firewall integration (separate configuration)
 
 ## Example Details
 

@@ -1,0 +1,262 @@
+# VPC with VPN Gateway for Hybrid Cloud Connectivity
+#
+# This example demonstrates VPN connectivity for hybrid cloud scenarios:
+# - VPN Gateway attached to VPC for site-to-site VPN connections
+# - Customer Gateways representing on-premises VPN devices
+# - Route propagation to private and database subnet route tables
+# - Multiple availability zones for high availability
+#
+# Use Case: Enterprise hybrid cloud requiring secure connectivity between:
+#           - On-premises data centers and AWS
+#           - Branch offices and AWS workloads
+#           - Legacy systems that can't migrate to cloud
+#           - Disaster recovery and backup scenarios
+#
+# Cost Considerations:
+# - 1 VPN Gateway (~$36/month)
+# - 2 Customer Gateways (FREE)
+# - 2 VPN Connections (~$72/month) - requires separate VPN Connection resources
+# - 1 NAT Gateway (~$32/month + data transfer)
+# - Data transfer charges for VPN traffic
+#
+# Production Notes:
+# - VPN provides up to 1.25 Gbps per tunnel (2 tunnels = 2.5 Gbps max)
+# - For higher throughput, consider AWS Direct Connect
+# - BGP routing recommended for automatic failover
+# - Monitor VPN tunnel health and metrics
+# - Test failover scenarios regularly
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: vpn-connected-vpc
+  namespace: default
+  annotations:
+    description: "VPC with VPN Gateway for hybrid cloud connectivity"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+
+  # Availability Zones - 2 AZs for high availability
+  azs:
+    - us-west-2a
+    - us-west-2b
+
+  # DNS Configuration
+  enableDnsHostnames: true
+  enableDnsSupport: true
+
+  # ==================
+  # Subnet Configuration
+  # ==================
+
+  # Public Subnets - for VPN Gateway endpoints (NAT Gateways, bastion hosts)
+  publicSubnets:
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+
+  mapPublicIpOnLaunch: true
+
+  # Private Subnets - for application servers accessing on-premises via VPN
+  privateSubnets:
+    - 10.0.11.0/24
+    - 10.0.12.0/24
+
+  # Database Subnets - for databases that may need on-premises access
+  databaseSubnets:
+    - 10.0.21.0/24
+    - 10.0.22.0/24
+
+  createDatabaseSubnetRouteTable: true
+
+  # ==================
+  # Internet Connectivity
+  # ==================
+
+  # Internet Gateway for public subnet access
+  createIgw: true
+
+  # NAT Gateway for private subnet internet access
+  # Private subnets can access both internet (via NAT) and on-premises (via VPN)
+  enableNatGateway: true
+  singleNatGateway: true  # Cost-optimized for dev/test; use oneNatGatewayPerAz for production
+
+  # ==================
+  # VPN Gateway Configuration
+  # ==================
+
+  # Enable VPN Gateway for site-to-site VPN connections
+  enableVpnGateway: true
+
+  # Amazon-side ASN (Autonomous System Number) for BGP routing
+  # Default is 64512; customize if needed for BGP routing
+  # Range: 64512-65534 (private ASNs) or your public ASN
+  amazonSideAsn: 64512
+
+  # Route Propagation - automatically add routes learned via BGP from on-premises
+  # This enables dynamic routing updates as on-premises networks change
+
+  # Propagate routes to private subnet route tables
+  # Private subnets can reach on-premises networks via VPN
+  propagatePrivateRouteTablesVgw: true
+
+  # Propagate routes to database subnet route tables
+  # Database subnets can reach on-premises databases and services
+  propagateDatabaseRouteTablesVgw: true
+
+  # Do NOT propagate to public subnets (typically don't need on-premises access)
+  propagatePublicRouteTablesVgw: false
+
+  # Do NOT propagate to intra subnets (completely isolated)
+  propagateIntraRouteTablesVgw: false
+
+  # ==================
+  # Customer Gateway Configuration
+  # ==================
+
+  # Customer Gateways represent the on-premises side of the VPN connection
+  # Multiple gateways for redundancy and multi-site connectivity
+  customerGateways:
+    # Primary data center VPN device
+    datacenter1:
+      bgpAsn: 65001  # On-premises BGP ASN
+      ipAddress: 203.0.113.1  # Public IP of on-premises VPN device
+      deviceName: "Primary-DC-Firewall"
+      type: "ipsec.1"
+
+    # Secondary data center VPN device (disaster recovery site)
+    datacenter2:
+      bgpAsn: 65002  # Different ASN for secondary site
+      ipAddress: 203.0.113.2
+      deviceName: "DR-DC-Firewall"
+      type: "ipsec.1"
+
+  # ==================
+  # Subnet Groups
+  # ==================
+
+  createDatabaseSubnetGroup: true
+  databaseSubnetGroupName: vpn-vpc-db-subnet-group
+
+  # ==================
+  # Tags
+  # ==================
+
+  tags:
+    Name: vpn-connected-vpc
+    Environment: production
+    ManagedBy: upbound
+    NetworkType: hybrid-cloud
+    VPNEnabled: "true"
+
+  vpcTags:
+    Purpose: "Hybrid cloud connectivity"
+    Connectivity: "VPN"
+
+  publicSubnetTags:
+    Tier: public
+    VPNAccess: "no"
+
+  privateSubnetTags:
+    Tier: private
+    VPNAccess: "yes"
+    OnPremisesAccess: "true"
+
+  databaseSubnetTags:
+    Tier: database
+    VPNAccess: "yes"
+    OnPremisesAccess: "true"
+
+  # VPN Gateway specific tags
+  vpnGatewayTags:
+    Purpose: "site-to-site-vpn"
+    ASN: "64512"
+
+  # Customer Gateway specific tags (merged with per-gateway config)
+  customerGatewayTags:
+    ManagedBy: "upbound"
+    VPNType: "ipsec"
+
+# ==================
+# Post-Deployment Steps
+# ==================
+#
+# After deploying this VPC, you need to:
+#
+# 1. Create VPN Connections:
+#    - Create VPN Connection between VPN Gateway and each Customer Gateway
+#    - Download VPN configuration for your on-premises device
+#    - Configure on-premises VPN device with AWS-provided settings
+#
+# 2. Configure On-Premises Side:
+#    - Set up IPSec tunnels (2 per VPN Connection for redundancy)
+#    - Configure BGP routing (recommended) or static routes
+#    - Set up tunnel monitoring and health checks
+#
+# 3. Test Connectivity:
+#    - Verify VPN tunnel status (both tunnels should be UP)
+#    - Test connectivity from private subnets to on-premises networks
+#    - Test connectivity from on-premises to AWS resources
+#    - Verify BGP route propagation
+#
+# 4. Security:
+#    - Configure security groups to allow traffic from on-premises CIDR blocks
+#    - Update NACLs if using restrictive rules
+#    - Enable VPN tunnel CloudWatch metrics and alarms
+#
+# ==================
+# Network Architecture
+# ==================
+#
+# Internet Traffic Flow:
+#   Public subnets → Internet Gateway → Internet
+#   Private subnets → NAT Gateway → Internet Gateway → Internet
+#
+# On-Premises Traffic Flow:
+#   Private subnets → VPN Gateway → IPSec Tunnel → Customer Gateway → On-Premises
+#   Database subnets → VPN Gateway → IPSec Tunnel → Customer Gateway → On-Premises
+#
+# Route Propagation:
+#   - BGP dynamically advertises on-premises routes to AWS
+#   - Routes automatically appear in private and database route tables
+#   - No manual route updates needed when on-premises networks change
+#
+# Example BGP Configuration:
+#   - AWS advertises VPC CIDR (10.0.0.0/16) to on-premises
+#   - On-premises advertises office networks (e.g., 192.168.0.0/16) to AWS
+#   - Private subnets learn routes to 192.168.0.0/16 via route propagation
+#
+# ==================
+# Troubleshooting
+# ==================
+#
+# If VPN tunnels are down:
+# 1. Check Customer Gateway public IP is reachable
+# 2. Verify on-premises firewall allows IPSec (UDP 500, 4500)
+# 3. Confirm IPSec parameters match (encryption, authentication)
+# 4. Check BGP ASN configuration on both sides
+# 5. Review VPN Connection logs in CloudWatch
+#
+# If routes aren't propagating:
+# 1. Verify route propagation is enabled on route tables
+# 2. Check BGP session is established (both tunnels)
+# 3. Confirm on-premises is advertising routes via BGP
+# 4. Check route table limits (50 propagated routes max per table)
+#
+# Performance issues:
+# 1. Monitor VPN tunnel metrics (bytes in/out, tunnel status)
+# 2. Consider multiple VPN connections for higher throughput
+# 3. Evaluate AWS Direct Connect for >1 Gbps requirements
+# 4. Check for packet loss or high latency in tunnels
+#
+# ==================
+# Alternative: AWS Direct Connect
+# ==================
+#
+# For higher bandwidth, lower latency, or dedicated connectivity, consider:
+# - AWS Direct Connect: 1 Gbps, 10 Gbps, or 100 Gbps dedicated connections
+# - Lower latency than VPN (private fiber connection)
+# - More consistent network performance
+# - Higher cost but better for production workloads
+# - Can combine with VPN for backup/redundancy

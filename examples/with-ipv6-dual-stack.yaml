@@ -1,0 +1,205 @@
+# IPv6 Dual-Stack VPC Configuration
+#
+# This example demonstrates IPv6 support with a dual-stack VPC (both IPv4 and IPv6):
+# - IPv6 CIDR block automatically assigned by AWS
+# - Public subnets with IPv6 for internet-facing workloads
+# - Private subnets with IPv6 using Egress-Only Internet Gateway
+# - Dual-stack routing (IPv4 via NAT/IGW, IPv6 via IGW/Egress-Only IGW)
+# - DNS64 for IPv6-only resources to reach IPv4 services
+#
+# Use Case: Modern cloud-native applications requiring IPv6 support for:
+#           - IoT devices (many are IPv6-only)
+#           - Mobile applications (cellular networks increasingly IPv6)
+#           - Cost savings (IPv6 traffic is often cheaper)
+#           - Future-proofing (IPv4 address exhaustion)
+#
+# Cost Considerations:
+# - Same as IPv4-only VPC (no additional charges for IPv6)
+# - 1 NAT Gateway (~$32/month + data transfer) for IPv4
+# - Egress-Only IGW for IPv6 (FREE)
+# - Standard VPC resources (no charge)
+#
+# Production Notes:
+# - Dual-stack allows gradual migration from IPv4 to IPv6
+# - Applications must support IPv6 (test thoroughly)
+# - Security groups and NACLs need IPv6 rules
+# - Some AWS services may not support IPv6 yet
+#
+apiVersion: aws.platform.upbound.io/v1alpha1
+kind: VPC
+metadata:
+  name: ipv6-dual-stack-vpc
+  namespace: default
+  annotations:
+    description: "Dual-stack VPC with IPv4 and IPv6 support"
+spec:
+  # Core Network Configuration
+  region: us-west-2
+  cidr: 10.0.0.0/16
+
+  # Availability Zones - 2 AZs for cost optimization while maintaining availability
+  azs:
+    - us-west-2a
+    - us-west-2b
+
+  # DNS Configuration - DNS64 enables IPv6-only resources to reach IPv4 services
+  enableDnsHostnames: true
+  enableDnsSupport: true
+
+  # ==================
+  # IPv6 Configuration
+  # ==================
+
+  # Enable IPv6 - AWS automatically assigns a /56 CIDR block
+  enableIpv6: true
+
+  # Assign IPv6 addresses to instances on launch in public subnets
+  # This makes them reachable via IPv6 from the internet
+  assignIpv6AddressOnCreation: true
+
+  # ==================
+  # Subnet Configuration
+  # ==================
+
+  # Public Subnets - IPv4 + IPv6 internet access via Internet Gateway
+  # Instances get both IPv4 (via NAT for outbound) and IPv6 addresses
+  publicSubnets:
+    - 10.0.1.0/24
+    - 10.0.2.0/24
+
+  # Public subnets automatically assign both IPv4 and IPv6 addresses
+  mapPublicIpOnLaunch: true
+
+  # IPv6 CIDR blocks for public subnets (automatically calculated)
+  # AWS assigns /64 subnets from the VPC's /56 IPv6 CIDR
+  publicSubnetIpv6Prefixes:
+    - 0  # First /64 subnet (e.g., 2600:xxxx:xxxx:xx00::/64)
+    - 1  # Second /64 subnet (e.g., 2600:xxxx:xxxx:xx01::/64)
+
+  # Private Subnets - IPv4 via NAT, IPv6 via Egress-Only IGW
+  # Instances can initiate outbound connections but can't receive inbound IPv6
+  privateSubnets:
+    - 10.0.11.0/24
+    - 10.0.12.0/24
+
+  # IPv6 CIDR blocks for private subnets
+  privateSubnetIpv6Prefixes:
+    - 10  # Eleventh /64 subnet (e.g., 2600:xxxx:xxxx:xx0a::/64)
+    - 11  # Twelfth /64 subnet (e.g., 2600:xxxx:xxxx:xx0b::/64)
+
+  # Database Subnets - IPv4 + IPv6, isolated (no NAT/IGW by default)
+  databaseSubnets:
+    - 10.0.21.0/24
+    - 10.0.22.0/24
+
+  # IPv6 CIDR blocks for database subnets
+  databaseSubnetIpv6Prefixes:
+    - 20  # Twenty-first /64 subnet
+    - 21  # Twenty-second /64 subnet
+
+  # Create dedicated route table for database subnets
+  createDatabaseSubnetRouteTable: true
+
+  # ==================
+  # Internet Gateways
+  # ==================
+
+  # Internet Gateway - provides IPv4 and IPv6 internet access for public subnets
+  createIgw: true
+
+  # Egress-Only Internet Gateway - provides outbound-only IPv6 access for private subnets
+  # This is IPv6's equivalent to NAT Gateway (FREE, unlike NAT Gateway)
+  createEgressOnlyIgw: true
+
+  # ==================
+  # NAT Gateway (IPv4 only)
+  # ==================
+
+  # Single NAT Gateway for IPv4 outbound traffic from private subnets
+  # IPv6 uses Egress-Only IGW instead (no NAT needed for IPv6)
+  enableNatGateway: true
+  singleNatGateway: true
+
+  # ==================
+  # Subnet Groups
+  # ==================
+
+  # RDS Database Subnet Group - for RDS instances with dual-stack support
+  createDatabaseSubnetGroup: true
+  databaseSubnetGroupName: ipv6-dual-stack-db-subnet-group
+
+  # ==================
+  # Tags
+  # ==================
+
+  # Global tags applied to all resources
+  tags:
+    Name: ipv6-dual-stack-vpc
+    Environment: production
+    ManagedBy: upbound
+    NetworkType: dual-stack
+    IPv6Enabled: "true"
+
+  # VPC-specific tags
+  vpcTags:
+    Purpose: "IPv6 demonstration"
+    Stack: "dual-stack"
+
+  # Public subnet tags
+  publicSubnetTags:
+    Tier: public
+    InternetAccess: "ipv4-ipv6"
+    IPv6: "true"
+
+  # Private subnet tags
+  privateSubnetTags:
+    Tier: private
+    InternetAccess: "ipv4-nat-ipv6-egress-only"
+    IPv6: "true"
+
+  # Database subnet tags
+  databaseSubnetTags:
+    Tier: database
+    InternetAccess: "none"
+    IPv6: "true"
+
+  # Internet Gateway tags
+  igwTags:
+    Purpose: "dual-stack-internet-access"
+
+  # NAT Gateway tags
+  natGatewayTags:
+    Purpose: "ipv4-outbound-only"
+    Note: "IPv6 uses Egress-Only IGW"
+
+# ==================
+# Usage Notes
+# ==================
+#
+# After deployment, your VPC will have:
+#
+# 1. IPv4 CIDR: 10.0.0.0/16
+# 2. IPv6 CIDR: Automatically assigned by AWS (e.g., 2600:1f13:fe9:8a00::/56)
+# 3. Public subnets: IPv4 and IPv6 internet access via IGW
+# 4. Private subnets: IPv4 via NAT, IPv6 via Egress-Only IGW
+# 5. Database subnets: Isolated with dual-stack support
+#
+# Routing:
+# - Public: 0.0.0.0/0 → IGW, ::/0 → IGW
+# - Private: 0.0.0.0/0 → NAT, ::/0 → Egress-Only IGW
+# - Database: No internet routes (isolated)
+#
+# Security Considerations:
+# - Update security groups to include IPv6 rules (e.g., ::/0 for all IPv6)
+# - Test applications with IPv6 before production deployment
+# - Monitor dual-stack traffic patterns
+# - Consider IPv6-only subnets for cost savings (future enhancement)
+#
+# Migration Path:
+# 1. Deploy dual-stack VPC (this example)
+# 2. Test applications with IPv6 enabled
+# 3. Gradually shift traffic to IPv6
+# 4. Eventually deprecate IPv4 (optional)
+#
+# To retrieve the assigned IPv6 CIDR:
+#   kubectl get vpc ipv6-dual-stack-vpc -o jsonpath='{.status.atProvider.ipv6CidrBlock}'
