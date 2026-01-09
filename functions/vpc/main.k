@@ -176,6 +176,12 @@ s3EndpointType = oxrSpec.s3EndpointType if oxrSpec.s3EndpointType else "Gateway"
 enableDynamodbEndpoint = oxrSpec.enableDynamodbEndpoint if oxrSpec.enableDynamodbEndpoint != None else False
 vpcEndpointTags = oxrSpec.vpcEndpointTags or {}
 
+# Extract Interface VPC Endpoints configuration
+enableInterfaceEndpoints = oxrSpec.enableInterfaceEndpoints if oxrSpec.enableInterfaceEndpoints != None else False
+interfaceEndpointServices = oxrSpec.interfaceEndpointServices or []
+enableInterfaceEndpointPrivateDns = oxrSpec.enableInterfaceEndpointPrivateDns if oxrSpec.enableInterfaceEndpointPrivateDns != None else True
+interfaceEndpointPolicies = oxrSpec.interfaceEndpointPolicies or {}
+
 # Extract Network ACL configuration
 publicDedicatedNetworkAcl = oxrSpec.publicDedicatedNetworkAcl if oxrSpec.publicDedicatedNetworkAcl != None else False
 publicInboundAclRules = oxrSpec.publicInboundAclRules or []
@@ -341,6 +347,12 @@ config = {
     s3EndpointType = s3EndpointType
     enableDynamodbEndpoint = enableDynamodbEndpoint
     vpcEndpointTags = vpcEndpointTags
+
+    # Interface VPC Endpoints configuration
+    enableInterfaceEndpoints = enableInterfaceEndpoints
+    interfaceEndpointServices = interfaceEndpointServices
+    enableInterfaceEndpointPrivateDns = enableInterfaceEndpointPrivateDns
+    interfaceEndpointPolicies = interfaceEndpointPolicies
 
     # Network ACL configuration
     publicDedicatedNetworkAcl = publicDedicatedNetworkAcl

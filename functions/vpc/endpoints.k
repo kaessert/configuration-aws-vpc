@@ -4,6 +4,7 @@ VPC Endpoints Module
 This module handles generation of VPC Endpoints:
 - S3 Gateway Endpoint
 - DynamoDB Gateway Endpoint
+- Interface VPC Endpoints (PrivateLink) for AWS services
 """
 
 # Import AWS EC2 provider models (v2 - namespaced resources)
@@ -92,6 +93,93 @@ generateDynamoDBEndpoint = lambda config: {str: any} -> [any] {
     ] if config.enableDynamodbEndpoint else []
 }
 
+# ========================================
+# INTERFACE VPC ENDPOINTS (PRIVATELINK)
+# ========================================
+
+# Generate single Interface Endpoint for a service
+_generateInterfaceEndpointForService = lambda config, service: str -> any {
+    """
+    Generates a single Interface VPC Endpoint for a given AWS service.
+
+    NOTE: Due to Upbound provider schema limitations, security groups cannot be
+    specified. Endpoints will use the VPC's default security group (AWS behavior).
+
+    Args:
+        config: Configuration object
+        service: AWS service name (e.g., "ec2", "ssm", "rds")
+
+    Returns:
+        VPCEndpoint resource for the specified service
+    """
+    # Build subnet configuration using subnetConfiguration array
+    # Use private subnet selectors
+    subnetConfig = {
+        subnetConfiguration = [
+            {
+                subnetIdSelector = {
+                    matchControllerRef = True
+                    matchLabels = {
+                        "subnet-type": "private"
+                    }
+                }
+            }
+        ]
+    }
+
+    # Build endpoint policy configuration (optional)
+    policyConfig = {
+        policy = config.interfaceEndpointPolicies[service]
+    } if service in config.interfaceEndpointPolicies else {}
+
+    ec2v1beta1.VPCEndpoint{
+        metadata = config.metadata("vpce-${service}") | {
+            name = "vpce-${service}-${config.vpcName}"
+            labels = config.sanitizeLabels(config.tags)
+        }
+        spec = config.defaultV2Spec | {
+            forProvider = {
+                region = config.region
+                vpcIdSelector = {
+                    matchControllerRef = True
+                }
+                serviceName = "com.amazonaws.${config.region}.${service}"
+                vpcEndpointType = "Interface"
+                privateDnsEnabled = config.enableInterfaceEndpointPrivateDns
+                tags = config.tags | config.vpcEndpointTags | {
+                    Name = "vpce-${service}-${config.vpcName}"
+                    Service = service
+                }
+            } | subnetConfig | policyConfig
+        }
+    }
+}
+
+# Generate all Interface Endpoints
+generateInterfaceEndpoints = lambda config: {str: any} -> [any] {
+    """
+    Generates all Interface VPC Endpoint resources.
+
+    NOTE: Security group support is not available in the current Upbound provider schema.
+    Endpoints will automatically use the VPC's default security group.
+
+    Args:
+        config: Configuration object containing:
+            - enableInterfaceEndpoints: Whether to create Interface endpoints
+            - interfaceEndpointServices: List of AWS service names
+            - enableInterfaceEndpointPrivateDns: Whether to enable private DNS
+            - interfaceEndpointPolicies: Map of service to policy JSON (optional)
+
+    Returns:
+        List of all Interface VPC Endpoint resources
+    """
+    # Generate Interface endpoint for each service
+    [
+        _generateInterfaceEndpointForService(config, service)
+        for service in config.interfaceEndpointServices
+    ] if config.enableInterfaceEndpoints and len(config.interfaceEndpointServices) > 0 else []
+}
+
 # Generate all VPC Endpoints
 generateAllEndpoints = lambda config: {str: any} -> [any] {
     """
@@ -101,8 +189,9 @@ generateAllEndpoints = lambda config: {str: any} -> [any] {
         config: Configuration object containing all endpoint parameters
 
     Returns:
-        List of all VPC Endpoint resources
+        List of all VPC Endpoint resources (Gateway and Interface)
     """
     generateS3Endpoint(config) + \
-    generateDynamoDBEndpoint(config)
+    generateDynamoDBEndpoint(config) + \
+    generateInterfaceEndpoints(config)
 }

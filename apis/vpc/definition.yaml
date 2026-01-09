@@ -215,6 +215,31 @@ spec:
                   description: Enable DynamoDB VPC endpoint
                   default: false
 
+                # Interface VPC Endpoints (PrivateLink)
+                enableInterfaceEndpoints:
+                  type: boolean
+                  description: Enable Interface VPC Endpoints for AWS services. NOTE - Endpoints will use VPC default security group (provider limitation).
+                  default: false
+
+                interfaceEndpointServices:
+                  type: array
+                  description: List of AWS service names for Interface endpoints (e.g., ec2, ssm, rds, secretsmanager, ecr.api, ecr.dkr, ecs, ecs-agent, ecs-telemetry, logs, kms, elasticloadbalancing)
+                  items:
+                    type: string
+                  default: []
+
+                enableInterfaceEndpointPrivateDns:
+                  type: boolean
+                  description: Enable private DNS for Interface endpoints
+                  default: true
+
+                interfaceEndpointPolicies:
+                  type: object
+                  description: Map of service name to IAM policy JSON string for endpoint policies
+                  additionalProperties:
+                    type: string
+                  default: {}
+
                 # Flow Logs
                 enableFlowLog:
                   type: boolean
