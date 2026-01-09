@@ -234,7 +234,7 @@ generateNATGateways = lambda config: {str: any} -> [any] {
         ec2v1beta1.NATGateway{
             metadata = config.metadata("nat-0") | {
                 name = "nat-${config.vpcName}-${config.azs[0]}"
-                labels = config.sanitizeLabels(config.tags)
+                labels = config.sanitizeLabels(config.tags) | {"az": config.azs[0]}
             }
             spec = config.defaultV2Spec | {
                 forProvider = _buildNatForProvider(

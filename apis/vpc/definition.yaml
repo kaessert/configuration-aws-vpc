@@ -473,14 +473,49 @@ spec:
                   description: Create NAT Gateway route for database subnets
                   default: false
 
+                createDatabaseInternetGatewayRoute:
+                  type: boolean
+                  description: Create Internet Gateway route for database subnets (WARNING - enables public access)
+                  default: false
+
                 createElasticacheSubnetRouteTable:
                   type: boolean
                   description: Create separate route table for ElastiCache subnets
                   default: false
 
+                createElasticacheNatGatewayRoute:
+                  type: boolean
+                  description: Create NAT Gateway route for ElastiCache subnets (requires createElasticacheSubnetRouteTable)
+                  default: false
+
                 createRedshiftSubnetRouteTable:
                   type: boolean
                   description: Create separate route table for Redshift subnets
+                  default: false
+
+                createRedshiftNatGatewayRoute:
+                  type: boolean
+                  description: Create NAT Gateway route for Redshift subnets (requires createRedshiftSubnetRouteTable)
+                  default: false
+
+                createRedshiftPublicSubnetRouteTable:
+                  type: boolean
+                  description: Create separate public route table for Redshift subnets
+                  default: false
+
+                enablePublicRedshift:
+                  type: boolean
+                  description: Enable public Redshift cluster by routing through IGW (requires createRedshiftPublicSubnetRouteTable)
+                  default: false
+
+                onePublicRouteTablePerAz:
+                  type: boolean
+                  description: Create one public route table per AZ instead of a single shared table
+                  default: false
+
+                oneIntraRouteTablePerAz:
+                  type: boolean
+                  description: Create one intra route table per AZ instead of a single shared table for enhanced isolation
                   default: false
 
                 # Subnet Group Configuration

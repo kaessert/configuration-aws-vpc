@@ -134,6 +134,18 @@ natGatewayDestinationCidrBlock = oxrSpec.natGatewayDestinationCidrBlock if oxrSp
 # Extract route table configuration
 createDatabaseSubnetRouteTable = oxrSpec.createDatabaseSubnetRouteTable if oxrSpec.createDatabaseSubnetRouteTable != None else False
 createDatabaseNatGatewayRoute = oxrSpec.createDatabaseNatGatewayRoute if oxrSpec.createDatabaseNatGatewayRoute != None else False
+createDatabaseInternetGatewayRoute = oxrSpec.createDatabaseInternetGatewayRoute if oxrSpec.createDatabaseInternetGatewayRoute != None else False
+
+createElasticacheSubnetRouteTable = oxrSpec.createElasticacheSubnetRouteTable if oxrSpec.createElasticacheSubnetRouteTable != None else False
+createElasticacheNatGatewayRoute = oxrSpec.createElasticacheNatGatewayRoute if oxrSpec.createElasticacheNatGatewayRoute != None else False
+
+createRedshiftSubnetRouteTable = oxrSpec.createRedshiftSubnetRouteTable if oxrSpec.createRedshiftSubnetRouteTable != None else False
+createRedshiftNatGatewayRoute = oxrSpec.createRedshiftNatGatewayRoute if oxrSpec.createRedshiftNatGatewayRoute != None else False
+createRedshiftPublicSubnetRouteTable = oxrSpec.createRedshiftPublicSubnetRouteTable if oxrSpec.createRedshiftPublicSubnetRouteTable != None else False
+enablePublicRedshift = oxrSpec.enablePublicRedshift if oxrSpec.enablePublicRedshift != None else False
+
+onePublicRouteTablePerAz = oxrSpec.onePublicRouteTablePerAz if oxrSpec.onePublicRouteTablePerAz != None else False
+oneIntraRouteTablePerAz = oxrSpec.oneIntraRouteTablePerAz if oxrSpec.oneIntraRouteTablePerAz != None else False
 
 # Extract DNS configuration
 enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames != None else True
@@ -333,6 +345,18 @@ config = {
     # Route table configuration
     createDatabaseSubnetRouteTable = createDatabaseSubnetRouteTable
     createDatabaseNatGatewayRoute = createDatabaseNatGatewayRoute
+    createDatabaseInternetGatewayRoute = createDatabaseInternetGatewayRoute
+
+    createElasticacheSubnetRouteTable = createElasticacheSubnetRouteTable
+    createElasticacheNatGatewayRoute = createElasticacheNatGatewayRoute
+
+    createRedshiftSubnetRouteTable = createRedshiftSubnetRouteTable
+    createRedshiftNatGatewayRoute = createRedshiftNatGatewayRoute
+    createRedshiftPublicSubnetRouteTable = createRedshiftPublicSubnetRouteTable
+    enablePublicRedshift = enablePublicRedshift
+
+    onePublicRouteTablePerAz = onePublicRouteTablePerAz
+    oneIntraRouteTablePerAz = oneIntraRouteTablePerAz
 
     # DHCP Options configuration
     enableDhcpOptions = enableDhcpOptions
