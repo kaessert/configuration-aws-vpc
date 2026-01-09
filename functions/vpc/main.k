@@ -153,6 +153,9 @@ enableDnsHostnames = oxrSpec.enableDnsHostnames if oxrSpec.enableDnsHostnames !=
 enableDnsSupport = oxrSpec.enableDnsSupport if oxrSpec.enableDnsSupport != None else True
 enableDns64 = oxrSpec.enableDns64 if oxrSpec.enableDns64 != None else False
 
+# Extract VPC configuration
+instanceTenancy = oxrSpec.instanceTenancy if oxrSpec.instanceTenancy else "default"
+
 # Extract IPv6 configuration
 enableIpv6 = oxrSpec.enableIpv6 if oxrSpec.enableIpv6 != None else False
 assignGeneratedIpv6CidrBlock = oxrSpec.assignGeneratedIpv6CidrBlock if oxrSpec.assignGeneratedIpv6CidrBlock != None else True
@@ -310,6 +313,9 @@ config = {
     enableDnsHostnames = enableDnsHostnames
     enableDnsSupport = enableDnsSupport
     enableDns64 = enableDns64
+
+    # VPC configuration
+    instanceTenancy = instanceTenancy
 
     # IPv6 configuration
     enableIpv6 = enableIpv6

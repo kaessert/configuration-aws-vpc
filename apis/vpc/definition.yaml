@@ -160,6 +160,18 @@ spec:
                   description: Enable DNS64 for IPv6
                   default: false
 
+                # VPC Configuration
+                instanceTenancy:
+                  type: string
+                  description: |
+                    Instance tenancy option for the VPC. Determines whether instances launched in the VPC run on shared or dedicated hardware.
+                    - "default": Instances run on shared hardware (most common, cost-effective)
+                    - "dedicated": Instances run on dedicated hardware (compliance/isolation requirements)
+                  enum:
+                    - default
+                    - dedicated
+                  default: default
+
                 # DHCP Options
                 enableDhcpOptions:
                   type: boolean

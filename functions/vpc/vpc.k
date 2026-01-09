@@ -66,6 +66,7 @@ _generateVPC = lambda config: {str: any} -> [any] {
             - region: AWS region
             - enableDnsHostnames: Enable DNS hostnames
             - enableDnsSupport: Enable DNS support
+            - instanceTenancy: Instance tenancy (default or dedicated)
 
     Returns:
         List containing the VPC resource
@@ -75,6 +76,7 @@ _generateVPC = lambda config: {str: any} -> [any] {
         region = config.region
         enableDnsHostnames = config.enableDnsHostnames
         enableDnsSupport = config.enableDnsSupport
+        instanceTenancy = config.instanceTenancy
         tags = config.tags | {
             Name = config.vpcName
         }
