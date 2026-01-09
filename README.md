@@ -8,7 +8,7 @@ Build AWS VPCs using Crossplane Composite Resources, KCL composition functions, 
 
 ✅ **Phase 4 COMPLETED** - All critical (P0), high-priority (P1), and important (P2) features implemented
 ✅ **68 Composition Tests** - All features validated with fast unit tests
-✅ **15 E2E Tests** - Critical paths tested against real AWS infrastructure
+✅ **18 E2E Tests** - Critical paths tested against real AWS infrastructure
 ✅ **~90% Feature Parity** - Comprehensive feature set matching Terraform AWS VPC module
 ✅ **Modular Design** - 10 focused KCL modules (~3000 lines), well-organized and maintainable
 ✅ **Zero Failing Tests** - All tests passing, no known regressions
@@ -69,8 +69,6 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 - **Subnet Configuration**: Custom subnet naming and per-AZ tags (low priority)
 - **VPC Block Public Access**: New AWS security feature (waiting for provider support)
 - **Outpost Subnets**: AWS Outposts support (niche use case)
-
-See [thoughts/TASKS.md](thoughts/TASKS.md) for the complete roadmap and status.
 
 ## Quick Start
 
@@ -181,8 +179,7 @@ configuration-aws-vpc/
 │       ├── main.k            # KCL composition logic
 │       └── kcl.mod           # KCL dependencies
 ├── examples/                  # Usage examples
-├── tests/                     # Composition and E2E tests
-└── thoughts/                  # Documentation and guides
+└── tests/                     # Composition and E2E tests
 ```
 
 ### Key Components
@@ -239,11 +236,11 @@ This project follows **strict Test-Driven Development (TDD)**:
 - Default Resource Management (4 tests: security group, NACL, route table)
 - Instance Tenancy (2 tests)
 
-**E2E Tests**: 15 tests (all passing) ✅
+**E2E Tests**: 18 tests (all passing) ✅
 - Basic VPC
 - Complete VPC
 - Simple VPC
-- NAT strategies (2 tests: single, enhancements)
+- NAT strategies (3 tests: single, per-AZ, enhancements)
 - VPC Endpoints
 - DHCP Options
 - Network ACLs (2 tests: public/private, extended all subnet types)
@@ -253,6 +250,8 @@ This project follows **strict Test-Driven Development (TDD)**:
 - VPN Gateway
 - IPv6 Support (dual-stack)
 - Interface VPC Endpoints
+- Default Resource Management
+- Extended Routing Options
 
 ### Run Tests
 
@@ -273,8 +272,6 @@ up test run tests/e2etest-vpc-basic --e2e
 - **Composition Tests**: Fast unit tests validating resource generation (< 10s)
 - **E2E Tests**: Integration tests with real AWS resources (10-30 minutes)
 
-See [TESTING.md](TESTING.md) for comprehensive testing documentation.
-
 ## Development
 
 ### Prerequisites
@@ -286,10 +283,10 @@ See [TESTING.md](TESTING.md) for comprehensive testing documentation.
 
 ### Development Workflow
 
-1. **Check tasks**: See [thoughts/tasks.md](thoughts/tasks.md) for prioritized tasks
-2. **Write test first**: Generate and write test before implementation
-3. **Implement feature**: Make the test pass
-4. **Refactor**: Improve code while keeping tests green
+1. **Write test first**: Generate and write test before implementation
+2. **Implement feature**: Make the test pass
+3. **Refactor**: Improve code while keeping tests green
+4. **Test**: Ensure all tests pass
 5. **Commit**: Only commit when all tests pass
 
 ### Project Commands
@@ -326,17 +323,14 @@ Contributions are welcome! This project follows test-driven development practice
 
 ### Contributing Workflow
 
-1. Check [thoughts/tasks.md](thoughts/tasks.md) for available tasks
-2. Read [CLAUDE.md](CLAUDE.md) for comprehensive development guidelines
-3. Read [TESTING.md](TESTING.md) for testing guidelines
-4. **Write tests FIRST** for any new feature
-5. Implement the feature to pass tests
-6. Ensure all tests pass before submitting PR
-7. Follow conventional commit messages (feat:, fix:, docs:, test:)
+1. **Write tests FIRST** for any new feature
+2. Implement the feature to pass tests
+3. Ensure all tests pass before submitting PR
+4. Follow conventional commit messages (feat:, fix:, docs:, test:)
 
 ### Code Standards
 
-- Follow patterns in [thoughts/UPBOUND_REFERENCE.md](thoughts/UPBOUND_REFERENCE.md)
+- Follow Upbound and Crossplane best practices
 - Write composition tests for all features
 - Document breaking changes
 - Update examples when adding features
@@ -387,24 +381,8 @@ Contributions are welcome! This project follows test-driven development practice
 - Phase 6: User-facing documentation completion
 - Phase 7: Performance optimization
 
-See [thoughts/TASKS.md](thoughts/TASKS.md) for the complete roadmap.
+## Related Documentation
 
-## Documentation
-
-### For Users
-- [README.md](README.md) - This file
-- [examples/](examples/) - Usage examples
-- [TESTING.md](TESTING.md) - Testing guide
-
-### For Developers
-- [CLAUDE.md](CLAUDE.md) - Comprehensive development guide
-- [thoughts/tasks.md](thoughts/tasks.md) - Prioritized task list
-- [thoughts/SPECIFICATION.md](thoughts/SPECIFICATION.md) - Feature specification
-- [thoughts/UPBOUND_REFERENCE.md](thoughts/UPBOUND_REFERENCE.md) - Upbound patterns and best practices
-- [thoughts/KCL_REFERENCE.md](thoughts/KCL_REFERENCE.md) - KCL language reference
-- [thoughts/GIT_REFERENCE.md](thoughts/GIT_REFERENCE.md) - Git workflow reference
-
-### Related Documentation
 - [Terraform AWS VPC Module](https://github.com/terraform-aws-modules/terraform-aws-vpc) - Reference implementation
 - [Upbound Documentation](https://docs.upbound.io/) - Upbound platform docs
 - [Crossplane Documentation](https://docs.crossplane.io/) - Crossplane concepts
@@ -640,8 +618,6 @@ kubectl get vpc my-vpc -o jsonpath='{.status.natGatewayIds[*]}'
 
 > **Feature Parity**: ~90% complete (18 of 21 major features implemented, 3 deferred as P3/low priority)
 
-See [thoughts/TASKS.md](thoughts/TASKS.md) for detailed feature status and rationale.
-
 ## Troubleshooting
 
 ### Common Issues
@@ -679,9 +655,8 @@ kubectl describe <managed-resource>
 
 ### Getting Help
 
-- Check [CLAUDE.md](CLAUDE.md) for detailed development instructions
-- Review [thoughts/](thoughts/) for comprehensive development guides
 - Consult [Upbound Documentation](https://docs.upbound.io/)
+- Check [Crossplane Documentation](https://docs.crossplane.io/)
 - Open an issue with reproduction steps
 
 ## License
@@ -702,6 +677,6 @@ Upbound Solutions Team
 
 **Ready to get started?** Check out the [examples/](examples/) directory or read the [Quick Start](#quick-start) guide above.
 
-**Contributing?** Read [CLAUDE.md](CLAUDE.md) and [TESTING.md](TESTING.md) to understand our development workflow.
+**Contributing?** See the [Contributing](#contributing) section for workflow and code standards.
 
-**Questions?** Open an issue or consult the [documentation](#documentation).
+**Questions?** Open an issue or consult the [Related Documentation](#related-documentation).
