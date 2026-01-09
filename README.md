@@ -524,6 +524,94 @@ spec:
 
 See [apis/vpc/definition.yaml](apis/vpc/definition.yaml) for the complete API definition.
 
+### VPC Outputs (Status Fields)
+
+After a VPC is created and reconciled, the following status fields are available:
+
+```yaml
+status:
+  # VPC Outputs
+  vpcId: string                          # ID of the VPC
+  vpcArn: string                         # ARN of the VPC
+  vpcCidrBlock: string                   # The CIDR block of the VPC
+  vpcIpv6CidrBlock: string              # The IPv6 CIDR block (if enabled)
+  vpcEnableDnsSupport: bool             # Whether DNS support is enabled
+  vpcEnableDnsHostnames: bool           # Whether DNS hostnames are enabled
+
+  # Subnet Outputs
+  publicSubnets: [string]               # List of public subnet IDs
+  publicSubnetsCidrBlocks: [string]     # List of public subnet CIDR blocks
+  publicSubnetArns: [string]            # List of public subnet ARNs
+  privateSubnets: [string]              # List of private subnet IDs
+  privateSubnetsCidrBlocks: [string]    # List of private subnet CIDR blocks
+  privateSubnetArns: [string]           # List of private subnet ARNs
+  databaseSubnets: [string]             # List of database subnet IDs
+  databaseSubnetsCidrBlocks: [string]   # List of database subnet CIDR blocks
+  elasticacheSubnets: [string]          # List of ElastiCache subnet IDs
+  elasticacheSubnetsCidrBlocks: [string] # List of ElastiCache subnet CIDR blocks
+  redshiftSubnets: [string]             # List of Redshift subnet IDs
+  redshiftSubnetsCidrBlocks: [string]   # List of Redshift subnet CIDR blocks
+  intraSubnets: [string]                # List of intra subnet IDs
+  intraSubnetsCidrBlocks: [string]      # List of intra subnet CIDR blocks
+
+  # Gateway Outputs
+  igwId: string                         # Internet Gateway ID
+  igwArn: string                        # Internet Gateway ARN
+  natGatewayIds: [string]               # List of NAT Gateway IDs
+  natEipPublicIps: [string]             # List of Elastic IP addresses for NAT Gateways
+  vpnGatewayId: string                  # VPN Gateway ID (if enabled)
+  vpnGatewayArn: string                 # VPN Gateway ARN (if enabled)
+  customerGatewayIds: {string: string}  # Map of Customer Gateway names to IDs
+  customerGatewayArns: {string: string} # Map of Customer Gateway names to ARNs
+
+  # Route Table Outputs
+  publicRouteTableIds: [string]         # List of public route table IDs
+  privateRouteTableIds: [string]        # List of private route table IDs
+  databaseRouteTableIds: [string]       # List of database route table IDs
+  elasticacheRouteTableIds: [string]    # List of ElastiCache route table IDs
+  redshiftRouteTableIds: [string]       # List of Redshift route table IDs
+  intraRouteTableIds: [string]          # List of intra route table IDs
+
+  # VPC Endpoint Outputs
+  vpcEndpointS3Id: string               # S3 VPC endpoint ID
+  vpcEndpointDynamodbId: string         # DynamoDB VPC endpoint ID
+
+  # DHCP Options Outputs
+  dhcpOptionsId: string                 # DHCP options set ID
+  dhcpOptionsAssociationId: string      # DHCP options association ID
+
+  # Flow Log Outputs
+  vpcFlowLogId: string                  # VPC Flow Log ID
+  vpcFlowLogArn: string                 # VPC Flow Log ARN
+  vpcFlowLogDestinationArn: string      # Flow Log destination ARN
+
+  # Subnet Group Outputs
+  databaseSubnetGroupId: string         # Database subnet group ID
+  databaseSubnetGroupName: string       # Database subnet group name
+  databaseSubnetGroupArn: string        # Database subnet group ARN
+  elasticacheSubnetGroupName: string    # ElastiCache subnet group name
+  redshiftSubnetGroupId: string         # Redshift subnet group ID
+  redshiftSubnetGroupName: string       # Redshift subnet group name
+  redshiftSubnetGroupArn: string        # Redshift subnet group ARN
+
+  # Default Resource Outputs
+  defaultSecurityGroupId: string        # Default security group ID
+  defaultNetworkAclId: string           # Default Network ACL ID
+  defaultRouteTableId: string           # Default route table ID
+```
+
+**Usage Example:**
+
+```bash
+# Get VPC status
+kubectl get vpc my-vpc -o yaml
+
+# Extract specific outputs
+kubectl get vpc my-vpc -o jsonpath='{.status.vpcId}'
+kubectl get vpc my-vpc -o jsonpath='{.status.publicSubnets[*]}'
+kubectl get vpc my-vpc -o jsonpath='{.status.natGatewayIds[*]}'
+```
+
 ## Comparison with Terraform Module
 
 | Feature | Terraform Module | This Project | Status |
