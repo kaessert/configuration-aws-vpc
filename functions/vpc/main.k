@@ -41,6 +41,7 @@ import flowlogs
 import subnetgroups
 import vpn
 import customergateways
+import defaultresources
 
 # ============================================================================
 # ACCESS COMPOSITION FUNCTION PARAMETERS
@@ -249,6 +250,19 @@ vpnGatewayTags = oxrSpec.vpnGatewayTags or {}
 # Extract Customer Gateway configuration
 customerGateways = oxrSpec.customerGateways or {}
 
+# Extract Default Resource Management configuration
+manageDefaultSecurityGroup = oxrSpec.manageDefaultSecurityGroup if oxrSpec.manageDefaultSecurityGroup != None else False
+defaultSecurityGroupTags = oxrSpec.defaultSecurityGroupTags or {}
+
+manageDefaultNetworkAcl = oxrSpec.manageDefaultNetworkAcl if oxrSpec.manageDefaultNetworkAcl != None else False
+defaultNetworkAclIngressRules = oxrSpec.defaultNetworkAclIngressRules or []
+defaultNetworkAclEgressRules = oxrSpec.defaultNetworkAclEgressRules or []
+defaultNetworkAclTags = oxrSpec.defaultNetworkAclTags or {}
+
+manageDefaultRouteTable = oxrSpec.manageDefaultRouteTable if oxrSpec.manageDefaultRouteTable != None else False
+defaultRouteTableRoutes = oxrSpec.defaultRouteTableRoutes or []
+defaultRouteTableTags = oxrSpec.defaultRouteTableTags or {}
+
 # Extract subnet configuration
 publicSubnets = oxrSpec.publicSubnets or []
 mapPublicIpOnLaunch = oxrSpec.mapPublicIpOnLaunch if oxrSpec.mapPublicIpOnLaunch != None else True
@@ -427,6 +441,17 @@ config = {
 
     # Customer Gateway configuration
     customerGateways = customerGateways
+
+    # Default Resource Management configuration
+    manageDefaultSecurityGroup = manageDefaultSecurityGroup
+    defaultSecurityGroupTags = defaultSecurityGroupTags
+    manageDefaultNetworkAcl = manageDefaultNetworkAcl
+    defaultNetworkAclIngressRules = defaultNetworkAclIngressRules
+    defaultNetworkAclEgressRules = defaultNetworkAclEgressRules
+    defaultNetworkAclTags = defaultNetworkAclTags
+    manageDefaultRouteTable = manageDefaultRouteTable
+    defaultRouteTableRoutes = defaultRouteTableRoutes
+    defaultRouteTableTags = defaultRouteTableTags
 }
 
 # ============================================================================
@@ -445,4 +470,5 @@ items = \
     flowlogs.generateFlowLogs(config.vpcName, config.region, config.enableFlowLog, config.createFlowLogCloudwatchLogGroup, config.createFlowLogS3Bucket, config.flowLogTrafficType, config.flowLogMaxAggregationInterval, config.flowLogFileFormat, config.flowLogHiveCompatiblePartitions, config.flowLogPerHourPartition, config.tags) + \
     subnetgroups.generateSubnetGroups(oxr, dxr, ocds, dcds, region, tags) + \
     vpn.generateAllVPN(config) + \
-    customergateways.generateCustomerGateways(config)
+    customergateways.generateCustomerGateways(config) + \
+    defaultresources.generateDefaultResources(config)

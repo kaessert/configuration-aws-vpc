@@ -564,6 +564,168 @@ spec:
                   additionalProperties:
                     type: string
 
+                # Default Resource Management (Security Hardening)
+                manageDefaultSecurityGroup:
+                  type: boolean
+                  description: Manage the default security group (removes all ingress/egress rules for security hardening)
+                  default: false
+
+                defaultSecurityGroupTags:
+                  type: object
+                  description: Additional tags for the default security group
+                  additionalProperties:
+                    type: string
+
+                manageDefaultNetworkAcl:
+                  type: boolean
+                  description: Manage the default Network ACL with custom rules
+                  default: false
+
+                defaultNetworkAclIngressRules:
+                  type: array
+                  description: Inbound ACL rules for default Network ACL
+                  items:
+                    type: object
+                    required:
+                      - ruleNumber
+                      - protocol
+                      - ruleAction
+                      - cidrBlock
+                    properties:
+                      ruleNumber:
+                        type: integer
+                        description: Rule number (1-32766, evaluated in order)
+                        minimum: 1
+                        maximum: 32766
+                      protocol:
+                        type: string
+                        description: Protocol (tcp, udp, icmp, all, or protocol number)
+                      ruleAction:
+                        type: string
+                        description: Allow or deny
+                        enum:
+                          - allow
+                          - deny
+                      cidrBlock:
+                        type: string
+                        description: CIDR block to match
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      fromPort:
+                        type: integer
+                        description: Starting port (required for TCP/UDP)
+                        minimum: 0
+                        maximum: 65535
+                      toPort:
+                        type: integer
+                        description: Ending port (required for TCP/UDP)
+                        minimum: 0
+                        maximum: 65535
+                      icmpType:
+                        type: integer
+                        description: ICMP type (for ICMP protocol)
+                        minimum: -1
+                        maximum: 255
+                      icmpCode:
+                        type: integer
+                        description: ICMP code (for ICMP protocol)
+                        minimum: -1
+                        maximum: 255
+
+                defaultNetworkAclEgressRules:
+                  type: array
+                  description: Outbound ACL rules for default Network ACL
+                  items:
+                    type: object
+                    required:
+                      - ruleNumber
+                      - protocol
+                      - ruleAction
+                      - cidrBlock
+                    properties:
+                      ruleNumber:
+                        type: integer
+                        description: Rule number (1-32766, evaluated in order)
+                        minimum: 1
+                        maximum: 32766
+                      protocol:
+                        type: string
+                        description: Protocol (tcp, udp, icmp, all, or protocol number)
+                      ruleAction:
+                        type: string
+                        description: Allow or deny
+                        enum:
+                          - allow
+                          - deny
+                      cidrBlock:
+                        type: string
+                        description: CIDR block to match
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      fromPort:
+                        type: integer
+                        description: Starting port (required for TCP/UDP)
+                        minimum: 0
+                        maximum: 65535
+                      toPort:
+                        type: integer
+                        description: Ending port (required for TCP/UDP)
+                        minimum: 0
+                        maximum: 65535
+                      icmpType:
+                        type: integer
+                        description: ICMP type (for ICMP protocol)
+                        minimum: -1
+                        maximum: 255
+                      icmpCode:
+                        type: integer
+                        description: ICMP code (for ICMP protocol)
+                        minimum: -1
+                        maximum: 255
+
+                defaultNetworkAclTags:
+                  type: object
+                  description: Additional tags for the default Network ACL
+                  additionalProperties:
+                    type: string
+
+                manageDefaultRouteTable:
+                  type: boolean
+                  description: Manage the default route table with custom routes
+                  default: false
+
+                defaultRouteTableRoutes:
+                  type: array
+                  description: Custom routes for default route table
+                  items:
+                    type: object
+                    required:
+                      - destinationCidrBlock
+                    properties:
+                      destinationCidrBlock:
+                        type: string
+                        description: Destination CIDR block
+                        pattern: ^([0-9]{1,3}\.){3}[0-9]{1,3}\/[0-9]{1,2}$
+                      destinationIpv6CidrBlock:
+                        type: string
+                        description: Destination IPv6 CIDR block
+                      gatewayType:
+                        type: string
+                        description: Gateway type (igw, nat, vpn, eigw)
+                        enum:
+                          - igw
+                          - nat
+                          - vpn
+                          - eigw
+                      natGatewayIndex:
+                        type: integer
+                        description: Index of NAT Gateway to use (for gatewayType=nat)
+                        minimum: 0
+
+                defaultRouteTableTags:
+                  type: object
+                  description: Additional tags for the default route table
+                  additionalProperties:
+                    type: string
+
                 # Tagging
                 tags:
                   type: object
@@ -1284,3 +1446,16 @@ spec:
                 redshiftSubnetGroupArn:
                   type: string
                   description: ARN of the Redshift subnet group
+
+                # Default Resource Outputs
+                defaultSecurityGroupId:
+                  type: string
+                  description: ID of the default security group
+
+                defaultNetworkAclId:
+                  type: string
+                  description: ID of the default Network ACL
+
+                defaultRouteTableId:
+                  type: string
+                  description: ID of the default route table

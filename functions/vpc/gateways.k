@@ -31,7 +31,9 @@ generateInternetGateway = lambda config: {str: any} -> [any] {
         ec2v1beta1.InternetGateway{
             metadata = config.metadata("igw") | {
                 name = "igw-${config.vpcName}"
-                labels = config.sanitizeLabels(config.tags)
+                labels = config.sanitizeLabels(config.tags) | {
+                    "resource-type": "igw"
+                }
             }
             spec = config.defaultV2Spec | {
                 forProvider = {
