@@ -15,6 +15,99 @@ Supports both IPv4 and IPv6 configurations.
 # Import AWS EC2 provider models (v2 - namespaced resources)
 import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
+# Helper function to calculate IPv6 CIDR block for a subnet
+_calculateSubnetIpv6Cidr = lambda vpcIpv6Cidr: str, prefix: int -> str {
+    """
+    Calculates the IPv6 CIDR block for a subnet given the VPC's IPv6 CIDR and a prefix index.
+
+    AWS assigns VPCs a /56 IPv6 CIDR block. Subnets use /64 blocks.
+    This function implements cidrsubnet(vpcIpv6Cidr, 8, prefix) logic.
+
+    Args:
+        vpcIpv6Cidr: The VPC's IPv6 CIDR block (e.g., "2600:1f13:d6f:5800::/56")
+        prefix: The subnet prefix index (0-255)
+
+    Returns:
+        The calculated /64 CIDR block for the subnet
+
+    Example:
+        vpcIpv6Cidr = "2600:1f13:d6f:5800::/56"
+        prefix = 0 -> "2600:1f13:d6f:5800::/64"
+        prefix = 1 -> "2600:1f13:d6f:5801::/64"
+        prefix = 5 -> "2600:1f13:d6f:5805::/64"
+    """
+    # Extract the base address (without /56 suffix)
+    baseAddr = vpcIpv6Cidr.split("/")[0]
+
+    # AWS /56 CIDR explanation:
+    # - VPC gets /56 like "2600:1f13:d6f:5800::/56"
+    # - 56 bits = 3.5 segments = segments 0-2 (48 bits) + upper 8 bits of segment 3
+    # - Lower 8 bits of segment 3 are the subnet prefix (00-ff)
+    # - For /64, we extend to full segment 3, then segments 4-7 are all zeros
+    #
+    # Example: "2600:1f13:d6f:5800::/56" with prefix 5
+    # - segment[3] = "5800" (58 is the network, 00 is initially)
+    # - Add prefix to lower 8 bits: 58 + 05 = "5805"
+    # - Result: "2600:1f13:d6f:5805::/64"
+
+    # Handle :: compression by expanding to full form
+    if "::" in baseAddr:
+        # Split on :: to get before and after parts
+        parts = baseAddr.split("::")
+        beforePart = parts[0] if parts[0] else ""
+        afterPart = parts[1] if len(parts) > 1 and parts[1] else ""
+
+        # Get non-empty segments from each part
+        beforeSegs = [s for s in beforePart.split(":") if s] if beforePart else []
+        afterSegs = [s for s in afterPart.split(":") if s] if afterPart else []
+
+        # Calculate how many zero segments to insert
+        existingCount = len(beforeSegs) + len(afterSegs)
+        zeroCount = 8 - existingCount
+
+        # Build full 8-segment address
+        segments = beforeSegs + ["0"] * zeroCount + afterSegs
+    else:
+        # No compression - split and filter empty strings
+        rawSegs = [s for s in baseAddr.split(":") if s]
+        # Pad to 8 segments if needed
+        segCount = len(rawSegs)
+        padCount = 8 - segCount if segCount < 8 else 0
+        segments = rawSegs + ["0"] * padCount
+
+    # Ensure we have exactly 8 segments and all are valid hex strings
+    # Clean up segments: strip whitespace, ensure non-empty, default to "0"
+    cleanedSegs = [(s.strip() if s and s.strip() else "0") for s in segments]
+
+    # Ensure exactly 8 segments (take first 8 or pad to 8)
+    finalSegCount = len(cleanedSegs)
+    segments = cleanedSegs[:8] if finalSegCount >= 8 else cleanedSegs + ["0"] * (8 - finalSegCount)
+
+    # Get the base value of segment 3 and add the prefix
+    # segment[3] has the upper 8 bits of the /56 network
+    # Safely parse as hex, defaulting to 0 if invalid
+    segment3Str = segments[3] if len(segments) > 3 else "0"
+    segment3Value = int(segment3Str, 16) if segment3Str and segment3Str != "" else 0
+
+    # Clear lower 8 bits and add prefix
+    baseValue = (segment3Value // 256) * 256  # Keep upper 8 bits
+    newSegment3 = baseValue + prefix
+    hexPrefix = "{:x}".format(newSegment3)
+    segments[3] = hexPrefix
+
+    # For /64, segments 4-7 are all host bits (set to 0 for the network address)
+    segments[4] = "0"
+    segments[5] = "0"
+    segments[6] = "0"
+    segments[7] = "0"
+
+    # Compress trailing zeros: if segments 4-7 are all "0", use :: notation
+    # Result: "2600:1f13:d6f:5800::" instead of "2600:1f13:d6f:5800:0:0:0:0"
+    compressedAddr = ":".join(segments[:4]) + "::"
+
+    "${compressedAddr}/64"
+}
+
 # Helper function to build IPv6 configuration for subnets
 _buildIpv6Config = lambda config, i: int, prefixList: [int] -> {str: any} {
     """
@@ -31,12 +124,18 @@ _buildIpv6Config = lambda config, i: int, prefixList: [int] -> {str: any} {
     ipv6Config = {}
 
     if config.enableIpv6:
-        # AWS auto-assigns IPv6 CIDR blocks from the VPC's IPv6 CIDR range
-        # We don't need to explicitly set ipv6CidrBlock - AWS handles allocation
+        # Calculate and set the IPv6 CIDR block if we have the VPC's IPv6 CIDR (late binding)
+        # On first composition pass, observedVpcIpv6CidrBlock will be None
+        # On subsequent passes, we'll calculate and set the subnet's IPv6 CIDR block
+        if config.observedVpcIpv6CidrBlock and len(prefixList) > i:
+            subnetPrefix = prefixList[i]
+            subnetIpv6Cidr = _calculateSubnetIpv6Cidr(config.observedVpcIpv6CidrBlock, subnetPrefix)
+            ipv6Config = ipv6Config | {ipv6CidrBlock = subnetIpv6Cidr}
 
-        # Add assignIpv6AddressOnCreation flag
-        if config.assignIpv6AddressOnCreation:
-            ipv6Config = ipv6Config | {assignIpv6AddressOnCreation = True}
+            # Only set assignIpv6AddressOnCreation AFTER the IPv6 CIDR block is set
+            # AWS requires the CIDR block to exist before this flag can be enabled
+            if config.assignIpv6AddressOnCreation:
+                ipv6Config = ipv6Config | {assignIpv6AddressOnCreation = True}
 
         # Add IPv6-native configuration
         # For dual-stack mode (IPv4 + IPv6), explicitly set ipv6Native = False

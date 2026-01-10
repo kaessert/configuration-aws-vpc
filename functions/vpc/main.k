@@ -287,6 +287,30 @@ intraSubnets = oxrSpec.intraSubnets or []
 intraSubnetTags = oxrSpec.intraSubnetTags or {}
 
 # ============================================================================
+# EXTRACT OBSERVED VPC IPv6 CIDR BLOCK FOR LATE BINDING
+# ============================================================================
+
+# Extract the VPC's observed IPv6 CIDR block from composed resources
+# This is needed to calculate subnet IPv6 CIDR blocks
+# On first composition pass, this will be empty string (VPC doesn't exist yet)
+# On subsequent passes, we'll have the AWS-assigned IPv6 CIDR block
+#
+# Note: ocds is a mapping (dict) where:
+# - key is the resource name
+# - value is an object with .Resource field containing the K8s resource
+# See: https://github.com/crossplane-contrib/function-kcl/tree/main/examples/default/read_ocds_resource
+
+# Filter by kind to find VPC resources (name varies based on XR name)
+# Access the .Resource field to get the actual K8s resource
+_vpcResources = [ocds[name].Resource for name in ocds if ocds[name]?.Resource?.kind == "VPC"] if ocds else []
+_hasVpc = len(_vpcResources) > 0
+_hasStatus = _hasVpc and "status" in _vpcResources[0] and _vpcResources[0]["status"]
+_hasAtProvider = _hasStatus and "atProvider" in _vpcResources[0]["status"] and _vpcResources[0]["status"]["atProvider"]
+_hasIpv6Cidr = _hasAtProvider and "ipv6CidrBlock" in _vpcResources[0]["status"]["atProvider"] and _vpcResources[0]["status"]["atProvider"]["ipv6CidrBlock"]
+
+observedVpcIpv6CidrBlock = _vpcResources[0]["status"]["atProvider"]["ipv6CidrBlock"] if _hasIpv6Cidr else ""
+
+# ============================================================================
 # BUILD CONFIGURATION OBJECT FOR MODULES
 # ============================================================================
 
@@ -327,6 +351,7 @@ config = {
     ipv6Native = ipv6Native
     enableResourceNameDnsAaaaRecordOnLaunch = enableResourceNameDnsAaaaRecordOnLaunch
     privateDnsHostnameTypeOnLaunch = privateDnsHostnameTypeOnLaunch
+    observedVpcIpv6CidrBlock = observedVpcIpv6CidrBlock  # Late-bound IPv6 CIDR from VPC status
 
     # IPv6 subnet prefixes
     publicSubnetIpv6Prefixes = publicSubnetIpv6Prefixes
