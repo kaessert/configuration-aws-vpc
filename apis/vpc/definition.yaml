@@ -451,6 +451,43 @@ spec:
                   items:
                     type: integer
 
+                # IPv4 Prefix Configuration (for IPAM late-binding)
+                publicSubnetIpv4Prefixes:
+                  type: array
+                  description: IPv4 prefix offsets for public subnets (e.g., [0, 1, 2] for .0.0/24, .1.0/24, .2.0/24 from VPC CIDR)
+                  items:
+                    type: integer
+
+                privateSubnetIpv4Prefixes:
+                  type: array
+                  description: IPv4 prefix offsets for private subnets
+                  items:
+                    type: integer
+
+                databaseSubnetIpv4Prefixes:
+                  type: array
+                  description: IPv4 prefix offsets for database subnets
+                  items:
+                    type: integer
+
+                elasticacheSubnetIpv4Prefixes:
+                  type: array
+                  description: IPv4 prefix offsets for ElastiCache subnets
+                  items:
+                    type: integer
+
+                redshiftSubnetIpv4Prefixes:
+                  type: array
+                  description: IPv4 prefix offsets for Redshift subnets
+                  items:
+                    type: integer
+
+                intraSubnetIpv4Prefixes:
+                  type: array
+                  description: IPv4 prefix offsets for intra subnets
+                  items:
+                    type: integer
+
                 ipv6Native:
                   type: boolean
                   description: Create IPv6-only subnets (no IPv4)

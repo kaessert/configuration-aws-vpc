@@ -108,6 +108,68 @@ _calculateSubnetIpv6Cidr = lambda vpcIpv6Cidr: str, prefix: int -> str {
     "${compressedAddr}/64"
 }
 
+# Helper function to calculate IPv4 CIDR block for a subnet
+_calculateSubnetIpv4Cidr = lambda vpcIpv4Cidr: str, prefix: int -> str {
+    """
+    Calculates the IPv4 CIDR block for a subnet given the VPC's IPv4 CIDR and a prefix index.
+
+    This function extends the VPC CIDR by 8 bits (one octet) and uses the prefix as the third octet.
+    Example: VPC /16 → Subnets /24, VPC /20 → Subnets /28
+
+    Args:
+        vpcIpv4Cidr: The VPC's IPv4 CIDR block (e.g., "10.0.0.0/16")
+        prefix: The subnet prefix index (0-255)
+
+    Returns:
+        The calculated CIDR block for the subnet (8 bits more specific than VPC)
+
+    Example:
+        vpcIpv4Cidr = "10.0.0.0/16"
+        prefix = 0 -> "10.0.0.0/24"
+        prefix = 1 -> "10.0.1.0/24"
+        prefix = 5 -> "10.0.5.0/24"
+
+        vpcIpv4Cidr = "10.0.0.0/20"
+        prefix = 0 -> "10.0.0.0/28"
+        prefix = 1 -> "10.0.1.0/28"
+    """
+    # Extract base address and prefix length
+    parts = vpcIpv4Cidr.split("/")
+    baseAddr = parts[0]
+    vpcPrefixLen = int(parts[1]) if len(parts) > 1 else 16
+
+    # Calculate subnet prefix length (add 8 bits)
+    subnetPrefixLen = vpcPrefixLen + 8
+
+    # Split IP address into octets
+    octets = baseAddr.split(".")
+    octet0 = int(octets[0]) if len(octets) > 0 else 0
+    octet1 = int(octets[1]) if len(octets) > 1 else 0
+    octet2 = int(octets[2]) if len(octets) > 2 else 0
+
+    # Calculate the third octet based on VPC prefix length
+    # For /16: third octet is directly the prefix
+    # For /20: need to preserve upper 4 bits and add prefix to lower 4 bits
+    if vpcPrefixLen <= 16:
+        # VPC /16 or less - third octet is directly the prefix
+        newOctet2 = prefix
+    elif vpcPrefixLen <= 24:
+        # VPC /17 to /24 - need to preserve existing bits in octet2
+        # Calculate how many bits of octet2 are part of the network address
+        octet2Bits = vpcPrefixLen - 16  # bits used in octet2 (0-8)
+        octet2Mask = (0xFF << (8 - octet2Bits)) & 0xFF  # mask for network bits
+        octet2Base = octet2 & octet2Mask  # preserve network bits
+        # Add prefix to host bits
+        newOctet2 = octet2Base + prefix
+    else:
+        # VPC /25 or more - third octet is fully determined by VPC
+        newOctet2 = octet2
+
+    # Build subnet CIDR
+    subnetAddr = "${octet0}.${octet1}.${newOctet2}.0"
+    "${subnetAddr}/${subnetPrefixLen}"
+}
+
 # Helper function to build IPv6 configuration for subnets
 _buildIpv6Config = lambda config, i: int, prefixList: [int] -> {str: any} {
     """
@@ -162,10 +224,37 @@ _buildIpv6Config = lambda config, i: int, prefixList: [int] -> {str: any} {
     ipv6Config
 }
 
+# Helper function to determine IPv4 CIDR for a subnet
+_getSubnetIpv4Cidr = lambda config, i: int, explicitCidrs: [str], ipv4Prefixes: [int] -> str {
+    """
+    Determines the IPv4 CIDR for a subnet using either explicit CIDRs or calculated CIDRs (for IPAM).
+
+    Args:
+        config: Configuration object containing observed VPC CIDR
+        i: Index of the subnet
+        explicitCidrs: List of explicitly specified CIDRs (e.g., ["10.0.1.0/24"])
+        ipv4Prefixes: List of IPv4 prefix offsets (e.g., [0, 1, 2]) for IPAM late-binding
+
+    Returns:
+        The IPv4 CIDR block for the subnet, or empty string if not available
+
+    Priority:
+        1. Explicit CIDR (if provided in explicitCidrs[i])
+        2. Calculated CIDR (if ipv4Prefixes[i] provided AND observedVpcIpv4CidrBlock available)
+        3. Empty string (if neither available)
+    """
+    # Option 1: Use explicitly specified CIDR
+    # Option 2: Calculate from observed VPC CIDR + prefix (for IPAM)
+    # Option 3: Return empty string (no CIDR available yet)
+    explicitCidrs[i] if len(explicitCidrs) > i else (_calculateSubnetIpv4Cidr(config.observedVpcIpv4CidrBlock, ipv4Prefixes[i]) if config.observedVpcIpv4CidrBlock and len(ipv4Prefixes) > i else "")
+}
+
 # Generate public subnets distributed across AZs
 _generatePublicSubnets = lambda config: {str: any} -> [any] {
     """
     Generates public subnets distributed across availability zones.
+
+    Supports both explicit CIDR blocks and IPAM late-binding via IPv4 prefixes.
 
     Args:
         config: Configuration object containing subnet parameters
@@ -173,6 +262,9 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
     Returns:
         List of public subnet resources
     """
+    # Determine number of subnets from explicit CIDRs or prefixes
+    subnetCount = len(config.publicSubnets) if len(config.publicSubnets) > 0 else len(config.publicSubnetIpv4Prefixes)
+
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("public-subnet-${i}") | {
@@ -189,7 +281,7 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     availabilityZone = config.azs[i % len(config.azs)]
-                    cidrBlock = subnetCidr
+                    cidrBlock = _getSubnetIpv4Cidr(config, i, config.publicSubnets, config.publicSubnetIpv4Prefixes)
                     mapPublicIpOnLaunch = config.mapPublicIpOnLaunch
                     region = config.region
                     tags = config.tags | config.publicSubnetTags | {
@@ -199,8 +291,10 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
                 } | _buildIpv6Config(config, i, config.publicSubnetIpv6Prefixes)
             }
         }
-        for i, subnetCidr in config.publicSubnets
-    ] if len(config.publicSubnets) > 0 and len(config.azs) > 0 else []
+        for i in range(subnetCount)
+        # Only create subnet if CIDR is available (handles late-binding on first pass)
+        if _getSubnetIpv4Cidr(config, i, config.publicSubnets, config.publicSubnetIpv4Prefixes) != ""
+    ] if subnetCount > 0 and len(config.azs) > 0 else []
 }
 
 # Generate private subnets distributed across AZs
@@ -208,12 +302,17 @@ _generatePrivateSubnets = lambda config: {str: any} -> [any] {
     """
     Generates private subnets distributed across availability zones.
 
+    Supports both explicit CIDR blocks and IPAM late-binding via IPv4 prefixes.
+
     Args:
         config: Configuration object containing subnet parameters
 
     Returns:
         List of private subnet resources
     """
+    # Determine number of subnets from explicit CIDRs or prefixes
+    subnetCount = len(config.privateSubnets) if len(config.privateSubnets) > 0 else len(config.privateSubnetIpv4Prefixes)
+
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("private-subnet-${i}") | {
@@ -229,7 +328,7 @@ _generatePrivateSubnets = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     availabilityZone = config.azs[i % len(config.azs)]
-                    cidrBlock = subnetCidr
+                    cidrBlock = _getSubnetIpv4Cidr(config, i, config.privateSubnets, config.privateSubnetIpv4Prefixes)
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.privateSubnetTags | {
@@ -239,8 +338,9 @@ _generatePrivateSubnets = lambda config: {str: any} -> [any] {
                 } | _buildIpv6Config(config, i, config.privateSubnetIpv6Prefixes)
             }
         }
-        for i, subnetCidr in config.privateSubnets
-    ] if len(config.privateSubnets) > 0 and len(config.azs) > 0 else []
+        for i in range(subnetCount)
+        if _getSubnetIpv4Cidr(config, i, config.privateSubnets, config.privateSubnetIpv4Prefixes) != ""
+    ] if subnetCount > 0 and len(config.azs) > 0 else []
 }
 
 # Generate database subnets distributed across AZs
@@ -248,12 +348,16 @@ _generateDatabaseSubnets = lambda config: {str: any} -> [any] {
     """
     Generates database subnets distributed across availability zones.
 
+    Supports both explicit CIDR blocks and IPAM late-binding via IPv4 prefixes.
+
     Args:
         config: Configuration object containing subnet parameters
 
     Returns:
         List of database subnet resources
     """
+    subnetCount = len(config.databaseSubnets) if len(config.databaseSubnets) > 0 else len(config.databaseSubnetIpv4Prefixes)
+
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("database-subnet-${i}") | {
@@ -269,7 +373,7 @@ _generateDatabaseSubnets = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     availabilityZone = config.azs[i % len(config.azs)]
-                    cidrBlock = subnetCidr
+                    cidrBlock = _getSubnetIpv4Cidr(config, i, config.databaseSubnets, config.databaseSubnetIpv4Prefixes)
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.databaseSubnetTags | {
@@ -279,8 +383,9 @@ _generateDatabaseSubnets = lambda config: {str: any} -> [any] {
                 } | _buildIpv6Config(config, i, config.databaseSubnetIpv6Prefixes)
             }
         }
-        for i, subnetCidr in config.databaseSubnets
-    ] if len(config.databaseSubnets) > 0 and len(config.azs) > 0 else []
+        for i in range(subnetCount)
+        if _getSubnetIpv4Cidr(config, i, config.databaseSubnets, config.databaseSubnetIpv4Prefixes) != ""
+    ] if subnetCount > 0 and len(config.azs) > 0 else []
 }
 
 # Generate elasticache subnets distributed across AZs
@@ -288,12 +393,16 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
     """
     Generates ElastiCache subnets distributed across availability zones.
 
+    Supports both explicit CIDR blocks and IPAM late-binding via IPv4 prefixes.
+
     Args:
         config: Configuration object containing subnet parameters
 
     Returns:
         List of elasticache subnet resources
     """
+    subnetCount = len(config.elasticacheSubnets) if len(config.elasticacheSubnets) > 0 else len(config.elasticacheSubnetIpv4Prefixes)
+
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("elasticache-subnet-${i}") | {
@@ -309,7 +418,7 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     availabilityZone = config.azs[i % len(config.azs)]
-                    cidrBlock = subnetCidr
+                    cidrBlock = _getSubnetIpv4Cidr(config, i, config.elasticacheSubnets, config.elasticacheSubnetIpv4Prefixes)
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.elasticacheSubnetTags | {
@@ -319,8 +428,9 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
                 } | _buildIpv6Config(config, i, config.elasticacheSubnetIpv6Prefixes)
             }
         }
-        for i, subnetCidr in config.elasticacheSubnets
-    ] if len(config.elasticacheSubnets) > 0 and len(config.azs) > 0 else []
+        for i in range(subnetCount)
+        if _getSubnetIpv4Cidr(config, i, config.elasticacheSubnets, config.elasticacheSubnetIpv4Prefixes) != ""
+    ] if subnetCount > 0 and len(config.azs) > 0 else []
 }
 
 # Generate redshift subnets distributed across AZs
@@ -328,12 +438,16 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
     """
     Generates Redshift subnets distributed across availability zones.
 
+    Supports both explicit CIDR blocks and IPAM late-binding via IPv4 prefixes.
+
     Args:
         config: Configuration object containing subnet parameters
 
     Returns:
         List of redshift subnet resources
     """
+    subnetCount = len(config.redshiftSubnets) if len(config.redshiftSubnets) > 0 else len(config.redshiftSubnetIpv4Prefixes)
+
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("redshift-subnet-${i}") | {
@@ -349,7 +463,7 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     availabilityZone = config.azs[i % len(config.azs)]
-                    cidrBlock = subnetCidr
+                    cidrBlock = _getSubnetIpv4Cidr(config, i, config.redshiftSubnets, config.redshiftSubnetIpv4Prefixes)
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.redshiftSubnetTags | {
@@ -359,8 +473,9 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
                 } | _buildIpv6Config(config, i, config.redshiftSubnetIpv6Prefixes)
             }
         }
-        for i, subnetCidr in config.redshiftSubnets
-    ] if len(config.redshiftSubnets) > 0 and len(config.azs) > 0 else []
+        for i in range(subnetCount)
+        if _getSubnetIpv4Cidr(config, i, config.redshiftSubnets, config.redshiftSubnetIpv4Prefixes) != ""
+    ] if subnetCount > 0 and len(config.azs) > 0 else []
 }
 
 # Generate intra (isolated) subnets distributed across AZs
@@ -369,12 +484,16 @@ _generateIntraSubnets = lambda config: {str: any} -> [any] {
     Generates intra (isolated) subnets distributed across availability zones.
     These subnets have no route to the internet (no IGW or NAT Gateway).
 
+    Supports both explicit CIDR blocks and IPAM late-binding via IPv4 prefixes.
+
     Args:
         config: Configuration object containing subnet parameters
 
     Returns:
         List of intra subnet resources
     """
+    subnetCount = len(config.intraSubnets) if len(config.intraSubnets) > 0 else len(config.intraSubnetIpv4Prefixes)
+
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("intra-subnet-${i}") | {
@@ -390,7 +509,7 @@ _generateIntraSubnets = lambda config: {str: any} -> [any] {
                         matchControllerRef = True
                     }
                     availabilityZone = config.azs[i % len(config.azs)]
-                    cidrBlock = subnetCidr
+                    cidrBlock = _getSubnetIpv4Cidr(config, i, config.intraSubnets, config.intraSubnetIpv4Prefixes)
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.intraSubnetTags | {
@@ -400,8 +519,9 @@ _generateIntraSubnets = lambda config: {str: any} -> [any] {
                 } | _buildIpv6Config(config, i, config.intraSubnetIpv6Prefixes)
             }
         }
-        for i, subnetCidr in config.intraSubnets
-    ] if len(config.intraSubnets) > 0 and len(config.azs) > 0 else []
+        for i in range(subnetCount)
+        if _getSubnetIpv4Cidr(config, i, config.intraSubnets, config.intraSubnetIpv4Prefixes) != ""
+    ] if subnetCount > 0 and len(config.azs) > 0 else []
 }
 
 # Generate all subnets

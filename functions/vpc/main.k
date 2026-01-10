@@ -175,6 +175,14 @@ elasticacheSubnetIpv6Prefixes = oxrSpec.elasticacheSubnetIpv6Prefixes or []
 redshiftSubnetIpv6Prefixes = oxrSpec.redshiftSubnetIpv6Prefixes or []
 intraSubnetIpv6Prefixes = oxrSpec.intraSubnetIpv6Prefixes or []
 
+# Extract IPv4 subnet prefixes (for IPAM late-binding)
+publicSubnetIpv4Prefixes = oxrSpec.publicSubnetIpv4Prefixes or []
+privateSubnetIpv4Prefixes = oxrSpec.privateSubnetIpv4Prefixes or []
+databaseSubnetIpv4Prefixes = oxrSpec.databaseSubnetIpv4Prefixes or []
+elasticacheSubnetIpv4Prefixes = oxrSpec.elasticacheSubnetIpv4Prefixes or []
+redshiftSubnetIpv4Prefixes = oxrSpec.redshiftSubnetIpv4Prefixes or []
+intraSubnetIpv4Prefixes = oxrSpec.intraSubnetIpv4Prefixes or []
+
 # Extract IPv6 gateway configuration
 createEgressOnlyIgw = oxrSpec.createEgressOnlyIgw if oxrSpec.createEgressOnlyIgw != None else False
 
@@ -310,6 +318,10 @@ _hasIpv6Cidr = _hasAtProvider and "ipv6CidrBlock" in _vpcResources[0]["status"][
 
 observedVpcIpv6CidrBlock = _vpcResources[0]["status"]["atProvider"]["ipv6CidrBlock"] if _hasIpv6Cidr else ""
 
+# Extract observed IPv4 CIDR (for IPAM late-binding)
+_hasIpv4Cidr = _hasAtProvider and "cidrBlock" in _vpcResources[0]["status"]["atProvider"] and _vpcResources[0]["status"]["atProvider"]["cidrBlock"]
+observedVpcIpv4CidrBlock = _vpcResources[0]["status"]["atProvider"]["cidrBlock"] if _hasIpv4Cidr else ""
+
 # ============================================================================
 # BUILD CONFIGURATION OBJECT FOR MODULES
 # ============================================================================
@@ -352,6 +364,7 @@ config = {
     enableResourceNameDnsAaaaRecordOnLaunch = enableResourceNameDnsAaaaRecordOnLaunch
     privateDnsHostnameTypeOnLaunch = privateDnsHostnameTypeOnLaunch
     observedVpcIpv6CidrBlock = observedVpcIpv6CidrBlock  # Late-bound IPv6 CIDR from VPC status
+    observedVpcIpv4CidrBlock = observedVpcIpv4CidrBlock  # Late-bound IPv4 CIDR from VPC status (for IPAM)
 
     # IPv6 subnet prefixes
     publicSubnetIpv6Prefixes = publicSubnetIpv6Prefixes
@@ -360,6 +373,14 @@ config = {
     elasticacheSubnetIpv6Prefixes = elasticacheSubnetIpv6Prefixes
     redshiftSubnetIpv6Prefixes = redshiftSubnetIpv6Prefixes
     intraSubnetIpv6Prefixes = intraSubnetIpv6Prefixes
+
+    # IPv4 subnet prefixes (for IPAM late-binding)
+    publicSubnetIpv4Prefixes = publicSubnetIpv4Prefixes
+    privateSubnetIpv4Prefixes = privateSubnetIpv4Prefixes
+    databaseSubnetIpv4Prefixes = databaseSubnetIpv4Prefixes
+    elasticacheSubnetIpv4Prefixes = elasticacheSubnetIpv4Prefixes
+    redshiftSubnetIpv4Prefixes = redshiftSubnetIpv4Prefixes
+    intraSubnetIpv4Prefixes = intraSubnetIpv4Prefixes
 
     # Gateway configuration
     createIgw = createIgw
