@@ -112,7 +112,19 @@
       "Bash(mv:*)",
       "Skill(claude-plugin-solutions:author-tests-kcl)",
       "Skill(claude-plugin-solutions:e2e-test-configuration)",
-      "Skill(claude-plugin-solutions:author-composition-kcl)"
+      "Skill(claude-plugin-solutions:author-composition-kcl)",
+      "Skill(control-plane-project:author-tests-kcl)",
+      "Skill(control-plane-project:author-composition-kcl)",
+      "Skill(control-plane-project:verify-configuration)",
+      "Skill(control-plane-project:e2e-test-configuration)",
+      "Bash(if [ -f /tmp/e2e-test-results.txt ])",
+      "Bash(then cat /tmp/e2e-test-results.txt)",
+      "Bash(else echo \"Results file not yet created\")",
+      "Skill(agent-basics:handover)",
+      "Skill(agent-basics:resume-handover)",
+      "Bash(ps:*)",
+      "Skill(iterate_project)",
+      "Bash(ln:*)"
     ]
   }
 }

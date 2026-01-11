@@ -1,4 +1,8 @@
 [dependencies]
+  [dependencies.helpers]
+    name = "helpers"
+    full_name = "test-shared_0.0.1"
+    version = "0.0.1"
   [dependencies.models]
     name = "models"
     full_name = "models_0.0.1"
