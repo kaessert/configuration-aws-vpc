@@ -4,18 +4,6 @@ A production-ready Upbound control plane configuration that provides **feature p
 
 Build AWS VPCs using Crossplane Composite Resources, KCL composition functions, and declarative Kubernetes-style configuration.
 
-## Production Readiness
-
-✅ **Phase 4 COMPLETED** - All critical (P0), high-priority (P1), and important (P2) features implemented
-✅ **68 Composition Tests** - All features validated with fast unit tests
-✅ **18 E2E Tests** - Critical paths tested against real AWS infrastructure
-✅ **~90% Feature Parity** - Comprehensive feature set matching Terraform AWS VPC module
-✅ **Modular Design** - 10 focused KCL modules (~3000 lines), well-organized and maintainable
-✅ **Zero Failing Tests** - All tests passing, no known regressions
-
-**Ready for**: Production environments with comprehensive requirements including hybrid cloud (VPN), IPv6 networks, enterprise IP management (IPAM), interface endpoints, and advanced routing
-**Includes**: VPC, Subnets (all 6 types), NAT (3 strategies), Routing, Gateway Endpoints, Interface Endpoints, NACLs (all subnet types), DHCP, Flow Logs, Subnet Groups, Secondary CIDRs, VPN Gateway, Customer Gateways, IPv6 (dual-stack & native), IPAM, Default Resource Management
-
 ## Overview
 
 This project implements a **drop-in replacement** for the Terraform AWS VPC module using Upbound's control plane architecture. It enables platform teams to provision AWS VPCs with the same flexibility and features as the Terraform module, but with the benefits of Kubernetes-native infrastructure management.
@@ -23,16 +11,12 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 ### Why Use This?
 
 - **Kubernetes-Native**: Manage VPCs declaratively using Kubernetes CRDs
-- **Feature Parity**: All features from the Terraform module, backed by comprehensive tests
-- **Test-Driven**: Every feature is tested before implementation (TDD approach)
+- **Feature Parity**: All features from the Terraform module
 - **Modular Design**: Clean, maintainable KCL code following Upbound best practices
 - **Production-Ready**: Built to the same standards as official Upbound configurations
 
 ## Features
 
-### Implemented ✅
-
-**Phase 1-3 Features (Core & Enhanced Networking):**
 - **VPC Creation**: Basic VPC with DNS support, customizable CIDR blocks, instance tenancy
 - **Subnets**: Six subnet types across multiple availability zones
   - Public subnets (with auto-assign public IP)
@@ -45,34 +29,21 @@ This project implements a **drop-in replacement** for the Terraform AWS VPC modu
 - **NAT Gateway**: Three strategies (single NAT, per-AZ, per-subnet), EIP reuse, custom destination CIDR
 - **Route Tables**: Public, private, database, and isolated routing with flexible association
 - **VPC Endpoints (Gateway)**: S3 and DynamoDB gateway endpoints
-- **Network ACLs**: Dedicated ACLs with custom rules for all subnet types (public, private, database, ElastiCache, Redshift, intra)
+- **VPC Endpoints (Interface)**: Private connectivity for EC2, SSM, RDS, Secrets Manager, and custom services
+- **Network ACLs**: Dedicated ACLs with custom rules for all subnet types
 - **DHCP Options**: Custom DNS servers, domain names, NTP servers, NetBIOS settings
 - **VPC Flow Logs**: Traffic monitoring to CloudWatch Logs or S3 with configurable filters
 - **Subnet Groups**: Database, ElastiCache, and Redshift subnet groups for managed services
 - **Secondary CIDR Blocks**: IP space expansion with multiple CIDR blocks per VPC
-- **Tagging**: Flexible tag merging for all resources
-- **Multi-AZ Support**: Distribute resources across availability zones
-
-**Phase 4 Features (Advanced):**
 - **VPN Gateway**: Hybrid cloud connectivity with route propagation to all subnet types
 - **Customer Gateways**: VPN customer side configuration with BGP support
 - **IPv6 Support**: Dual-stack and IPv6-native configurations with Egress-Only IGW
 - **IPAM Integration**: AWS IPAM for dynamic CIDR allocation (IPv4 and IPv6)
-- **Interface VPC Endpoints**: Private connectivity for EC2, SSM, RDS, Secrets Manager, and custom services
-- **Extended NACL Support**: Dedicated NACLs for database, ElastiCache, Redshift, and intra subnets
-- **Extended Routing**: Per-AZ public routes, ElastiCache routing, Redshift routing (private & public)
 - **Default Resource Management**: Manage default VPC resources (security group, NACL, route table)
-- **NAT Gateway Enhancements**: Per-subnet NAT, EIP reuse, custom destination CIDR
-
-### Optional Future Enhancements (P3 - Nice to Have) 📋
-
-- **Subnet Configuration**: Custom subnet naming and per-AZ tags (low priority)
-- **VPC Block Public Access**: New AWS security feature (waiting for provider support)
-- **Outpost Subnets**: AWS Outposts support (niche use case)
+- **Tagging**: Flexible tag merging for all resources
+- **Multi-AZ Support**: Distribute resources across availability zones
 
 ## Quick Start
-
-> **Note**: All implemented features are production-ready and fully tested with 68 composition tests and 15 E2E tests covering all Phase 1-4 features.
 
 ### Prerequisites
 
@@ -132,11 +103,11 @@ kubectl apply -f examples/simple-vpc.yaml
 Check status:
 
 ```bash
-kubectl get xvpc
-kubectl describe xvpc my-vpc
+kubectl get vpc
+kubectl describe vpc my-vpc
 ```
 
-### More Examples
+### Examples
 
 See the [examples/](examples/) directory for comprehensive, production-ready examples:
 
@@ -145,7 +116,7 @@ See the [examples/](examples/) directory for comprehensive, production-ready exa
 - `multi-subnet-vpc.yaml` - All subnet types across multiple AZs
 
 **Feature Showcases:**
-- `complete-vpc.yaml` ⭐ - **Complete reference** with all features (NAT, endpoints, ACLs, DHCP, Flow Logs, Subnet Groups, Secondary CIDRs)
+- `complete-vpc.yaml` - Complete reference with all features (NAT, endpoints, ACLs, DHCP, Flow Logs, Subnet Groups, Secondary CIDRs)
 - `with-endpoints.yaml` - VPC Endpoints for private AWS service access
 - `with-flow-logs.yaml` - Traffic monitoring with VPC Flow Logs
 - `with-ipv6-dual-stack.yaml` - IPv6 dual-stack configuration with Egress-Only IGW
@@ -154,15 +125,12 @@ See the [examples/](examples/) directory for comprehensive, production-ready exa
 **NAT Gateway Strategies:**
 - `nat-single.yaml` - Single NAT Gateway (cost-optimized: ~$32/month)
 - `nat-per-az.yaml` - NAT Gateway per AZ (high availability: ~$96/month)
-- NAT per subnet - Maximum availability (cost: ~$32/month × number of subnets)
 
 **Advanced Configurations:**
 - `private-only.yaml` - Private subnets without direct internet access
 - `multi-az.yaml` - High availability across 3 availability zones
 
-**Total**: 11 production-ready examples covering all implemented features with inline documentation, cost analysis, and use case guidance.
-
-See [examples/README.md](examples/README.md) for detailed documentation, cost comparisons, and usage guidance.
+See [examples/README.md](examples/README.md) for detailed documentation and cost comparisons.
 
 ## Architecture
 
@@ -186,7 +154,7 @@ configuration-aws-vpc/
 
 - **XRD (Composite Resource Definition)**: Defines the API surface matching Terraform module inputs
 - **Composition**: Orchestrates the KCL function
-- **KCL Function**: Modular design with 10 focused modules (~2300 lines total)
+- **KCL Function**: Modular design with 10 focused modules
   - `vpc.k` - Core VPC resource
   - `subnets.k` - All 6 subnet types
   - `gateways.k` - IGW, EIP, and NAT Gateway
@@ -197,61 +165,14 @@ configuration-aws-vpc/
   - `flowlogs.k` - VPC Flow Logs
   - `subnetgroups.k` - DB/ElastiCache/Redshift subnet groups
   - `main.k` - Orchestration and coordination
-- **Tests**: 32 composition tests + 10 E2E tests validate all features
-
-> **Note**: Modular refactoring completed in Phase 2.6, ensuring clean separation of concerns and maintainability.
 
 ### Design Principles
 
-1. **Test-Driven Development**: All features tested before implementation
-2. **Modular Design**: Clean separation of concerns
-3. **Terraform Compatibility**: Exact feature parity with reference module
-4. **Best Practices**: Follows patterns from [platform-ref-upbound](https://github.com/upbound/platform-ref-upbound)
+1. **Modular Design**: Clean separation of concerns
+2. **Terraform Compatibility**: Feature parity with reference module
+3. **Best Practices**: Follows patterns from [platform-ref-upbound](https://github.com/upbound/platform-ref-upbound)
 
 ## Testing
-
-This project follows **strict Test-Driven Development (TDD)**:
-
-🔴 RED → 🟢 GREEN → 🔵 REFACTOR → 🧪 E2E → ✅ COMMIT
-
-### Current Test Coverage
-
-**Composition Tests**: 68 tests (all passing) ✅
-- VPC basics (1 test)
-- All 6 subnet types (6 tests)
-- Internet Gateway (2 tests)
-- NAT Gateway strategies (6 tests: single, per-AZ, per-subnet, reuse EIPs, custom CIDR, disabled)
-- Route tables (8 tests: public, private single NAT, private per-AZ, isolated, database NAT, database IGW, ElastiCache NAT, Redshift NAT, Redshift public, public per-AZ, intra per-AZ)
-- VPC Endpoints (3 tests: S3 gateway, DynamoDB gateway, disabled)
-- Interface VPC Endpoints (5 tests: single, multiple, custom SG, no private DNS, disabled)
-- Network ACLs (6 tests: public, private, database, ElastiCache, Redshift, intra)
-- DHCP Options (2 tests)
-- VPC Flow Logs (3 tests)
-- Subnet Groups (3 tests)
-- Secondary CIDR Blocks (1 test)
-- VPN Gateway (4 tests: enabled, disabled, custom ASN, selective propagation)
-- Customer Gateway (2 tests)
-- IPv6 Support (6 tests: dual-stack, native, disabled, routing, Egress-Only IGW, IPAM)
-- IPAM Integration (2 tests: IPv4, IPv6)
-- Default Resource Management (4 tests: security group, NACL, route table)
-- Instance Tenancy (2 tests)
-
-**E2E Tests**: 18 tests (all passing) ✅
-- Basic VPC
-- Complete VPC
-- Simple VPC
-- NAT strategies (3 tests: single, per-AZ, enhancements)
-- VPC Endpoints
-- DHCP Options
-- Network ACLs (2 tests: public/private, extended all subnet types)
-- Flow Logs
-- Subnet Groups
-- Secondary CIDR Blocks
-- VPN Gateway
-- IPv6 Support (dual-stack)
-- Interface VPC Endpoints
-- Default Resource Management
-- Extended Routing Options
 
 ### Run Tests
 
@@ -262,7 +183,7 @@ up test run tests/test-*
 # Run specific test
 up test run tests/test-xvpc-public-subnets
 
-# Run E2E tests (requires AWS credentials)
+# Run E2E tests (requires Upbound login)
 up login
 up test run tests/e2etest-vpc-basic --e2e
 ```
@@ -271,122 +192,6 @@ up test run tests/e2etest-vpc-basic --e2e
 
 - **Composition Tests**: Fast unit tests validating resource generation (< 10s)
 - **E2E Tests**: Integration tests with real AWS resources (10-30 minutes)
-
-## Development
-
-### Prerequisites
-
-- Go 1.21+
-- Upbound CLI
-- AWS CLI configured
-- Kubernetes cluster (local or remote)
-
-### Development Workflow
-
-1. **Write test first**: Generate and write test before implementation
-2. **Implement feature**: Make the test pass
-3. **Refactor**: Improve code while keeping tests green
-4. **Test**: Ensure all tests pass
-5. **Commit**: Only commit when all tests pass
-
-### Project Commands
-
-```bash
-# Build the project
-up project build
-
-# Run locally for testing
-up project run
-
-# Run tests
-up test run tests/test-*
-
-# Stop local run
-up project stop
-
-# Push to registry
-up project push
-```
-
-### Before Committing
-
-Always ensure:
-- ✅ All tests pass: `up test run tests/test-*`
-- ✅ Project builds: `up project build`
-- ✅ No regressions in existing tests
-
-**NEVER commit failing tests.**
-
-## Contributing
-
-Contributions are welcome! This project follows test-driven development practices.
-
-### Contributing Workflow
-
-1. **Write tests FIRST** for any new feature
-2. Implement the feature to pass tests
-3. Ensure all tests pass before submitting PR
-4. Follow conventional commit messages (feat:, fix:, docs:, test:)
-
-### Code Standards
-
-- Follow Upbound and Crossplane best practices
-- Write composition tests for all features
-- Document breaking changes
-- Update examples when adding features
-
-## Project Status
-
-**Phase**: Phase 4: Advanced Features - **COMPLETED** ✅
-
-**Completed**:
-- ✅ Phase 1: Project foundation and structure
-- ✅ Phase 2: Core VPC Features
-  - VPC creation with DNS settings and instance tenancy
-  - All 6 subnet types (public, private, database, elasticache, redshift, intra)
-  - Internet Gateway with conditional creation
-  - NAT Gateway (single, per-AZ, and per-subnet strategies)
-  - Comprehensive routing for all subnet types
-  - Modular code structure (10 KCL modules, ~3000 lines)
-- ✅ Phase 3: Enhanced Networking Features
-  - VPC Endpoints (Gateway: S3, DynamoDB)
-  - Network ACLs (all subnet types with custom rules)
-  - DHCP Options (DNS servers, domain name, NTP, NetBIOS)
-  - VPC Flow Logs (CloudWatch and S3 destinations)
-  - Subnet Groups (RDS, ElastiCache, Redshift)
-  - Secondary CIDR Blocks (IP space expansion)
-  - IPAM Integration (IPv4 support)
-- ✅ Phase 4: Advanced Features
-  - VPN Gateway - Hybrid cloud connectivity with route propagation
-  - Customer Gateways - VPN customer side configuration
-  - IPv6 Support - Dual-stack and IPv6-native with Egress-Only IGW
-  - IPAM Integration - IPv4 and IPv6 support
-  - Interface VPC Endpoints - EC2, SSM, RDS, Secrets Manager, custom services
-  - Extended NACL Support - All subnet types (database, ElastiCache, Redshift, intra)
-  - Extended Routing - Per-AZ public routes, ElastiCache/Redshift routing
-  - Default Resource Management - Security group, NACL, route table management
-  - NAT Gateway Enhancements - Per-subnet NAT, EIP reuse, custom destination CIDR
-
-**Test Coverage**: 68 composition tests + 15 E2E tests - **ALL PASSING** ✅
-
-**Feature Parity**: ~90% vs Terraform AWS VPC module
-
-**Remaining (Optional - P3 priorities)**:
-- Subnet Configuration Enhancements - Custom naming/suffixes (low priority)
-- VPC Block Public Access - Waiting for provider support (AWS feature from Nov 2024)
-- Outpost Subnets - Niche use case for AWS Outposts
-
-**Next Up (Phase 5-6)**:
-- Phase 5: Additional examples and documentation
-- Phase 6: User-facing documentation completion
-- Phase 7: Performance optimization
-
-## Related Documentation
-
-- [Terraform AWS VPC Module](https://github.com/terraform-aws-modules/terraform-aws-vpc) - Reference implementation
-- [Upbound Documentation](https://docs.upbound.io/) - Upbound platform docs
-- [Crossplane Documentation](https://docs.crossplane.io/) - Crossplane concepts
-- [KCL Language](https://kcl-lang.io/) - KCL reference
 
 ## API Reference
 
@@ -647,7 +452,7 @@ kubectl describe <resource>
 kubectl get events --sort-by='.lastTimestamp'
 
 # Check composition status
-kubectl describe xvpc <name>
+kubectl describe vpc <name>
 
 # Check managed resource status
 kubectl describe <managed-resource>
@@ -658,6 +463,22 @@ kubectl describe <managed-resource>
 - Consult [Upbound Documentation](https://docs.upbound.io/)
 - Check [Crossplane Documentation](https://docs.crossplane.io/)
 - Open an issue with reproduction steps
+
+## Contributing
+
+Contributions are welcome!
+
+1. Write tests for any new feature
+2. Ensure all tests pass before submitting PR
+3. Follow conventional commit messages (feat:, fix:, docs:, test:)
+4. Update examples when adding features
+
+## Related Documentation
+
+- [Terraform AWS VPC Module](https://github.com/terraform-aws-modules/terraform-aws-vpc) - Reference implementation
+- [Upbound Documentation](https://docs.upbound.io/) - Upbound platform docs
+- [Crossplane Documentation](https://docs.crossplane.io/) - Crossplane concepts
+- [KCL Language](https://kcl-lang.io/) - KCL reference
 
 ## License
 
@@ -676,7 +497,5 @@ Upbound Solutions Team
 ---
 
 **Ready to get started?** Check out the [examples/](examples/) directory or read the [Quick Start](#quick-start) guide above.
-
-**Contributing?** See the [Contributing](#contributing) section for workflow and code standards.
 
 **Questions?** Open an issue or consult the [Related Documentation](#related-documentation).
