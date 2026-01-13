@@ -497,7 +497,7 @@ buildVPCDHCPOptions = lambda name: str, tags: {str: str}, region: str = "us-west
     Returns:
         VPC DHCP Options managed resource
     """
-    forProvider = { tags: tags }
+    forProvider: {str: any} = { tags: tags }
 
     if domainName:
         forProvider["domainName"] = domainName
@@ -586,7 +586,7 @@ buildVPNGateway = lambda name: str, tags: {str: str}, region: str = "us-west-2",
     Returns:
         VPN Gateway managed resource
     """
-    forProviderBase = { tags: tags }
+    forProviderBase: {str: any} = { tags: tags }
 
     if amazonSideAsn:
         forProviderBase["amazonSideAsn"] = amazonSideAsn

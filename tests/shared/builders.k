@@ -11,7 +11,7 @@ Import and use builder functions to create resources with standard configuration
 Example:
     import builders
 
-    _vpc = builders.buildVPC({
+    _vpc = builders._buildVPC({
         name: "vpc-test",
         region: "us-west-2",
         cidrBlock: "10.0.0.0/16",
@@ -23,7 +23,7 @@ Alternative (Recommended):
 Define builder functions locally within each test file for better self-containment:
 
     # Within tests/test-my-feature/main.k
-    buildSubnet = lambda config: {
+    _buildSubnet = lambda config: {str: any} {
         ec2v1beta1.Subnet {
             metadata: { name: config.name }
             spec: {
@@ -50,8 +50,8 @@ import models.io.upbound.awsm.ec2.v1beta1 as ec2v1beta1
 
 
 # Builder for VPC resources
-# Usage: buildVPC({ name: "vpc-test", region: "us-west-2", cidrBlock: "10.0.0.0/16", tags: {...} })
-buildVPC = lambda config: {
+# Usage: _buildVPC({ name: "vpc-test", region: "us-west-2", cidrBlock: "10.0.0.0/16", tags: {...} })
+_buildVPC = lambda config: {str: any} {
     ec2v1beta1.VPC {
         metadata: {
             name: config.name
@@ -74,8 +74,8 @@ buildVPC = lambda config: {
 }
 
 # Builder for Subnet resources
-# Usage: buildSubnet({ name: "subnet-test", region: "us-west-2", cidrBlock: "10.0.1.0/24", az: "us-west-2a", tags: {...} })
-buildSubnet = lambda config: {
+# Usage: _buildSubnet({ name: "subnet-test", region: "us-west-2", cidrBlock: "10.0.1.0/24", az: "us-west-2a", tags: {...} })
+_buildSubnet = lambda config: {str: any} {
     ec2v1beta1.Subnet {
         metadata: {
             name: config.name
@@ -99,8 +99,8 @@ buildSubnet = lambda config: {
 }
 
 # Builder for Internet Gateway resources
-# Usage: buildInternetGateway({ name: "igw-test", region: "us-west-2", tags: {...} })
-buildInternetGateway = lambda config: {
+# Usage: _buildInternetGateway({ name: "igw-test", region: "us-west-2", tags: {...} })
+_buildInternetGateway = lambda config: {str: any} {
     ec2v1beta1.InternetGateway {
         metadata: {
             name: config.name
@@ -121,8 +121,8 @@ buildInternetGateway = lambda config: {
 }
 
 # Builder for NAT Gateway resources
-# Usage: buildNATGateway({ name: "nat-test", region: "us-west-2", subnetLabels: {...}, tags: {...} })
-buildNATGateway = lambda config: {
+# Usage: _buildNATGateway({ name: "nat-test", region: "us-west-2", subnetLabels: {...}, tags: {...} })
+_buildNATGateway = lambda config: {str: any} {
     ec2v1beta1.NATGateway {
         metadata: {
             name: config.name
@@ -146,8 +146,8 @@ buildNATGateway = lambda config: {
 }
 
 # Builder for Route Table resources
-# Usage: buildRouteTable({ name: "rt-test", region: "us-west-2", tags: {...} })
-buildRouteTable = lambda config: {
+# Usage: _buildRouteTable({ name: "rt-test", region: "us-west-2", tags: {...} })
+_buildRouteTable = lambda config: {str: any} {
     ec2v1beta1.RouteTable {
         metadata: {
             name: config.name
@@ -168,8 +168,8 @@ buildRouteTable = lambda config: {
 }
 
 # Builder for Security Group resources
-# Usage: buildSecurityGroup({ name: "sg-test", region: "us-west-2", description: "Test SG", tags: {...} })
-buildSecurityGroup = lambda config: {
+# Usage: _buildSecurityGroup({ name: "sg-test", region: "us-west-2", description: "Test SG", tags: {...} })
+_buildSecurityGroup = lambda config: {str: any} {
     ec2v1beta1.SecurityGroup {
         metadata: {
             name: config.name
@@ -191,8 +191,8 @@ buildSecurityGroup = lambda config: {
 }
 
 # Builder for Network ACL resources
-# Usage: buildNetworkACL({ name: "nacl-test", region: "us-west-2", tags: {...} })
-buildNetworkACL = lambda config: {
+# Usage: _buildNetworkACL({ name: "nacl-test", region: "us-west-2", tags: {...} })
+_buildNetworkACL = lambda config: {str: any} {
     ec2v1beta1.NetworkACL {
         metadata: {
             name: config.name
@@ -214,15 +214,18 @@ buildNetworkACL = lambda config: {
 
 # Helper function to merge tags
 # Usage: mergeTags({ Environment: "test" }, { Feature: "vpc" }) -> { Environment: "test", Feature: "vpc" }
-mergeTags = lambda baseTags, additionalTags: {
-    **baseTags
-    **additionalTags
+mergeTags = lambda baseTags: {str: str}, additionalTags: {str: str} -> {str: str} {
+    {**baseTags, **additionalTags}
 }
 
 # Helper function to build subnet name
 # Usage: buildSubnetName("test-vpc", "public", "us-west-2a") -> "subnet-public-test-vpc-us-west-2a"
-buildSubnetName = lambda vpcName, subnetType, az: "subnet-${subnetType}-${vpcName}-${az}"
+buildSubnetName = lambda vpcName: str, subnetType: str, az: str -> str {
+    "subnet-${subnetType}-${vpcName}-${az}"
+}
 
 # Helper function to build resource name with prefix
 # Usage: buildResourceName("nat", "test-vpc", "us-west-2a") -> "nat-test-vpc-us-west-2a"
-buildResourceName = lambda resourceType, vpcName, suffix: "${resourceType}-${vpcName}-${suffix}" if suffix else "${resourceType}-${vpcName}"
+buildResourceName = lambda resourceType: str, vpcName: str, suffix: str -> str {
+    "${resourceType}-${vpcName}-${suffix}" if suffix else "${resourceType}-${vpcName}"
+}
