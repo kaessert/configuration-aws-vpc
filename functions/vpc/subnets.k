@@ -87,7 +87,14 @@ _calculateSubnetIpv6Cidr = lambda vpcIpv6Cidr: str, prefix: int -> str {
     # segment[3] has the upper 8 bits of the /56 network
     # Safely parse as hex, defaulting to 0 if invalid
     segment3Str = segments[3] if len(segments) > 3 else "0"
-    segment3Value = int(segment3Str, 16) if segment3Str and segment3Str != "" else 0
+
+    # Filter to only valid hex characters (0-9, a-f, A-F) to prevent ParseIntError
+    # This handles edge cases where segments might have unexpected characters
+    validHexChars = "0123456789abcdefABCDEF"
+    cleanSegment3 = "".join([c for c in segment3Str if c in validHexChars])
+
+    # If no valid hex chars remain, default to "0"
+    segment3Value = int(cleanSegment3, 16) if cleanSegment3 else 0
 
     # Clear lower 8 bits and add prefix
     baseValue = (segment3Value // 256) * 256  # Keep upper 8 bits
