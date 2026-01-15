@@ -31,6 +31,18 @@ generateDHCPOptions = lambda config: {str: any} -> [any] {
     Returns:
         List containing the DHCP Options resource (or empty list if disabled)
     """
+    # Build forProvider dictionary conditionally to avoid passing null values
+    _baseForProvider = {
+        region = config.region
+        tags = config.tags | {
+            Name = "${config.vpcName}-dhcp-options"
+        }
+    }
+
+    # Conditionally add optional fields only if they have valid values
+    # This prevents passing null/None which causes Kubernetes validation errors
+    _forProviderWithOptionals = _baseForProvider | ({domainName = config.dhcpOptionsDomainName} if config.dhcpOptionsDomainName else {}) | ({domainNameServers = config.dhcpOptionsDomainNameServers} if config.dhcpOptionsDomainNameServers and len(config.dhcpOptionsDomainNameServers) > 0 else {}) | ({ntpServers = config.dhcpOptionsNtpServers} if config.dhcpOptionsNtpServers and len(config.dhcpOptionsNtpServers) > 0 else {}) | ({netbiosNameServers = config.dhcpOptionsNetbiosNameServers} if config.dhcpOptionsNetbiosNameServers and len(config.dhcpOptionsNetbiosNameServers) > 0 else {}) | ({netbiosNodeType = str(config.dhcpOptionsNetbiosNodeType)} if config.dhcpOptionsNetbiosNodeType != None else {})
+
     [
         ec2v1beta1.VPCDHCPOptions{
             metadata = config.metadata("dhcp-options") | {
@@ -38,17 +50,7 @@ generateDHCPOptions = lambda config: {str: any} -> [any] {
                 labels = config.tags
             }
             spec = config.defaultV2Spec | {
-                forProvider = {
-                    region = config.region
-                    domainName = config.dhcpOptionsDomainName if config.dhcpOptionsDomainName else None
-                    domainNameServers = config.dhcpOptionsDomainNameServers if len(config.dhcpOptionsDomainNameServers) > 0 else None
-                    ntpServers = config.dhcpOptionsNtpServers if len(config.dhcpOptionsNtpServers) > 0 else None
-                    netbiosNameServers = config.dhcpOptionsNetbiosNameServers if len(config.dhcpOptionsNetbiosNameServers) > 0 else None
-                    netbiosNodeType = str(config.dhcpOptionsNetbiosNodeType) if config.dhcpOptionsNetbiosNodeType != None else None
-                    tags = config.tags | {
-                        Name = "${config.vpcName}-dhcp-options"
-                    }
-                }
+                forProvider = _forProviderWithOptionals
             }
         }
     ] if config.enableDhcpOptions else []
