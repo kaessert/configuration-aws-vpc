@@ -119,7 +119,7 @@ _test_database = metav1alpha1.CompositionTest{
             },
             # Database Subnet 1
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-database-test-nacl-db-us-west-2a" }
+                metadata: { name: "subnet-database-test-nacl-db-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -129,7 +129,7 @@ _test_database = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2a"
                         cidrBlock: "10.0.101.0/24"
                         tags: {
-                            Name: "subnet-database-test-nacl-db-us-west-2a"
+                            Name: "subnet-database-test-nacl-db-us-west-2a-0"
                             Type: "database"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -139,7 +139,7 @@ _test_database = metav1alpha1.CompositionTest{
             },
             # Database Subnet 2
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-database-test-nacl-db-us-west-2b" }
+                metadata: { name: "subnet-database-test-nacl-db-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -149,7 +149,7 @@ _test_database = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2b"
                         cidrBlock: "10.0.102.0/24"
                         tags: {
-                            Name: "subnet-database-test-nacl-db-us-west-2b"
+                            Name: "subnet-database-test-nacl-db-us-west-2b-1"
                             Type: "database"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -333,7 +333,7 @@ _test_elasticache = metav1alpha1.CompositionTest{
             },
             # ElastiCache Subnet 1
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-elasticache-test-nacl-ec-us-west-2a" }
+                metadata: { name: "subnet-elasticache-test-nacl-ec-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -343,7 +343,7 @@ _test_elasticache = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2a"
                         cidrBlock: "10.0.201.0/24"
                         tags: {
-                            Name: "subnet-elasticache-test-nacl-ec-us-west-2a"
+                            Name: "subnet-elasticache-test-nacl-ec-us-west-2a-0"
                             Type: "elasticache"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -353,7 +353,7 @@ _test_elasticache = metav1alpha1.CompositionTest{
             },
             # ElastiCache Subnet 2
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-elasticache-test-nacl-ec-us-west-2b" }
+                metadata: { name: "subnet-elasticache-test-nacl-ec-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -363,7 +363,7 @@ _test_elasticache = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2b"
                         cidrBlock: "10.0.202.0/24"
                         tags: {
-                            Name: "subnet-elasticache-test-nacl-ec-us-west-2b"
+                            Name: "subnet-elasticache-test-nacl-ec-us-west-2b-1"
                             Type: "elasticache"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -539,7 +539,7 @@ _test_intra = metav1alpha1.CompositionTest{
             },
             # Intra Subnet 1
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-intra-test-nacl-intra-us-west-2a" }
+                metadata: { name: "subnet-intra-test-nacl-intra-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -549,7 +549,7 @@ _test_intra = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2a"
                         cidrBlock: "10.0.51.0/24"
                         tags: {
-                            Name: "subnet-intra-test-nacl-intra-us-west-2a"
+                            Name: "subnet-intra-test-nacl-intra-us-west-2a-0"
                             Type: "intra"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -559,7 +559,7 @@ _test_intra = metav1alpha1.CompositionTest{
             },
             # Intra Subnet 2
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-intra-test-nacl-intra-us-west-2b" }
+                metadata: { name: "subnet-intra-test-nacl-intra-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -569,7 +569,7 @@ _test_intra = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2b"
                         cidrBlock: "10.0.52.0/24"
                         tags: {
-                            Name: "subnet-intra-test-nacl-intra-us-west-2b"
+                            Name: "subnet-intra-test-nacl-intra-us-west-2b-1"
                             Type: "intra"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -723,7 +723,7 @@ _test_redshift = metav1alpha1.CompositionTest{
             },
             # Redshift Subnet 1
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-redshift-test-nacl-rs-us-west-2a" }
+                metadata: { name: "subnet-redshift-test-nacl-rs-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -733,7 +733,7 @@ _test_redshift = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2a"
                         cidrBlock: "10.0.151.0/24"
                         tags: {
-                            Name: "subnet-redshift-test-nacl-rs-us-west-2a"
+                            Name: "subnet-redshift-test-nacl-rs-us-west-2a-0"
                             Type: "redshift"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -743,7 +743,7 @@ _test_redshift = metav1alpha1.CompositionTest{
             },
             # Redshift Subnet 2
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-redshift-test-nacl-rs-us-west-2b" }
+                metadata: { name: "subnet-redshift-test-nacl-rs-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -753,7 +753,7 @@ _test_redshift = metav1alpha1.CompositionTest{
                         availabilityZone: "us-west-2b"
                         cidrBlock: "10.0.152.0/24"
                         tags: {
-                            Name: "subnet-redshift-test-nacl-rs-us-west-2b"
+                            Name: "subnet-redshift-test-nacl-rs-us-west-2b-1"
                             Type: "redshift"
                             Environment: "test"
                             ManagedBy: "upbound"

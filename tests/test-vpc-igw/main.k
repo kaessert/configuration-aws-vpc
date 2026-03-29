@@ -74,7 +74,7 @@ _test_disabled = metav1alpha1.CompositionTest {
             },
             # Spec: Subnet should be created
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-no-igw-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-no-igw-us-west-2a-0" }
                 spec: {
                     providerConfigRef: {
                         kind: "ProviderConfig"
@@ -88,7 +88,7 @@ _test_disabled = metav1alpha1.CompositionTest {
                         cidrBlock: "10.0.1.0/24"
                         mapPublicIpOnLaunch: True
                         tags: {
-                            Name: "subnet-public-test-vpc-no-igw-us-west-2a"
+                            Name: "subnet-public-test-vpc-no-igw-us-west-2a-0"
                             Type: "public"
                             Environment: "test"
                             ManagedBy: "upbound"
@@ -153,7 +153,7 @@ _test_enabled = metav1alpha1.CompositionTest {
             },
             # Spec: Subnet should be created
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-with-igw-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-with-igw-us-west-2a-0" }
                 spec: {
                     providerConfigRef: {
                         kind: "ProviderConfig"
@@ -167,7 +167,7 @@ _test_enabled = metav1alpha1.CompositionTest {
                         cidrBlock: "10.0.1.0/24"
                         mapPublicIpOnLaunch: True
                         tags: {
-                            Name: "subnet-public-test-vpc-with-igw-us-west-2a"
+                            Name: "subnet-public-test-vpc-with-igw-us-west-2a-0"
                             Type: "public"
                             Environment: "test"
                             ManagedBy: "upbound"

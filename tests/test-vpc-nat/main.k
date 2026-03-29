@@ -96,7 +96,7 @@ _test_disabled = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in first AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-disabled-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-nat-disabled-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -116,7 +116,7 @@ _test_disabled = metav1alpha1.CompositionTest {
             },
             # Spec: Private subnet should be created in first AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-private-test-vpc-nat-disabled-us-west-2a" }
+                metadata: { name: "subnet-private-test-vpc-nat-disabled-us-west-2a-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -207,7 +207,7 @@ _test_single = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in first AZ (where NAT will be placed)
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-single-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-nat-single-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -227,7 +227,7 @@ _test_single = metav1alpha1.CompositionTest {
             },
             # Spec: Private subnet should be created in first AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-private-test-vpc-nat-single-us-west-2a" }
+                metadata: { name: "subnet-private-test-vpc-nat-single-us-west-2a-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -359,7 +359,7 @@ _test_per_az = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet in us-west-2a
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-per-az-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-nat-per-az-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -379,7 +379,7 @@ _test_per_az = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet in us-west-2b
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-per-az-us-west-2b" }
+                metadata: { name: "subnet-public-test-vpc-nat-per-az-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -399,7 +399,7 @@ _test_per_az = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet in us-west-2c
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-per-az-us-west-2c" }
+                metadata: { name: "subnet-public-test-vpc-nat-per-az-us-west-2c-2" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -620,7 +620,7 @@ _test_per_subnet = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in first AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-per-subnet-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-nat-per-subnet-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -640,7 +640,7 @@ _test_per_subnet = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in second AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-per-subnet-us-west-2b" }
+                metadata: { name: "subnet-public-test-vpc-nat-per-subnet-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -660,7 +660,7 @@ _test_per_subnet = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in third AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-per-subnet-us-west-2c" }
+                metadata: { name: "subnet-public-test-vpc-nat-per-subnet-us-west-2c-2" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -1023,7 +1023,7 @@ _test_reuse_eips = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in first AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-reuse-eips-us-west-2a" }
+                metadata: { name: "subnet-public-test-vpc-nat-reuse-eips-us-west-2a-0" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -1043,7 +1043,7 @@ _test_reuse_eips = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in second AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-reuse-eips-us-west-2b" }
+                metadata: { name: "subnet-public-test-vpc-nat-reuse-eips-us-west-2b-1" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]
@@ -1063,7 +1063,7 @@ _test_reuse_eips = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet should be created in third AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-vpc-nat-reuse-eips-us-west-2c" }
+                metadata: { name: "subnet-public-test-vpc-nat-reuse-eips-us-west-2c-2" }
                 spec: {
                     providerConfigRef: { kind: "ProviderConfig", name: "default" }
                     managementPolicies: ["*"]

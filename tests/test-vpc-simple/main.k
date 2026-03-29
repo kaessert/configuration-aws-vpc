@@ -88,7 +88,7 @@ _items = [
                 # Spec: Public subnet 1 (us-west-2a)
                 ec2v1beta1.Subnet{
                     metadata: {
-                        name: "subnet-public-test-vpc-us-west-2a"
+                        name: "subnet-public-test-vpc-us-west-2a-0"
                     }
                     spec: {
                         # v2: providerConfigRef requires kind field
@@ -124,7 +124,7 @@ _items = [
                 # Spec: Public subnet 2 (us-west-2b)
                 ec2v1beta1.Subnet{
                     metadata: {
-                        name: "subnet-public-test-vpc-us-west-2b"
+                        name: "subnet-public-test-vpc-us-west-2b-1"
                     }
                     spec: {
                         # v2: providerConfigRef requires kind field

@@ -275,7 +275,7 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("public-subnet-${i}") | {
-                name = "subnet-public-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                name = "subnet-public-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                 labels = config.sanitizeLabels(config.tags | config.publicSubnetTags) | {
                     "subnet-type": "public"
                     "subnet-index": str(i)
@@ -292,7 +292,7 @@ _generatePublicSubnets = lambda config: {str: any} -> [any] {
                     mapPublicIpOnLaunch = config.mapPublicIpOnLaunch
                     region = config.region
                     tags = config.tags | config.publicSubnetTags | {
-                        Name = "subnet-public-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                        Name = "subnet-public-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                         Type = "public"
                     }
                 } | _buildIpv6Config(config, i, config.publicSubnetIpv6Prefixes)
@@ -323,7 +323,7 @@ _generatePrivateSubnets = lambda config: {str: any} -> [any] {
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("private-subnet-${i}") | {
-                name = "subnet-private-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                name = "subnet-private-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                 labels = config.sanitizeLabels(config.tags | config.privateSubnetTags) | {
                     "subnet-type": "private"
                     "az": config.azs[i % len(config.azs)]
@@ -339,7 +339,7 @@ _generatePrivateSubnets = lambda config: {str: any} -> [any] {
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.privateSubnetTags | {
-                        Name = "subnet-private-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                        Name = "subnet-private-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                         Type = "private"
                     }
                 } | _buildIpv6Config(config, i, config.privateSubnetIpv6Prefixes)
@@ -368,7 +368,7 @@ _generateDatabaseSubnets = lambda config: {str: any} -> [any] {
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("database-subnet-${i}") | {
-                name = "subnet-database-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                name = "subnet-database-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                 labels = config.sanitizeLabels(config.tags | config.databaseSubnetTags) | {
                     "subnet-type": "database"
                     "az": config.azs[i % len(config.azs)]
@@ -384,7 +384,7 @@ _generateDatabaseSubnets = lambda config: {str: any} -> [any] {
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.databaseSubnetTags | {
-                        Name = "subnet-database-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                        Name = "subnet-database-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                         Type = "database"
                     }
                 } | _buildIpv6Config(config, i, config.databaseSubnetIpv6Prefixes)
@@ -413,7 +413,7 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("elasticache-subnet-${i}") | {
-                name = "subnet-elasticache-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                name = "subnet-elasticache-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                 labels = config.sanitizeLabels(config.tags | config.elasticacheSubnetTags) | {
                     "subnet-type": "elasticache"
                     "az": config.azs[i % len(config.azs)]
@@ -429,7 +429,7 @@ _generateElasticacheSubnets = lambda config: {str: any} -> [any] {
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.elasticacheSubnetTags | {
-                        Name = "subnet-elasticache-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                        Name = "subnet-elasticache-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                         Type = "elasticache"
                     }
                 } | _buildIpv6Config(config, i, config.elasticacheSubnetIpv6Prefixes)
@@ -458,7 +458,7 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("redshift-subnet-${i}") | {
-                name = "subnet-redshift-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                name = "subnet-redshift-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                 labels = config.sanitizeLabels(config.tags | config.redshiftSubnetTags) | {
                     "subnet-type": "redshift"
                     "az": config.azs[i % len(config.azs)]
@@ -474,7 +474,7 @@ _generateRedshiftSubnets = lambda config: {str: any} -> [any] {
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.redshiftSubnetTags | {
-                        Name = "subnet-redshift-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                        Name = "subnet-redshift-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                         Type = "redshift"
                     }
                 } | _buildIpv6Config(config, i, config.redshiftSubnetIpv6Prefixes)
@@ -504,7 +504,7 @@ _generateIntraSubnets = lambda config: {str: any} -> [any] {
     [
         ec2v1beta1.Subnet{
             metadata = config.metadata("intra-subnet-${i}") | {
-                name = "subnet-intra-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                name = "subnet-intra-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                 labels = config.sanitizeLabels(config.tags | config.intraSubnetTags) | {
                     "subnet-type": "intra"
                     "az": config.azs[i % len(config.azs)]
@@ -520,7 +520,7 @@ _generateIntraSubnets = lambda config: {str: any} -> [any] {
                     mapPublicIpOnLaunch = False
                     region = config.region
                     tags = config.tags | config.intraSubnetTags | {
-                        Name = "subnet-intra-${config.vpcName}-${config.azs[i % len(config.azs)]}"
+                        Name = "subnet-intra-${config.vpcName}-${config.azs[i % len(config.azs)]}-${i}"
                         Type = "intra"
                     }
                 } | _buildIpv6Config(config, i, config.intraSubnetIpv6Prefixes)

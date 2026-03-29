@@ -495,7 +495,7 @@ _test_isolated = metav1alpha1.CompositionTest {
             },
             # Spec: Intra subnet in first AZ
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-intra-test-vpc-routes-isolated-us-west-2a" }
+                metadata: { name: "subnet-intra-test-vpc-routes-isolated-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }

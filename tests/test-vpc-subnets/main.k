@@ -69,7 +69,7 @@ _test_database = metav1alpha1.CompositionTest {
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-database-test-database-subnets-us-west-2a" }
+                metadata: { name: "subnet-database-test-database-subnets-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -80,14 +80,14 @@ _test_database = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "database"
-                            Name: "subnet-database-test-database-subnets-us-west-2a"
+                            Name: "subnet-database-test-database-subnets-us-west-2a-0"
                             Type: "database"
                         }
                     }
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-database-test-database-subnets-us-west-2b" }
+                metadata: { name: "subnet-database-test-database-subnets-us-west-2b-1" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -98,7 +98,7 @@ _test_database = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "database"
-                            Name: "subnet-database-test-database-subnets-us-west-2b"
+                            Name: "subnet-database-test-database-subnets-us-west-2b-1"
                             Type: "database"
                         }
                     }
@@ -140,7 +140,7 @@ _test_elasticache = metav1alpha1.CompositionTest {
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-elasticache-test-elasticache-subnets-us-west-2a" }
+                metadata: { name: "subnet-elasticache-test-elasticache-subnets-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -151,14 +151,14 @@ _test_elasticache = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "elasticache"
-                            Name: "subnet-elasticache-test-elasticache-subnets-us-west-2a"
+                            Name: "subnet-elasticache-test-elasticache-subnets-us-west-2a-0"
                             Type: "elasticache"
                         }
                     }
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-elasticache-test-elasticache-subnets-us-west-2b" }
+                metadata: { name: "subnet-elasticache-test-elasticache-subnets-us-west-2b-1" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -169,7 +169,7 @@ _test_elasticache = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "elasticache"
-                            Name: "subnet-elasticache-test-elasticache-subnets-us-west-2b"
+                            Name: "subnet-elasticache-test-elasticache-subnets-us-west-2b-1"
                             Type: "elasticache"
                         }
                     }
@@ -211,7 +211,7 @@ _test_intra = metav1alpha1.CompositionTest {
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-intra-test-intra-subnets-us-west-2a" }
+                metadata: { name: "subnet-intra-test-intra-subnets-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -222,14 +222,14 @@ _test_intra = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "intra"
-                            Name: "subnet-intra-test-intra-subnets-us-west-2a"
+                            Name: "subnet-intra-test-intra-subnets-us-west-2a-0"
                             Type: "intra"
                         }
                     }
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-intra-test-intra-subnets-us-west-2b" }
+                metadata: { name: "subnet-intra-test-intra-subnets-us-west-2b-1" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -240,7 +240,7 @@ _test_intra = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "intra"
-                            Name: "subnet-intra-test-intra-subnets-us-west-2b"
+                            Name: "subnet-intra-test-intra-subnets-us-west-2b-1"
                             Type: "intra"
                         }
                     }
@@ -282,7 +282,7 @@ _test_private = metav1alpha1.CompositionTest {
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-private-test-private-subnets-us-west-2a" }
+                metadata: { name: "subnet-private-test-private-subnets-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -293,14 +293,14 @@ _test_private = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "private"
-                            Name: "subnet-private-test-private-subnets-us-west-2a"
+                            Name: "subnet-private-test-private-subnets-us-west-2a-0"
                             Type: "private"
                         }
                     }
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-private-test-private-subnets-us-west-2b" }
+                metadata: { name: "subnet-private-test-private-subnets-us-west-2b-1" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -311,7 +311,7 @@ _test_private = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "private"
-                            Name: "subnet-private-test-private-subnets-us-west-2b"
+                            Name: "subnet-private-test-private-subnets-us-west-2b-1"
                             Type: "private"
                         }
                     }
@@ -354,7 +354,7 @@ _test_public = metav1alpha1.CompositionTest {
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-public-subnets-us-west-2a" }
+                metadata: { name: "subnet-public-test-public-subnets-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -365,14 +365,14 @@ _test_public = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "public"
-                            Name: "subnet-public-test-public-subnets-us-west-2a"
+                            Name: "subnet-public-test-public-subnets-us-west-2a-0"
                             Type: "public"
                         }
                     }
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-public-subnets-us-west-2b" }
+                metadata: { name: "subnet-public-test-public-subnets-us-west-2b-1" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -383,7 +383,7 @@ _test_public = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "public"
-                            Name: "subnet-public-test-public-subnets-us-west-2b"
+                            Name: "subnet-public-test-public-subnets-us-west-2b-1"
                             Type: "public"
                         }
                     }
@@ -425,7 +425,7 @@ _test_redshift = metav1alpha1.CompositionTest {
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-redshift-test-redshift-subnets-us-west-2a" }
+                metadata: { name: "subnet-redshift-test-redshift-subnets-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -436,14 +436,14 @@ _test_redshift = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "redshift"
-                            Name: "subnet-redshift-test-redshift-subnets-us-west-2a"
+                            Name: "subnet-redshift-test-redshift-subnets-us-west-2a-0"
                             Type: "redshift"
                         }
                     }
                 }
             },
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-redshift-test-redshift-subnets-us-west-2b" }
+                metadata: { name: "subnet-redshift-test-redshift-subnets-us-west-2b-1" }
                 spec: {
                     forProvider: {
                         vpcIdSelector: { matchControllerRef: True }
@@ -454,7 +454,7 @@ _test_redshift = metav1alpha1.CompositionTest {
                         tags: {
                             Environment: "test"
                             Tier: "redshift"
-                            Name: "subnet-redshift-test-redshift-subnets-us-west-2b"
+                            Name: "subnet-redshift-test-redshift-subnets-us-west-2b-1"
                             Type: "redshift"
                         }
                     }

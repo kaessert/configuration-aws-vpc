@@ -8,6 +8,7 @@
 
 **Phase 3: Enhanced Networking Features** - COMPLETED ✅
 **Phase 4: Advanced Features** - COMPLETED ✅ (All P0-P2 tasks completed, P3 tasks evaluated)
+**Terraform Validation** - ⚠️ 3 BUGS FOUND (2026-01-15) - See "Next Priorities" section
 
 ### What We Have Built ✅
 
@@ -73,14 +74,29 @@ All 18 E2E tests pass successfully:
 | vpc-subnetgroups | ✅ PASSED | ~7.5 min |
 | vpc-vpn | ✅ PASSED | ~16 min |
 
-### Feature Parity: ~90% (vs Terraform Module)
+### Feature Parity: ~83% (vs Terraform Module) - Updated 2026-01-15
 
-**What's Included**: All core VPC features, advanced networking, security features, IPv6, VPN, IPAM, flow logs, endpoints (gateway + interface), NACLs, default resource management, and more.
+**Validated via `/validate-terraform-replacement`** against terraform-aws-modules/terraform-aws-vpc examples.
 
-**What's Missing** (All P3 - Optional):
-- Custom subnet naming/suffixes (low value)
+**What's Validated ✅** (6/13 examples tested):
+- simple ✅ PASS - Basic VPC works perfectly
+- separate-route-tables ✅ PASS - Complex routing works perfectly
+- complete ⚠️ PARTIAL PASS - Works except DHCP bug
+- flow-log ⚠️ PARTIAL PASS - Works with feature gap (1 flow log vs 4)
+- secondary-cidr-blocks ⚠️ PARTIAL PASS - Works except naming collision bug
+- ipv6-dualstack ❌ FAIL - Blocked by IPv6 parsing bug
+
+**What's Blocking Full Parity** (Bugs to fix):
+- IPv6 CIDR parsing bug (P0) - Blocks all IPv6 VPCs
+- DHCP null arrays bug (P1) - Blocks complete configurations
+- Subnet naming collision (P1) - Blocks multi-CIDR-per-AZ subnets
+
+**What's Not Implemented** (All P3 - Optional):
+- IPAM (not in XRD)
 - VPC Block Public Access (provider limitation - Nov 2024 AWS feature)
 - Outpost subnets (niche use case)
+
+**Full Report**: `.terraform-validation/SUMMARY.md`
 
 **Recently Completed** (Phase 4 Progress):
 
@@ -115,12 +131,57 @@ All 18 E2E tests pass successfully:
 
 ### Next Priorities (Recommended Order)
 
-**✅ ALL P0-P2 TASKS COMPLETED!**
+**🐛 BUGS FOUND DURING TERRAFORM VALIDATION (2026-01-15)**
+
+The following bugs were discovered during `/validate-terraform-replacement` validation against `terraform-aws-modules/terraform-aws-vpc`. These are blocking full feature parity.
+
+**P0 - CRITICAL (Blocking IPv6):**
+1. ✅ **IPv6 CIDR Parsing Bug** (BUG-001) - **FIXED** (2026-01-15)
+   - **Location**: `functions/vpc/subnets.k:90`
+   - **Error**: `ParseIntError: InvalidDigit` in `int(segment3Str, 16)`
+   - **Impact**: Cannot create any IPv6-enabled VPCs (dual-stack or IPv6-only)
+   - **Examples Affected**: ipv6-dualstack, ipv6-only
+   - **Status**: ✅ COMPLETED
+   - **Fix**: Added hex character filtering before int() parsing
+   - **Commit**: cd71e6a
+   - **Validation**: E2E test e2etest-vpc-ipv6-dual-stack PASSED (27 min)
+
+**P1 - HIGH (Blocking Features):**
+2. ✅ **DHCP Options Null Arrays Bug** (BUG-002) - **FIXED** (2026-01-15)
+   - **Location**: `functions/vpc/dhcp.k:44`
+   - **Error**: Passed `null` instead of omitting optional array fields (domain_name_servers, ntp_servers, etc.)
+   - **Impact**: DHCP options resource creation failed on complete VPC configurations
+   - **Examples Affected**: complete
+   - **Status**: ✅ COMPLETED
+   - **Fix**: Conditionally build forProvider dictionary to omit null/empty fields
+   - **Commit**: c7e097a
+   - **Validation**: All 70 composition tests PASSED (including test-vpc-dhcp-partial)
+
+3. 🔧 **Subnet Naming Collision Bug** (BUG-003) - **CODE FIXED, TESTS PENDING** (2026-01-15)
+   - **Location**: `functions/vpc/subnets.k:278,326,371,416,461,507`
+   - **Error**: Subnet names used only AZ suffix without CIDR index
+   - **Impact**: Cannot create multiple subnets per AZ from different CIDR blocks
+   - **Root Cause**: When multiple CIDRs provide subnets in the same AZ, they get the same name
+   - **Examples Affected**: secondary-cidr-blocks
+   - **Status**: 🔧 CODE FIXED - Test updates in progress
+   - **Fix Applied**: Added subnet index suffix to all subnet names (all 6 subnet types)
+   - **Before**: `subnet-{type}-{vpcName}-{az}`
+   - **After**: `subnet-{type}-{vpcName}-{az}-{index}`
+   - **Test Status**: 23/70 composition tests need name updates to match new convention
+   - **Next Step**: Complete test file updates using systematic pattern matching
+   - **Validation Report**: `.terraform-validation/reports/` (secondary-cidr partial pass)
+
+**Validation Summary**: `.terraform-validation/SUMMARY.md`
+**Checklist**: `thoughts/tasks/TF_VALIDATE_CHECKLIST.md`
+
+---
+
+**✅ ALL P0-P2 TASKS COMPLETED!** (Pre-validation)
 
 **Phase 4 Status**: All critical (P0), high-priority (P1), and important (P2) features are implemented and tested. Remaining tasks are all P3 (Nice to Have) and have been evaluated.
 
 **Recommended Next Steps:**
-1. **Run E2E Tests** - Validate all Phase 4 features with real AWS resources
+1. **🐛 Fix Validation Bugs** - Address BUG-001, BUG-002, BUG-003 above
 2. **Documentation** - Complete user-facing documentation (Phase 6)
 3. **Examples** - Create comprehensive examples for all features (Phase 5)
 4. **Performance Optimization** - Optimize resource creation efficiency (Phase 7)

@@ -67,7 +67,7 @@ _test_disabled = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet WITHOUT IPv6
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-ipv6-disabled-us-west-2a" }
+                metadata: { name: "subnet-public-test-ipv6-disabled-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         region: "us-west-2"
@@ -155,7 +155,7 @@ _test_dual_stack = metav1alpha1.CompositionTest {
             },
             # Spec: Public subnet - Phase 1 (no IPv6 CIDR yet due to late-binding)
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-ipv6-dual-us-west-2a" }
+                metadata: { name: "subnet-public-test-ipv6-dual-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         region: "us-west-2"
@@ -168,7 +168,7 @@ _test_dual_stack = metav1alpha1.CompositionTest {
             },
             # Spec: Private subnet - Phase 1 (no IPv6 CIDR yet due to late-binding)
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-private-test-ipv6-dual-us-west-2a" }
+                metadata: { name: "subnet-private-test-ipv6-dual-us-west-2a-1" }
                 spec: {
                     forProvider: {
                         region: "us-west-2"
@@ -344,7 +344,7 @@ _test_native = metav1alpha1.CompositionTest {
             },
             # Spec: Subnet is IPv6-native (ipv6Native: True) - Phase 1
             ec2v1beta1.Subnet{
-                metadata: { name: "subnet-public-test-ipv6-native-us-west-2a" }
+                metadata: { name: "subnet-public-test-ipv6-native-us-west-2a-0" }
                 spec: {
                     forProvider: {
                         region: "us-west-2"

@@ -134,7 +134,7 @@ _items = [
                 # Spec: Public subnet using primary CIDR (10.0.x.x)
                 ec2v1beta1.Subnet{
                     metadata: {
-                        name: "subnet-public-test-secondary-cidr-us-west-2a"
+                        name: "subnet-public-test-secondary-cidr-us-west-2a-0"
                     }
                     spec: {
                         providerConfigRef: {
@@ -162,7 +162,7 @@ _items = [
                 # Spec: Private subnet using first secondary CIDR (10.1.x.x)
                 ec2v1beta1.Subnet{
                     metadata: {
-                        name: "subnet-private-test-secondary-cidr-us-west-2a"
+                        name: "subnet-private-test-secondary-cidr-us-west-2a-1"
                     }
                     spec: {
                         providerConfigRef: {
@@ -190,7 +190,7 @@ _items = [
                 # Spec: Database subnet using second secondary CIDR (10.2.x.x)
                 ec2v1beta1.Subnet{
                     metadata: {
-                        name: "subnet-database-test-secondary-cidr-us-west-2a"
+                        name: "subnet-database-test-secondary-cidr-us-west-2a-2"
                     }
                     spec: {
                         providerConfigRef: {
