@@ -1,5 +1,7 @@
 # AWS VPC Configuration for Upbound
 
+> **Disclaimer**: This repository was created entirely using [Ralph Loops](https://github.com/anthropics/claude-code) (autonomous AI agent iterations) and serves as a research example for AI-driven infrastructure-as-code development. It is provided as-is, without any warranties or guarantees of correctness, completeness, or fitness for any particular purpose. Use at your own risk.
+
 A production-ready Upbound control plane configuration that provides **feature parity** with the popular [terraform-aws-modules/terraform-aws-vpc](https://github.com/terraform-aws-modules/terraform-aws-vpc) Terraform module.
 
 Build AWS VPCs using Crossplane Composite Resources, KCL composition functions, and declarative Kubernetes-style configuration.
